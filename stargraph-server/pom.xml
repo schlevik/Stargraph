@@ -24,7 +24,7 @@
             </activation>
             <id>docker</id>
             <properties>
-                <skipDocker>true</skipDocker>
+                <skipDocker>false</skipDocker>
             </properties>
         </profile>
     </profiles>

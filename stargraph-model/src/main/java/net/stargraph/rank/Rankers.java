@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.util.Objects;
+
 public final class Rankers {
     private static Logger logger = LoggerFactory.getLogger(Rankers.class);
     private static Marker marker = MarkerFactory.getMarker("rank");
@@ -42,6 +44,7 @@ public final class Rankers {
     }
 
     public static Scores apply(Scores inputScores, ModifiableRankParams rankParams, Rankable target) {
+        Objects.requireNonNull(inputScores);
         logger.info(marker, "Applying {} on {} entries.", rankParams, inputScores.size());
         Ranker ranker = createRanker(rankParams);
         Scores rescores = ranker.score(inputScores, target);

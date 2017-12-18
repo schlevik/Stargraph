@@ -52,6 +52,7 @@ public final class LuceneSearcher extends BaseSearcher {
 
     @Override
     public Scores search(SearchQueryHolder holder) {
+        //TODO: IMPLEMENT
         return null;
     }
 
