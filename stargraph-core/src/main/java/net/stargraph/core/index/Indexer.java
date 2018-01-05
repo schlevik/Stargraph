@@ -26,6 +26,7 @@ package net.stargraph.core.index;
  * ==========================License-End===============================
  */
 
+import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 
@@ -58,5 +59,5 @@ public interface Indexer {
 
     void deleteAll();
 
-    void extend(Iterator<? extends Holder> dataIterator);
+    void extend(DataProvider<? extends Holder> dataProvider);
 }

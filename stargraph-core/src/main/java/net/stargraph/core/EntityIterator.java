@@ -33,6 +33,7 @@ import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,12 +41,14 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import static net.stargraph.ModelUtils.createInstance;
 
 public final class EntityIterator implements Iterator<Indexable> {
+    private Model model;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
     private KBId kbId;
@@ -55,10 +58,17 @@ public final class EntityIterator implements Iterator<Indexable> {
     private Node currentNode;
 
     public EntityIterator(Stargraph stargraph, KBId kbId) {
+        this(stargraph, kbId, null);
+        this.model = core.getGraphModel();
+    }
+
+    public EntityIterator(Stargraph stargraph, KBId kbId, List data) {
         this.kbId = Objects.requireNonNull(kbId);
         this.core = stargraph.getKBCore(kbId.getId());
         this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
         this.iterator = createIterator();
+        this.model = ModelFactory.createDefaultModel().add(data);
+
     }
 
 
@@ -105,7 +115,6 @@ public final class EntityIterator implements Iterator<Indexable> {
     }
 
     private Iterator<Node> createIterator() {
-        Model model = core.getGraphModel();
         Graph g = model.getGraph();
         ExtendedIterator<Triple> exIt = g.find(Node.ANY, null, null);
         ExtendedIterator<Node> subjIt = exIt.mapWith(Triple::getSubject);

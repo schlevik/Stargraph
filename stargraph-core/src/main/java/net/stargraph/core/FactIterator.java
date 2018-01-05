@@ -28,8 +28,11 @@ package net.stargraph.core;
 
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.*;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import static net.stargraph.ModelUtils.createInstance;
 import static net.stargraph.ModelUtils.createProperty;
@@ -38,6 +41,11 @@ final class FactIterator extends TripleIterator<Indexable> {
 
     FactIterator(Stargraph core, KBId kbId) {
         super(core, kbId);
+    }
+
+    FactIterator(Stargraph core, KBId kbId, List data) {
+        super(core, kbId, ModelFactory.createDefaultModel().add(data));
+
     }
 
     @Override

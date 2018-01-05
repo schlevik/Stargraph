@@ -30,6 +30,8 @@ import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.KBId;
 
+import java.util.List;
+
 public final class PropertyProviderFactory extends BaseDataProviderFactory {
 
     public PropertyProviderFactory(Stargraph core) {
@@ -39,5 +41,9 @@ public final class PropertyProviderFactory extends BaseDataProviderFactory {
     @Override
     public DataProvider<Indexable> create(KBId kbId) {
         return new DataProvider<>(new PropertyIterator(core, kbId));
+    }
+
+    public DataProvider<Indexable> create(KBId kbId, List data) {
+        return new DataProvider<>(new PropertyIterator(core, kbId, data));
     }
 }

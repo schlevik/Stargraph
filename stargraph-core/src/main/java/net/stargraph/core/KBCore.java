@@ -12,10 +12,16 @@ import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.BaseSearcher;
 import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.core.search.Searcher;
+import net.stargraph.data.DataProvider;
+import net.stargraph.data.DataProviderFactory;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
 import net.stargraph.query.Language;
 import net.stargraph.rank.ModifiableIndraParams;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -186,6 +192,29 @@ public final class KBCore {
     private void checkRunning() {
         if (!running) {
             throw new IllegalStateException("KB Core not started.");
+        }
+    }
+
+    public void extend(List<Statement> data) {
+        // TODO: 1/5/18 This is bound to JENA/RDF atm
+        /*
+         * Main idea:
+         * 1) add all statements to graph V
+         * 2) get all indexers for this KB
+         * 3) for each indexer, index newly incoming data
+         * 4) uuuuh yea, sth like that
+         */
+        Model model = getGraphModel();
+        model.add(data);
+
+
+        for (KBId kbId : this.getKBIds()) {
+            // create <? extends Holder> from List of statements.
+            Indexer indexer = indexers.get(kbId.getModel());
+            // create dataProvider from given model
+            DataProviderFactory dataProviderFactory = stargraph.createDataProviderFactory(kbId);
+            DataProvider<? extends Holder> dataProvider = dataProviderFactory.create(kbId, data);
+            indexer.extend(dataProvider);
         }
     }
 }

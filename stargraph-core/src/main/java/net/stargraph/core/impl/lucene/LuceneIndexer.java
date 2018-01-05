@@ -29,6 +29,7 @@ package net.stargraph.core.impl.lucene;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
+import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.InstanceEntity;
@@ -142,7 +143,7 @@ public final class LuceneIndexer extends BaseIndexer {
     }
 
     @Override
-    public void extend(Iterator<? extends Holder> dataIterator) {
+    public void extend(DataProvider<? extends Holder> data) {
         // TODO: 1/5/18 implement
     }
 }

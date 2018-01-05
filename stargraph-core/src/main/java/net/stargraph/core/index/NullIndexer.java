@@ -27,6 +27,7 @@ package net.stargraph.core.index;
  */
 
 import net.stargraph.core.Stargraph;
+import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
@@ -57,11 +58,12 @@ final class NullIndexer extends BaseIndexer {
     }
 
     @Override
-    public void extend(Iterator<? extends Holder> dataIterator) {
+    public void extend(DataProvider<? extends Holder> data) {
+        Iterator<? extends Holder> dataIterator = data.iterator();
         while (dataIterator.hasNext()) {
-            Holder data = dataIterator.next();
+            Holder datum = dataIterator.next();
             try {
-                doIndex(data.get(), this.kbId);
+                doIndex(datum.get(), this.kbId);
             } catch (InterruptedException e) {
                 System.out.println("Interrupted.");
             }

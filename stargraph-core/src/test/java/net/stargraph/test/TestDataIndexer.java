@@ -30,6 +30,7 @@ import net.stargraph.core.IndicesFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
@@ -82,8 +83,8 @@ public final class TestDataIndexer extends BaseIndexer {
     }
 
     @Override
-    public void extend(Iterator<? extends Holder> data) {
-        // TODO: 1/5/18
+    public void extend(DataProvider<? extends Holder> dataProvider) {
+
     }
 
     static class Factory implements IndicesFactory {

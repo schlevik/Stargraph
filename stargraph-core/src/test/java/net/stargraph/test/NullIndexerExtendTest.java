@@ -31,6 +31,7 @@ import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.Indexer;
 import net.stargraph.core.index.NullIndicesFactory;
+import net.stargraph.data.DataProviderFactory;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.KBId;
 import org.testng.Assert;
@@ -48,6 +49,7 @@ public final class NullIndexerExtendTest {
     private List<TestData> expected;
     private Stargraph stargraph;
     private Indexer indexer;
+    private final DataProviderFactory dataProviderFactory = new TestDataProviderFactory();
 
     @BeforeClass
     public void before() {
@@ -64,7 +66,8 @@ public final class NullIndexerExtendTest {
 
     @Test
     public void successWhenExtendIndexTest() {
-        this.indexer.extend(new TestDataIterator(this.kbId, this.expected));
+        this.indexer.extend(this.dataProviderFactory.create(this.kbId, this.expected));
     }
+
 
 }

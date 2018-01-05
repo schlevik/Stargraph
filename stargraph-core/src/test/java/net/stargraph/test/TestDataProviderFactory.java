@@ -50,4 +50,9 @@ public final class TestDataProviderFactory implements DataProviderFactory {
 
         return new DataProvider<>(new TestDataIterator(kbId, testData));
     }
+
+    @Override
+    public DataProvider<? extends Holder> create(KBId kbId, List data) {
+        return new DataProvider<>(new TestDataIterator(kbId, data));
+    }
 }

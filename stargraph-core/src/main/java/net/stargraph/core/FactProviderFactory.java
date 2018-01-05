@@ -28,7 +28,13 @@ package net.stargraph.core;
 
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
+import org.apache.jena.rdf.model.StmtIterator;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Encapsulates the logic to provide a stream of facts.
@@ -42,6 +48,11 @@ public final class FactProviderFactory extends BaseDataProviderFactory {
     @Override
     public DataProvider<Indexable> create(KBId kbId) {
         return new DataProvider<>(new FactIterator(core, kbId));
+    }
+
+    @Override
+    public DataProvider<Indexable> create(KBId kbId, List data) {
+        return new DataProvider<>(new FactIterator(core, kbId, data));
     }
 
 }

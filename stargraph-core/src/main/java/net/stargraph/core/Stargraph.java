@@ -12,10 +12,10 @@ package net.stargraph.core;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -48,6 +48,7 @@ import org.slf4j.MarkerFactory;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -76,7 +77,7 @@ public final class Stargraph {
     /**
      * Constructs a new Stargraph core API entry-point.
      *
-     * @param cfg Configuration instance.
+     * @param cfg     Configuration instance.
      * @param initKBs Controls the startup behaviour. Use <code>false</code> to postpone KB specific initialization.
      */
     public Stargraph(Config cfg, boolean initKBs) {
@@ -90,6 +91,7 @@ public final class Stargraph {
         // Configurable defaults
         setDataRootDir(mainConfig.getString("data.root-dir")); // absolute path is expected
         setDefaultIndicesFactory(createDefaultIndicesFactory());
+        // TODO: decouple
         setGraphModelFactory(new HDTModelFactory(this));
 
         if (initKBs) {
@@ -132,7 +134,7 @@ public final class Stargraph {
         return getKBCore(kbId.getId()).getSearcher(kbId.getModel());
     }
 
-    public void setKBInitSet(String ... kbIds) {
+    public void setKBInitSet(String... kbIds) {
         this.kbInitSet.addAll(Arrays.asList(kbIds));
     }
 
@@ -166,6 +168,20 @@ public final class Stargraph {
     }
 
     public DataProvider<? extends Holder> createDataProvider(KBId kbId) {
+        DataProviderFactory factory = this.createDataProviderFactory(kbId);
+
+        DataProvider<? extends Holder> provider = factory.create(kbId);
+
+        if (provider == null) {
+            throw new IllegalStateException("DataProvider not created!");
+        }
+
+        logger.info(marker, "Creating {} data provider", kbId);
+        return provider;
+
+    }
+
+    public DataProviderFactory createDataProviderFactory(KBId kbId) {
         DataProviderFactory factory;
 
         try {
@@ -182,19 +198,12 @@ public final class Stargraph {
                 // See TestDataProviderFactory as an example
                 factory = (DataProviderFactory) providerClazz.newInstance();
             }
-
-            DataProvider<? extends Holder> provider = factory.create(kbId);
-
-            if (provider == null) {
-                throw new IllegalStateException("DataProvider not created!");
-            }
-
-            logger.info(marker, "Creating {} data provider", kbId);
-            return provider;
-        } catch (Exception e) {
-            throw new StarGraphException("Fail to initialize data provider: " + kbId, e);
+            return factory;
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException | ClassNotFoundException e) {
+            throw new StarGraphException("Failed to Create data provider factory: " + kbId, e);
         }
     }
+
 
     public synchronized final void initialize() {
         if (initialized) {
@@ -252,16 +261,14 @@ public final class Stargraph {
         if (!kbInitSet.isEmpty()) {
             logger.info(marker, "KB init set: {}", kbInitSet);
             kbInitSet.forEach(this::initializeKB);
-        }
-        else {
+        } else {
             if (mainConfig.hasPathOrNull("kb")) {
                 if (mainConfig.getIsNull("kb")) {
                     throw new StarGraphException("No KB configured.");
                 }
 
                 mainConfig.getObject("kb").keySet().forEach(this::initializeKB);
-            }
-            else {
+            } else {
                 throw new StarGraphException("No KBs configured.");
             }
         }
@@ -271,12 +278,10 @@ public final class Stargraph {
         if (isEnabled(kbName)) {
             try {
                 kbCoreMap.put(kbName, new KBCore(kbName, this, true));
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logger.error(marker, "Error starting '{}'", kbName, e);
             }
-        }
-        else {
+        } else {
             logger.warn(marker, "KB '{}' is disabled", kbName);
         }
     }

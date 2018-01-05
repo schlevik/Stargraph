@@ -28,7 +28,10 @@ package net.stargraph.core;
 
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
+
+import java.util.List;
 
 /**
  * Encapsulates the logic to provide a stream of documents.
@@ -42,6 +45,12 @@ public final class DocumentProviderFactory extends BaseDataProviderFactory {
     @Override
     public DataProvider<Indexable> create(KBId kbId) {
         return new DataProvider<>(new DocumentIterator(core, kbId));
+    }
+
+    @Override
+    public DataProvider<? extends Holder> create(KBId kbId, List data) {
+        // TODO: 1/5/18 implement or refactor
+        return null;
     }
 
 }

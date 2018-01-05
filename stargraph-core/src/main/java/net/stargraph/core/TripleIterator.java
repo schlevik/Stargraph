@@ -36,6 +36,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -50,11 +51,16 @@ abstract class TripleIterator<T> implements Iterator<T> {
     private Namespace namespace;
 
     TripleIterator(Stargraph stargraph, KBId kbId) {
-        this.model = stargraph.getKBCore(kbId.getId()).getGraphModel();
+        this(stargraph, kbId, stargraph.getKBCore(kbId.getId()).getGraphModel());
+    }
+
+    TripleIterator(Stargraph stargraph, KBId kbId, Model model) {
+        this.model = model;
         this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
         this.kbId = Objects.requireNonNull(kbId);
         this.innerIt = Objects.requireNonNull(model).listStatements();
     }
+
 
     @Override
     public final boolean hasNext() {
