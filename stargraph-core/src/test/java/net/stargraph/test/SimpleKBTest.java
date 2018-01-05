@@ -30,6 +30,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.impl.hdt.HDTModelFactory;
 import net.stargraph.core.index.Indexer;
 import net.stargraph.core.index.NullIndicesFactory;
 import net.stargraph.model.KBId;
@@ -59,7 +60,7 @@ public final class SimpleKBTest {
         stargraph = new Stargraph(config, false);
         stargraph.setKBInitSet(kbName);
         stargraph.setDefaultIndicesFactory(new NullIndicesFactory());
-        stargraph.setGraphModelFactory(new NTriplesModelFactory(stargraph));
+        stargraph.setDefaultGraphModelFactory(new NTriplesModelFactory(stargraph));
         stargraph.setDataRootDir(root.toFile());
         stargraph.initialize();
     }
