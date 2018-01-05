@@ -45,6 +45,7 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public final class Namespace extends TreeMap<String, String> {
@@ -76,17 +77,19 @@ public final class Namespace extends TreeMap<String, String> {
     }
 
     public String shrinkURI(String uri) {
+        logger.trace(marker, "shrinking {}", uri);
         try {
             return shortenedURICache.get(uri, () -> {
                 // This is the computation we want to avoid using the cache.
                 if (uri.startsWith("http://")) {
-                    for (Map.Entry<String, String> entry : this.entrySet()) {
-                        if (uri.startsWith(entry.getKey())) {
-                            return uri.replace(entry.getKey(), entry.getValue());
+                    for (Map.Entry<String, String> entry : Namespace.this.entrySet()) {
+                        if (uri.startsWith(entry.getValue())) {
+                            logger.trace(marker, "URI starts with {}", entry.getKey());
+                            return uri.replace(entry.getValue(), entry.getKey() + ":");
                         }
                     }
                 }
-
+                logger.trace(marker, "couldn't shrink {}", uri);
                 return uri;
             });
         } catch (ExecutionException e) {
@@ -109,6 +112,7 @@ public final class Namespace extends TreeMap<String, String> {
 
     public boolean isFromMainNS(String uri) {
         String[] mapped = shrinkURI(uri).split(":");
+        logger.debug("Shrinked and split URI: {}", mapped);
         return mainNamespaces.contains(mapped[0]);
     }
 
@@ -152,6 +156,9 @@ public final class Namespace extends TreeMap<String, String> {
         if (kbConfig.hasPath("namespaces")) {
             Config nsConfig = kbConfig.getConfig("namespaces");
             mainNamespaces.addAll(nsConfig.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList()));
+            mainNamespaces.forEach((ns) -> this.put(ns, nsConfig.getString(ns)));
+            logger.info(marker, "Entry set: {}", this.entrySet());
+            logger.info(marker, "Who am I? {}", this);
             logger.info(marker, "Main Namespaces: {}", mainNamespaces);
         }
     }

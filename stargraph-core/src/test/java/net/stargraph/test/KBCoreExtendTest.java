@@ -72,12 +72,12 @@ public final class KBCoreExtendTest {
         this.core = stargraph.getKBCore(kbId.getId());
         this.expected = Arrays.asList(
                 ResourceFactory.createStatement(
-                        ResourceFactory.createResource("http://s"),
-                        ResourceFactory.createProperty("http://p"),
+                        ResourceFactory.createResource("http://lambda33.org/s"),
+                        ResourceFactory.createProperty("http://lambda3.org/p"),
                         ResourceFactory.createPlainLiteral("o1")),
                 ResourceFactory.createStatement(
-                        ResourceFactory.createResource("http://s"),
-                        ResourceFactory.createProperty("http://p"),
+                        ResourceFactory.createResource("http://ppl.org/s"),
+                        ResourceFactory.createProperty("http://ppl.org/p"),
                         ResourceFactory.createPlainLiteral("o2"))
         );
     }
