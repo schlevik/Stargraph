@@ -31,6 +31,8 @@ import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.core.index.IndexingException;
+import net.stargraph.data.Indexable;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
@@ -45,6 +47,8 @@ import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
 
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -237,4 +241,8 @@ public final class ElasticIndexer extends BaseIndexer {
         }
     }
 
+    @Override
+    public void extend(Iterator<? extends Holder> dataIterator) {
+        // TODO: 1/5/18
+    }
 }

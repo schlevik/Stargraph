@@ -29,6 +29,8 @@ package net.stargraph.core.impl.lucene;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
+import net.stargraph.data.Indexable;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.KBId;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -41,6 +43,8 @@ import org.apache.lucene.store.Directory;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 public final class LuceneIndexer extends BaseIndexer {
@@ -137,4 +141,8 @@ public final class LuceneIndexer extends BaseIndexer {
         throw new UnsupportedOperationException("Can't index: " + data.getClass());
     }
 
+    @Override
+    public void extend(Iterator<? extends Holder> dataIterator) {
+        // TODO: 1/5/18 implement
+    }
 }

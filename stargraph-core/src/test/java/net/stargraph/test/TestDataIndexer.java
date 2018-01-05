@@ -30,10 +30,13 @@ import net.stargraph.core.IndicesFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.data.Indexable;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -76,6 +79,11 @@ public final class TestDataIndexer extends BaseIndexer {
 
     final List<TestData> getIndexed() {
         return this.indexed;
+    }
+
+    @Override
+    public void extend(Iterator<? extends Holder> data) {
+        // TODO: 1/5/18
     }
 
     static class Factory implements IndicesFactory {

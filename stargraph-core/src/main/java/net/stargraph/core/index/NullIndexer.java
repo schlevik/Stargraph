@@ -12,10 +12,10 @@ package net.stargraph.core.index;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,12 +27,16 @@ package net.stargraph.core.index;
  */
 
 import net.stargraph.core.Stargraph;
+import net.stargraph.data.Indexable;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
 
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.List;
 
 /**
- * Indexer that don't do nothing. Useful for testing without the backend.
+ * Indexer that doesn't do anything. Useful for testing without the backend.
  * Prints on stdout whatever it gets.
  */
 final class NullIndexer extends BaseIndexer {
@@ -51,4 +55,17 @@ final class NullIndexer extends BaseIndexer {
         //that'it, nothing is done.
         System.out.println(data);
     }
+
+    @Override
+    public void extend(Iterator<? extends Holder> dataIterator) {
+        while (dataIterator.hasNext()) {
+            Holder data = dataIterator.next();
+            try {
+                doIndex(data.get(), this.kbId);
+            } catch (InterruptedException e) {
+                System.out.println("Interrupted.");
+            }
+        }
+    }
 }
+

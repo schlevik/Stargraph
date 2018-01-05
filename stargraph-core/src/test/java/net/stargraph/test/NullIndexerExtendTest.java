@@ -1,4 +1,4 @@
-package net.stargraph.core.index;
+package net.stargraph.test;
 
 /*-
  * ==========================License-Start=============================
@@ -12,10 +12,10 @@ package net.stargraph.core.index;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,37 +26,45 @@ package net.stargraph.core.index;
  * ==========================License-End===============================
  */
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import net.stargraph.core.Stargraph;
+import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.NullIndicesFactory;
 import net.stargraph.data.Indexable;
-import net.stargraph.data.processor.Holder;
+import net.stargraph.model.KBId;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
-import java.util.Iterator;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
-/**
- * Definition of an indexer.
- */
-public interface Indexer {
+public final class NullIndexerExtendTest {
 
-    void start();
+    private KBId kbId = KBId.of("mytest", "mytype");
+    private List<TestData> expected;
+    private Stargraph stargraph;
+    private Indexer indexer;
 
-    void stop();
+    @BeforeClass
+    public void before() {
+        ConfigFactory.invalidateCaches();
+        Config config = ConfigFactory.load().getConfig("stargraph");
+        this.stargraph = new Stargraph(config, false);
+        this.stargraph.setKBInitSet(kbId.getId());
+        this.stargraph.setDefaultIndicesFactory(new NullIndicesFactory());
+        this.stargraph.initialize();
+        this.indexer = stargraph.getIndexer(kbId);
+        List<String> expected = Arrays.asList("data#1", "data#2", "data#3");
+        this.expected = expected.stream().map(s -> new TestData(s)).collect(Collectors.toList());
+    }
 
-    void load();
+    @Test
+    public void successWhenExtendIndexTest() {
+        this.indexer.extend(new TestDataIterator(this.kbId, this.expected));
+    }
 
-    void load(boolean reset, int limit);
-
-    void awaitLoader() throws InterruptedException, TimeoutException, ExecutionException;
-
-    void awaitLoader(long time, TimeUnit unit) throws InterruptedException, TimeoutException, ExecutionException;
-
-    void index(Indexable data) throws InterruptedException;
-
-    void flush();
-
-    void deleteAll();
-
-    void extend(Iterator<? extends Holder> dataIterator);
 }
