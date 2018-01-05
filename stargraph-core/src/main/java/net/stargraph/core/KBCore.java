@@ -204,16 +204,22 @@ public final class KBCore {
          * 3) for each indexer, index newly incoming data
          * 4) uuuuh yea, sth like that
          */
-        Model model = getGraphModel();
+        logger.trace("Entering extend");
+        Model model =getGraphModel();
+        logger.debug("Adding incoming data to graph.");
         model.add(data);
 
 
         for (KBId kbId : this.getKBIds()) {
+            logger.debug("For KBid {}...", kbId);
             // create <? extends Holder> from List of statements.
             Indexer indexer = indexers.get(kbId.getModel());
+            logger.debug("Got indexer of type {}", indexer.getClass());
             // create dataProvider from given model
             DataProviderFactory dataProviderFactory = stargraph.createDataProviderFactory(kbId);
+            logger.debug("Created DataProviderFactory of type {}", dataProviderFactory.getClass());
             DataProvider<? extends Holder> dataProvider = dataProviderFactory.create(kbId, data);
+            logger.debug("Created DataProvider of type {}", dataProvider.getClass());
             indexer.extend(dataProvider);
         }
     }
