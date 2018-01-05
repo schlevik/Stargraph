@@ -90,7 +90,7 @@ public final class Stargraph {
         // Configurable defaults
         setDataRootDir(mainConfig.getString("data.root-dir")); // absolute path is expected
         setDefaultIndicesFactory(createDefaultIndicesFactory());
-        setGraphModelFactory(new HDTModelFactory(this));
+        setDefaultGraphModelFactory(createDefaultGraphModelFactory());
 
         if (initKBs) {
             initialize();
@@ -106,6 +106,10 @@ public final class Stargraph {
 
     public Config getMainConfig() {
         return mainConfig;
+    }
+
+    public Config getKBConfig(String kbName) {
+        return mainConfig.getConfig(String.format("kb.%s", kbName));
     }
 
     public Config getModelConfig(KBId kbId) {
@@ -148,7 +152,7 @@ public final class Stargraph {
         this.indicesFactory = Objects.requireNonNull(indicesFactory);
     }
 
-    public void setGraphModelFactory(GraphModelFactory modelFactory) {
+    public void setDefaultGraphModelFactory(GraphModelFactory modelFactory) {
         this.graphModelFactory = Objects.requireNonNull(modelFactory);
     }
 
@@ -219,10 +223,6 @@ public final class Stargraph {
         initialized = false;
     }
 
-    GraphModelFactory getGraphModelFactory() {
-        return graphModelFactory;
-    }
-
     IndicesFactory getIndicesFactory(KBId kbId) {
         final String idxStorePath = "index-store.factory.class";
         if (kbId != null) {
@@ -241,6 +241,26 @@ public final class Stargraph {
         }
 
         return indicesFactory;
+    }
+
+    GraphModelFactory getGraphModelFactory(String kbName) {
+        final String idxStorePath = "graph-model.factory.class";
+        if (kbName != null) {
+            //from model configuration
+            Config kbCfg = getKBConfig(kbName);
+            if (kbCfg.hasPath(idxStorePath)) {
+                String className = kbCfg.getString(idxStorePath);
+                logger.info(marker, "Using '{}'.", className);
+                return createGraphModelFactory(className);
+            }
+        }
+
+        if (graphModelFactory == null) {
+            //from main configuration if not already set
+            graphModelFactory = createGraphModelFactory(getMainConfig().getString(idxStorePath));
+        }
+
+        return graphModelFactory;
     }
 
     private boolean isEnabled(String kbName) {
@@ -298,6 +318,10 @@ public final class Stargraph {
         return getIndicesFactory(null);
     }
 
+    private GraphModelFactory createDefaultGraphModelFactory() {
+        return getGraphModelFactory(null);
+    }
+
     private IndicesFactory createIndicesFactory(String className) {
         try {
             Class<?> providerClazz = Class.forName(className);
@@ -305,6 +329,16 @@ public final class Stargraph {
             return (IndicesFactory) constructor.newInstance();
         } catch (Exception e) {
             throw new StarGraphException("Can't initialize indexers.", e);
+        }
+    }
+
+    private GraphModelFactory createGraphModelFactory(String className) {
+        try {
+            Class<?> providerClazz = Class.forName(className);
+            Constructor<?> constructor = providerClazz.getConstructors()[0];
+            return (GraphModelFactory) constructor.newInstance(this);
+        } catch (Exception e) {
+            throw new StarGraphException("Can't initialize graph model.", e);
         }
     }
 

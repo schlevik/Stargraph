@@ -135,7 +135,7 @@ public final class KBCore {
 
     public Model getGraphModel() {
         checkRunning();
-        return stargraph.getGraphModelFactory().getModel(kbName);
+        return stargraph.getGraphModelFactory(kbName).getModel(kbName);
     }
 
     public Indexer getIndexer(String modelId) {
