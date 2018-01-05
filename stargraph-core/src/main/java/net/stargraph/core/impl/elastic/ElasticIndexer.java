@@ -12,10 +12,10 @@ package net.stargraph.core.impl.elastic;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,6 +46,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -76,7 +77,7 @@ public final class ElasticIndexer extends BaseIndexer {
                 createIndex();
             } else {
                 if (reset) {
-                   deleteAll();
+                    deleteAll();
                 }
             }
         } catch (Exception e) {
@@ -114,14 +115,19 @@ public final class ElasticIndexer extends BaseIndexer {
 
     @Override
     protected void doFlush() {
+        logger.trace(marker, "Entering flush..");
+        logger.debug(marker, "..flushing bulkProcessor..");
         bulkProcessor.flush();
+        logger.debug(marker, "..flushed bulkProcessor..");
         try {
             //TODO: Figure out why flushing is not always being honored without delaying.
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        logger.debug(marker, "..slept for 2 seconds..");
         ForceMergeResponse res = esClient.prepareForceMerge().get();
+        logger.debug(marker, "..forced merge..");
         if (res.getFailedShards() > 0) {
             logger.warn("Flush request failure detected on {}", kbId);
         }
@@ -154,6 +160,7 @@ public final class ElasticIndexer extends BaseIndexer {
         if (bulkProcessor == null) {
             throw new StarGraphException("Back-end is unreachable now.");
         }
+
 
         try {
             final String id = UUIDs.base64UUID();
@@ -242,8 +249,5 @@ public final class ElasticIndexer extends BaseIndexer {
         }
     }
 
-    @Override
-    public void extend(DataProvider<? extends Holder> data) {
-        // TODO: 1/5/18
-    }
+
 }

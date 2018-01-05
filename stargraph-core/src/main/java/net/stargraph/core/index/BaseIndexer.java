@@ -12,10 +12,10 @@ package net.stargraph.core.index;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -90,8 +90,7 @@ public abstract class BaseIndexer implements Indexer {
             try {
                 onStop();
                 running = false;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logger.error(marker, "Fail to stop.", e);
             }
 
@@ -292,8 +291,7 @@ public abstract class BaseIndexer implements Indexer {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     logger.warn(marker, "Thread was interrupted.", e);
-                }
-                finally {
+                } finally {
                     this.loading = false;
                     logger.info(marker, "Loader is done.");
                 }
@@ -301,4 +299,25 @@ public abstract class BaseIndexer implements Indexer {
         });
     }
 
+
+    @Override
+    public void extend(DataProvider<? extends Holder> data) {
+        // TODO: 1/5/18 somebody should look deeper into the forceMerge / flush functionality of elasticIndexer
+        logger.trace(marker, "Entering extend...");
+        this.onStart();
+        logger.debug(marker, "..onStart() performed..");
+        Iterator<? extends Holder> it = data.iterator();
+        while (it.hasNext()) {
+            Indexable datum = (Indexable) it.next();
+            try {
+                index(datum);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        logger.debug(marker, "..all data was worked on..");
+        logger.debug(marker, ".. performing onStop()..");
+        this.onStop();
+        logger.debug(marker, "..done!");
+    }
 }
