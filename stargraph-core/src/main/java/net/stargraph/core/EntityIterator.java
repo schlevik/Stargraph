@@ -58,16 +58,19 @@ public final class EntityIterator implements Iterator<Indexable> {
     private Node currentNode;
 
     public EntityIterator(Stargraph stargraph, KBId kbId) {
-        this(stargraph, kbId, null);
+        this.kbId = Objects.requireNonNull(kbId);
+        this.core = stargraph.getKBCore(kbId.getId());
+        this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
         this.model = core.getGraphModel();
+        this.iterator = createIterator();
     }
 
     public EntityIterator(Stargraph stargraph, KBId kbId, List data) {
         this.kbId = Objects.requireNonNull(kbId);
         this.core = stargraph.getKBCore(kbId.getId());
         this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
-        this.iterator = createIterator();
         this.model = ModelFactory.createDefaultModel().add(data);
+        this.iterator = createIterator();
 
     }
 
