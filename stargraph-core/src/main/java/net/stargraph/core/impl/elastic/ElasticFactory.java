@@ -27,9 +27,11 @@ package net.stargraph.core.impl.elastic;
  */
 
 import net.stargraph.core.IndicesFactory;
+import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.model.KBId;
 
 public final class ElasticFactory implements IndicesFactory {
@@ -42,5 +44,10 @@ public final class ElasticFactory implements IndicesFactory {
     @Override
     public BaseSearcher createSearcher(KBId kbId, Stargraph stargraph) {
         return new ElasticSearcher(kbId, stargraph);
+    }
+
+    @Override
+    public EntitySearcher createEntitySearcher(KBCore core) {
+        return new ElasticEntitySearcher(core);
     }
 }
