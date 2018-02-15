@@ -36,9 +36,11 @@ import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.KBId;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
@@ -90,7 +92,7 @@ public final class LuceneIndexer extends BaseIndexer {
             writer.flush();
             writer.forceMerge(1, true);
         } catch (IOException e) {
-           throw new StarGraphException("After loading error.", e);
+            throw new StarGraphException("After loading error.", e);
         }
     }
 
@@ -133,14 +135,16 @@ public final class LuceneIndexer extends BaseIndexer {
         final Document doc = new Document();
 
         if (data instanceof InstanceEntity) {
-            InstanceEntity entity = (InstanceEntity)data;
-            doc.add(new TextField("id", new StringReader(entity.getId())));
-            doc.add(new TextField("value", new StringReader(entity.getValue())));
+            InstanceEntity entity = (InstanceEntity) data;
+            doc.add(new TextField("id", entity.getId(), Field.Store.YES));
+            doc.add(new TextField("value", entity.getValue(), Field.Store.YES));
             return doc;
         }
 
         throw new UnsupportedOperationException("Can't index: " + data.getClass());
     }
+
+
 
     @Override
     public void extend(DataProvider<? extends Holder> data) {

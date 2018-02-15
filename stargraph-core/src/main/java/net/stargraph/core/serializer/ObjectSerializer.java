@@ -47,6 +47,7 @@ public final class ObjectSerializer {
         module.addSerializer(ClassEntity.class, new ClassSerializer(kbId));
         module.addSerializer(Document.class, new DocumentSerializer(kbId));
         module.addDeserializer(Document.class, new DocumentDeserializer(kbId));
+        module.addDeserializer(Passage.class, new PassageDeserializer(kbId));
         mapper.registerModule(module);
         return mapper;
     }

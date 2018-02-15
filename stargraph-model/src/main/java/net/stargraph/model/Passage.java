@@ -26,33 +26,43 @@ package net.stargraph.model;
  * ==========================License-End===============================
  */
 
+import net.stargraph.data.processor.Hashable;
+
 import java.util.List;
 
 /**
  * Represents a passage that can be digested by the StarGraph database.
  */
-public final class Passage {
-	private String text;
-	private List<LabeledEntity> entities;
+public final class Passage implements Hashable {
+    private String text;
+    private List<LabeledEntity> entities;
 
-	public Passage(String text, List<LabeledEntity> entities) {
-		this.text = text;
-		this.entities = entities;
-	}
+    public Passage(String text, List<LabeledEntity> entities) {
+        this.text = text;
+        this.entities = entities;
+    }
 
-	public String getText() {
-		return text;
-	}
+    public String getText() {
+        return text;
+    }
 
-	public List<LabeledEntity> getEntities() {
-		return entities;
-	}
+    public List<LabeledEntity> getEntities() {
+        return entities;
+    }
 
-	@Override
-	public String toString() {
-		return "Passage{" +
-				"text='" + text + '\'' +
-				", entities=" + entities +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Passage{" +
+                "text='" + text + '\'' +
+                ", entities=" + entities +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Passage passage = (Passage) o;
+        return text.equals(passage.text);
+    }
 }

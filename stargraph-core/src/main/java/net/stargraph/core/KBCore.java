@@ -7,6 +7,7 @@ import net.stargraph.core.graph.GraphSearcher;
 import net.stargraph.core.impl.corenlp.NERSearcher;
 import net.stargraph.core.impl.elastic.ElasticEntitySearcher;
 import net.stargraph.core.impl.jena.JenaGraphSearcher;
+import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
 import net.stargraph.core.index.Indexer;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.BaseSearcher;
@@ -99,8 +100,8 @@ public final class KBCore {
                 logger.warn(marker, "No searcher created for {}", kbId);
             }
         }
-
-        this.ner = new NERSearcher(language, createEntitySearcher(), kbName);
+        //TODO useLucene
+        this.ner = new NERSearcher(language, createEntitySearcher(true), kbName);
         this.kbLoader = new KBLoader(this);
         this.running = true;
     }
@@ -173,6 +174,11 @@ public final class KBCore {
         return namespace;
     }
 
+    public EntitySearcher createEntitySearcher(boolean useLucene) {
+        //TODO kind of a hack, this should be red from config or w/e
+        return useLucene ? new LuceneEntitySearcher(this) : new ElasticEntitySearcher(this);
+    }
+
     public EntitySearcher createEntitySearcher() {
         //TODO: EntitySearcher creation depends on Searcher impl, need to decouple. See how NERAndLinkingIT is failing.
         return new ElasticEntitySearcher(this);
@@ -205,7 +211,7 @@ public final class KBCore {
          * 4) uuuuh yea, sth like that
          */
         logger.trace("Entering extend");
-        Model model =getGraphModel();
+        Model model = getGraphModel();
         logger.debug("Adding incoming data to graph.");
         model.add(data);
 

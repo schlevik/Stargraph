@@ -1,4 +1,4 @@
-package net.stargraph.test;
+package net.stargraph.test.it;
 
 /*-
  * ==========================License-Start=============================
@@ -26,53 +26,48 @@ package net.stargraph.test;
  * ==========================License-End===============================
  */
 
-import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import net.stargraph.core.FactProviderFactory;
-import net.stargraph.core.NTriplesModelFactory;
+import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
-import net.stargraph.data.DataProvider;
-import net.stargraph.model.KBId;
+import net.stargraph.core.ner.LinkedNamedEntity;
+import net.stargraph.core.ner.NER;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
+import java.util.List;
 
-public class FactProviderTest {
-    private Config config;
-    private Path root;
+public final class NERAndLinkingIT {
+    NER ner;
 
-    @BeforeMethod
-    public void before() throws IOException {
-        root = TestUtils.prepareObamaTestEnv("obama");
+    @BeforeClass
+    public void beforeClass() throws Exception {
         ConfigFactory.invalidateCaches();
-        config = ConfigFactory.load().getConfig("stargraph");
+        Stargraph stargraph = new Stargraph();
+        ner = stargraph.getKBCore("dbpedia-2016").getNER();
+        Assert.assertNotNull(ner);
     }
 
     @Test
-    public void factIterateTest() {
-        Stargraph core = new Stargraph(config, false);
-        core.setDataRootDir(root.toFile());
-        core.initialize();
-        KBId kbId = KBId.of("obama", "facts");
-        FactProviderFactory factory = new FactProviderFactory(core);
-        DataProvider<?> provider = factory.create(kbId);
-        Assert.assertEquals(provider.getStream().count(), 1877);
+    public void linkObamaTest() {
+        List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Obama");
+        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 
     @Test
-    public void factFromNTriplesTest() throws IOException {
-        Stargraph core = new Stargraph(config, false);
-        core.setDataRootDir(root.toFile());
-        core.setDefaultGraphModelFactory(new NTriplesModelFactory(core));
-        core.initialize();
-
-        KBId kbId = KBId.of("obama", "facts");
-        FactProviderFactory factory = new FactProviderFactory(core);
-        DataProvider<?> provider = factory.create(kbId);
-        Assert.assertEquals(provider.getStream().count(), 1877);
+    public void NoEntitiesTest() {
+        final String text = "Moreover, they were clearly meant to be exemplary invitations to revolt. And of course this will not make any sense.";
+        List<LinkedNamedEntity> entities = ner.searchAndLink(text);
+        Assert.assertTrue(entities.isEmpty());
     }
 
+    @Test
+    public void linkTest() {
+        final String text = "What it Really Stands for Anarchy '' in Anarchism and Other Essays.Individualist anarchist " +
+                "Benjamin Tucker defined anarchism as opposition to authority as follows `` They found that they must " +
+                "turn either to the right or to the left , -- follow either the path of Authority or the path of Liberty .";
+
+        List<LinkedNamedEntity> entities = ner.searchAndLink(text);
+        System.out.println(entities);
+    }
 }

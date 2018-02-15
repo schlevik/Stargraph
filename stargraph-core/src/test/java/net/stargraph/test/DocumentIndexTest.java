@@ -29,41 +29,57 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.impl.elastic.ElasticFactory;
 import net.stargraph.core.index.Indexer;
-import net.stargraph.core.index.NullIndicesFactory;
-import net.stargraph.data.DataProviderFactory;
-import net.stargraph.model.KBId;
+import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.data.Indexable;
+import net.stargraph.model.*;
+import net.stargraph.rank.*;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
-public final class NullIndexerExtendTest {
+public final class DocumentIndexTest {
 
-    private KBId kbId = KBId.of("mytest", "mytype");
-    private List<TestData> expected;
+    private KBId kbId = KBId.of("obama", "documents");
     private Stargraph stargraph;
     private Indexer indexer;
-    private final DataProviderFactory dataProviderFactory = new TestDataProviderFactory();
 
     @BeforeClass
-    public void before() {
+    public void before() throws InterruptedException {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
+
         this.stargraph = new Stargraph(config, false);
         this.stargraph.setKBInitSet(kbId.getId());
-        this.stargraph.setDefaultIndicesFactory(new NullIndicesFactory());
+        this.stargraph.setDefaultIndicesFactory(new ElasticFactory());
         this.stargraph.initialize();
         this.indexer = stargraph.getIndexer(kbId);
-        List<String> expected = Arrays.asList("data#1", "data#2", "data#3");
-        this.expected = expected.stream().map(s -> new TestData(s)).collect(Collectors.toList());
+
+        indexer.deleteAll();
+
+        String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
+                "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread.";
+
+        indexer.index(new Indexable(new Document("test.txt", "Test", text), kbId));
+        indexer.flush();
     }
 
     @Test
-    public void successWhenExtendIndexTest() {
-        this.indexer.extend(this.dataProviderFactory.create(this.kbId, this.expected));
+    public void queryDocumentIndexTest() {
+        EntitySearcher entitySearcher = this.stargraph.getKBCore("obama").createEntitySearcher();
+        InstanceEntity obama = new InstanceEntity("dbr:Barack_Obama", "Barack Obama");
+        ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama");
+        searchParams.term("like to eat");
+        ModifiableRankParams rankParams = new ModifiableRankParams(Threshold.auto(), RankingModel.LEVENSHTEIN);
+        Scores scores = entitySearcher.pivotedFullTextPassageSearch(obama, searchParams, rankParams);
+        ArrayList<LabeledEntity> linkedEntities = new ArrayList<>();
+        linkedEntities.add(obama);
+        System.out.println(scores);
+        Passage expected = new Passage("Barack Obama likes to eat garlic bread .", linkedEntities);
+        Assert.assertEquals(scores.get(0).getEntry(), expected);
     }
 
 

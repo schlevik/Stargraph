@@ -12,10 +12,10 @@ package net.stargraph.test;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,9 +31,11 @@ import net.stargraph.model.KBId;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 
 public final class TestUtils {
 
@@ -55,11 +57,12 @@ public final class TestUtils {
         }
     }
 
-    public static Path prepareObamaTestEnv() {
+
+    public static Path prepareObamaTestEnv(String kbID) {
         Path root;
         try {
             root = Files.createTempFile("stargraph-", "-dataDir");
-            Path factsPath = createPath(root, KBId.of("obama", "facts"));
+            Path factsPath = createPath(root, KBId.of(kbID, "facts"));
             Path hdtPath = factsPath.resolve("triples.hdt");
             Path ntFilePath = factsPath.resolve("triples.nt");
             copyResource("dataSets/obama/facts/triples.hdt", hdtPath);
@@ -68,5 +71,17 @@ public final class TestUtils {
             throw new RuntimeException(e);
         }
         return root;
+    }
+
+    public static void cleanUpObamaTestEnv(Path root) {
+        try {
+            Files.walk(root, FileVisitOption.FOLLOW_LINKS)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .peek(System.out::println)
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -29,29 +29,47 @@ package net.stargraph.test.it;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.index.Indexer;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
+import net.stargraph.model.KBId;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public final class NERAndLinkingIT {
     NER ner;
+    String kbName = "lucene-dbpedia";
+    KBId entityIndex = KBId.of(kbName, "entities");
+    Stargraph stargraph;
 
     @BeforeClass
     public void beforeClass() throws Exception {
         ConfigFactory.invalidateCaches();
-        Stargraph stargraph = new Stargraph();
-        ner = stargraph.getKBCore("dbpedia-2016").getNER();
+        stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
+        stargraph.setKBInitSet(kbName);
+        stargraph.initialize();
+        ner = stargraph.getKBCore(kbName).getNER();
         Assert.assertNotNull(ner);
     }
+
+//    @Test
+//    public void justIndexLucene() throws InterruptedException, ExecutionException, TimeoutException {
+//        Indexer indexer = stargraph.getIndexer(entityIndex);
+//        indexer.load(true, -1);
+//        indexer.awaitLoader();
+//        System.out.println("DONE! Didn't think we'd come this far.");
+//
+//    }
 
     @Test
     public void linkObamaTest() {
         List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Obama");
-        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
+        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:BarackObama"));
     }
 
     @Test
@@ -65,7 +83,7 @@ public final class NERAndLinkingIT {
     public void linkTest() {
         final String text = "What it Really Stands for Anarchy '' in Anarchism and Other Essays.Individualist anarchist " +
                 "Benjamin Tucker defined anarchism as opposition to authority as follows `` They found that they must " +
-                "turn either to the right or to the left , -- follow either the path of Authority or the path of Liberty .";
+                "turn either to the right or to the left , -- follow either the path of Authority or the path of Donald Trump .";
 
         List<LinkedNamedEntity> entities = ner.searchAndLink(text);
         System.out.println(entities);

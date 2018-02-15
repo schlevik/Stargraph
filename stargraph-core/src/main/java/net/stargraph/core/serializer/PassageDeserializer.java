@@ -35,29 +35,36 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-class DocumentDeserializer extends AbstractDeserializer<Document> {
+class PassageDeserializer extends AbstractDeserializer<Passage> {
 
-    DocumentDeserializer(KBId kbId) {
+    PassageDeserializer(KBId kbId) {
         super(kbId, PropertyEntity.class);
     }
 
     @Override
-    public Document deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        JsonNode node = p.getCodec().readTree(p);
-        String id = node.get("id").asText();
-        String title = node.get("title").asText();
-        String summary = (node.has("summary")) ? node.get("summary").asText() : null;
-        String text = node.get("text").asText();
+    public Passage deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+        return PassageDeserializer.deserializePassage(p.getCodec().readTree(p));
+    }
 
-        List<Passage> passages = new ArrayList();
-        if (node.has("passages")) {
-            for (final JsonNode pass : node.get("passages")) {
-                passages.add(PassageDeserializer.deserializePassage(pass));
+    public static Passage deserializePassage(JsonNode node) {
+        String passText = node.get("text").asText();
+        List<LabeledEntity> entities = new ArrayList<>();
+        if (node.has("entities")) {
+            for (final JsonNode ent : node.get("entities")) {
+                String entId = ent.get("id").asText();
+                String entValue = ent.get("value").asText();
+
+                if (ent.has("complex")) {
+                    entities.add(new ClassEntity(entId, entValue, ent.get("complex").asBoolean()));
+                } else if (ent.has("language")) {
+                    entities.add(new ValueEntity(entId, entValue, ent.get("dataType").asText(null), ent.get("language").asText(null)));
+                } else {
+                    entities.add(new InstanceEntity(entId, entValue));
+                }
+
             }
         }
 
-        return new Document(id, title, summary, text, passages);
+        return new Passage(passText, entities);
     }
-
-
 }

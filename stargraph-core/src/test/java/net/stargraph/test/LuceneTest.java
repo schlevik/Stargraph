@@ -29,42 +29,64 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
 import net.stargraph.core.index.Indexer;
-import net.stargraph.core.index.NullIndicesFactory;
-import net.stargraph.data.DataProviderFactory;
+import net.stargraph.core.search.Searcher;
 import net.stargraph.model.KBId;
+import net.stargraph.rank.*;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.File;
+import java.io.IOException;
 
-public final class NullIndexerExtendTest {
-
-    private KBId kbId = KBId.of("mytest", "mytype");
-    private List<TestData> expected;
+public final class LuceneTest {
+    // lucene-obama uses lucene. DUH
+    private String id = "lucene-obama";
+    private KBId kbId = KBId.of(id, "entities");
     private Stargraph stargraph;
-    private Indexer indexer;
-    private final DataProviderFactory dataProviderFactory = new TestDataProviderFactory();
+    private File dataRootDir;
+
 
     @BeforeClass
-    public void before() {
+    public void beforeClass() {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
+        dataRootDir = TestUtils.prepareObamaTestEnv(kbId.getId()).toFile();
         this.stargraph = new Stargraph(config, false);
         this.stargraph.setKBInitSet(kbId.getId());
-        this.stargraph.setDefaultIndicesFactory(new NullIndicesFactory());
+        this.stargraph.setDataRootDir(dataRootDir);
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(kbId);
-        List<String> expected = Arrays.asList("data#1", "data#2", "data#3");
-        this.expected = expected.stream().map(s -> new TestData(s)).collect(Collectors.toList());
+    }
+
+
+    @Test
+    public void bulkLoadTest() throws Exception {
+        Indexer indexer = stargraph.getIndexer(kbId);
+        indexer.load(true, -1);
+        indexer.awaitLoader();
+        Searcher searcher = stargraph.getSearcher(kbId);
+        Assert.assertEquals(searcher.countDocuments(), 810);
     }
 
     @Test
-    public void successWhenExtendIndexTest() {
-        this.indexer.extend(this.dataProviderFactory.create(this.kbId, this.expected));
+    public void searchTest() {
+        LuceneEntitySearcher entitySearcher = new LuceneEntitySearcher(this.stargraph.getKBCore(id));
+        ModifiableSearchParams searchParams = ModifiableSearchParams
+                .create(id)
+                .term("Barack Obama")
+                .limit(50);
+        ModifiableRankParams rankParams = new ModifiableRankParams().
+                rankingModel(RankingModel.LEVENSHTEIN).
+                threshold(Threshold.auto());
+        Scores result = entitySearcher.instanceSearch(searchParams, rankParams);
+        System.out.println(result);
     }
 
-
+    @AfterClass
+    public void afterClass() {
+        TestUtils.cleanUpObamaTestEnv(dataRootDir.toPath());
+    }
 }

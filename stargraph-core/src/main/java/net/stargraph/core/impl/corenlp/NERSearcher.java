@@ -113,7 +113,7 @@ public final class NERSearcher implements NER {
 
             /*
                 A named entity is composed of multiple words, most of the time.
-                Two consecutive words belong to one named entity if they have the same label.
+                Two consecutive words belong to entitiesone named entity if they have the same label.
                 This method does not differentiate two different named entities when they are not
                 divided by a different label.
                 CoreNLP labels words that are not a named entity with "O", so we remove these from the output.

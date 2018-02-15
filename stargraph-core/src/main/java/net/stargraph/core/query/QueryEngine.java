@@ -12,10 +12,10 @@ package net.stargraph.core.query;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,6 +38,7 @@ import net.stargraph.core.query.response.SPARQLSelectResponse;
 import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
+import net.stargraph.model.Passage;
 import net.stargraph.query.InteractionMode;
 import net.stargraph.query.Language;
 import net.stargraph.rank.*;
@@ -83,6 +84,9 @@ public final class QueryEngine {
                 case NLI:
                     response = nliQuery(query, language);
                     break;
+                case PASSAGE:
+                    response = passageQuery(query);
+                    break;
                 case SPARQL:
                     response = sparqlQuery(query);
                     break;
@@ -98,14 +102,12 @@ public final class QueryEngine {
 
             return response;
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error(marker, "Query Error '{}'", query, e);
             throw new StarGraphException("Query Error", e);
-        }
-        finally {
+        } finally {
             long millis = System.currentTimeMillis() - startTime;
-            logger.info(marker, "Query Engine took {}s Response: {}",  millis / 1000.0, response);
+            logger.info(marker, "Query Engine took {}s Response: {}", millis / 1000.0, response);
         }
     }
 
@@ -115,6 +117,47 @@ public final class QueryEngine {
             return new SPARQLSelectResponse(SPARQL, userQuery, vars);
         }
         return new NoResponse(SPARQL, userQuery);
+    }
+
+    private QueryResponse passageQuery(String userQuery) {
+        String query = userQuery.replace("PASSAGE ", "");
+        PassageQuestionAnalyzer analyzer = this.analyzers.getPassageQuestionAnalyzer(language);
+        PassageQuestionAnalysis analysis = analyzer.analyse(query);
+
+        InstanceEntity pivot = resolvePivot(analysis.getInstance());
+        EntitySearcher searcher = core.createEntitySearcher();
+
+        logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
+
+        // this is just a holder, we're not ranking anything atm
+        ModifiableRankParams rankParams = new ModifiableRankParams(Threshold.auto(), RankingModel.LEVENSHTEIN);
+
+        Scores scores = searcher.pivotedFullTextPassageSearch(pivot,
+                ModifiableSearchParams.create(dbId).term(analysis.getRest()), rankParams);
+
+        if (scores.size() > 0) {
+            AnswerSetResponse answerSet = new AnswerSetResponse(PASSAGE, userQuery);
+            answerSet.setTextAnswer(scores.stream()
+                    .map(score -> ((Passage) score.getEntry()).getText())
+                    .collect(Collectors.toList()));
+            return answerSet;
+        }
+
+        // detect instance & rest
+        // pivot instance
+        // uh.. basically do a full text search on passages & rank according to input
+        // example: What does barack obama like to eat?
+        //                    ^instance^   ^everything else^
+        // sentence = userQuery
+        // entity, rest = myAnalyzer.analyse(sentence)
+        // ----- how to do this?
+        // 1) subclass QuestionAnalyzer
+        // 2) make it do the following: annotate, apply _only_ INSTANCE rules, clean up, create a INSTANCE/rest view
+        // relevantPassages = documents.passages.pivotedFullTextSearch(entity, rest)
+        // ---- how to do this?
+        // > well implement it in in the KBCore i guess
+        // return sorted relevant passages
+        return new NoResponse(PASSAGE, userQuery);
     }
 
     private QueryResponse nliQuery(String userQuery, Language language) {
@@ -168,7 +211,7 @@ public final class QueryEngine {
         // mltSearch()
         // mltSearch will return Set<LabeledEntity>
 
-        if(!entities.isEmpty()) {
+        if (!entities.isEmpty()) {
             AnswerSetResponse answerSet = new AnswerSetResponse(ENTITY_SIMILARITY, userQuery);
             // \TODO define mappings for name entity
             // answerSet.setMappings();
@@ -195,7 +238,7 @@ public final class QueryEngine {
         // Definition is the summary of the document
         // document.getSummary()
 
-        if(!textAnswers.isEmpty()) {
+        if (!textAnswers.isEmpty()) {
             AnswerSetResponse answerSet = new AnswerSetResponse(DEFINITION, userQuery);
             // \TODO define mappings for name entity
             // answerSet.setMappings(); ->
@@ -219,7 +262,7 @@ public final class QueryEngine {
 //      Map<Document, Double> documents = core.getDocumentSearcher().searchDocuments(userQuery, 3);
 
         Set<LabeledEntity> entities = new HashSet<>();
-        if(!entities.isEmpty()) {
+        if (!entities.isEmpty()) {
             AnswerSetResponse answerSet = new AnswerSetResponse(DEFINITION, userQuery);
             answerSet.setEntityAnswer(new ArrayList<>(entities));
             return answerSet;
@@ -234,8 +277,7 @@ public final class QueryEngine {
             InstanceEntity pivot = resolvePivot(triple.s, builder);
             pivot = pivot != null ? pivot : resolvePivot(triple.o, builder);
             resolvePredicate(pivot, triple.p, builder);
-        }
-        else {
+        } else {
             // Probably is: V T C
             DataModelBinding binding = triple.s.getModelType() == DataModelType.VARIABLE ? triple.o : triple.s;
             resolveClass(binding, builder);
@@ -267,7 +309,7 @@ public final class QueryEngine {
     private InstanceEntity resolvePivot(DataModelBinding binding, SPARQLQueryBuilder builder) {
         List<Score> mappings = builder.getMappings(binding);
         if (!mappings.isEmpty()) {
-            return (InstanceEntity)mappings.get(0).getEntry();
+            return (InstanceEntity) mappings.get(0).getEntry();
         }
 
         if (binding.getModelType() == DataModelType.INSTANCE) {
@@ -277,6 +319,19 @@ public final class QueryEngine {
             Scores scores = searcher.instanceSearch(searchParams, rankParams);
             InstanceEntity instance = (InstanceEntity) scores.get(0).getEntry();
             builder.add(binding, Collections.singletonList(scores.get(0)));
+            return instance;
+        }
+        return null;
+    }
+
+    private InstanceEntity resolvePivot(DataModelBinding binding) {
+        if (binding.getModelType() == DataModelType.INSTANCE) {
+            EntitySearcher searcher = core.createEntitySearcher(true);
+            ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
+            ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
+            Scores scores = searcher.instanceSearch(searchParams, rankParams);
+            InstanceEntity instance = (InstanceEntity) scores.get(0).getEntry();
+
             return instance;
         }
         return null;

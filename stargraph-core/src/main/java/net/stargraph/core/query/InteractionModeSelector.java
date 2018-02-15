@@ -74,6 +74,10 @@ public final class InteractionModeSelector {
         }
 
         //TODO: other types will require configurable rules per language.
+        //TODO: WELL THIS IS JUST A HACK AT THE TIME BEING
+        if (queryString.startsWith("PASSAGE")) {
+            mode = InteractionMode.PASSAGE;
+        }
 
         return mode;
     }

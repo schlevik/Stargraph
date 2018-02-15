@@ -137,7 +137,7 @@ public final class Stargraph {
         return getKBCore(kbId.getId()).getSearcher(kbId.getModel());
     }
 
-    public void setKBInitSet(String ... kbIds) {
+    public void setKBInitSet(String... kbIds) {
         this.kbInitSet.addAll(Arrays.asList(kbIds));
     }
 
@@ -276,6 +276,12 @@ public final class Stargraph {
         return kbConfig.getBoolean("enabled");
     }
 
+    /**
+     * This function initializes the knowledge bases, i.e. creates the corresponding {@link KBCore} classes.
+     * <p>
+     * The information which KBs to initialize is either configured via the {@link Stargraph#kbInitSet} attribute
+     * (and its corresponding setter) or is loaded via the config. Every entry by the key kb is considered.
+     */
     private void initializeKBs() {
         if (!kbInitSet.isEmpty()) {
             logger.info(marker, "KB init set: {}", kbInitSet);
