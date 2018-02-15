@@ -41,6 +41,9 @@ import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 
+/**
+ * This test expects you have a elasticSearch instance configured and running to be found in the config.
+ */
 public final class DocumentIndexTest {
 
     private KBId kbId = KBId.of("obama", "documents");

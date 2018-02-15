@@ -27,9 +27,11 @@ package net.stargraph.test;
  */
 
 import net.stargraph.core.IndicesFactory;
+import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
@@ -96,6 +98,11 @@ public final class TestDataIndexer extends BaseIndexer {
 
         @Override
         public BaseSearcher createSearcher(KBId kbId, Stargraph stargraph) {
+            return null;
+        }
+
+        @Override
+        public EntitySearcher createEntitySearcher(KBCore core) {
             return null;
         }
     }

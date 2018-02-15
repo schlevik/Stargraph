@@ -326,7 +326,7 @@ public final class QueryEngine {
 
     private InstanceEntity resolvePivot(DataModelBinding binding) {
         if (binding.getModelType() == DataModelType.INSTANCE) {
-            EntitySearcher searcher = core.createEntitySearcher(true);
+            EntitySearcher searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
             Scores scores = searcher.instanceSearch(searchParams, rankParams);

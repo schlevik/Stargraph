@@ -100,8 +100,7 @@ public final class KBCore {
                 logger.warn(marker, "No searcher created for {}", kbId);
             }
         }
-        //TODO useLucene
-        this.ner = new NERSearcher(language, createEntitySearcher(true), kbName);
+        this.ner = new NERSearcher(language, createEntitySearcher(), kbName);
         this.kbLoader = new KBLoader(this);
         this.running = true;
     }
@@ -174,14 +173,9 @@ public final class KBCore {
         return namespace;
     }
 
-    public EntitySearcher createEntitySearcher(boolean useLucene) {
-        //TODO kind of a hack, this should be red from config or w/e
-        return useLucene ? new LuceneEntitySearcher(this) : new ElasticEntitySearcher(this);
-    }
-
     public EntitySearcher createEntitySearcher() {
-        //TODO: EntitySearcher creation depends on Searcher impl, need to decouple. See how NERAndLinkingIT is failing.
-        return new ElasticEntitySearcher(this);
+        IndicesFactory factory = stargraph.getIndicesFactory(KBId.of(kbName, "entities"));
+        return factory.createEntitySearcher(this);
     }
 
 
