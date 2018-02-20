@@ -12,10 +12,10 @@ package net.stargraph.test.it;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,6 +44,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Integration-tests the Query Engine with various questions and answers.
+ * <p>
+ * Expects you have a corresponding "stargraph.kb.dbpedia-2016" entry in application.conf and corresponding
+ * <b>populated indices</b>. I don't feel like indexing at the moment, that's why this test is disabled for the
+ * time being. To re-enable, consult the failsafe-config in pom.xml.
+ */
+@Test(enabled = false)
 public class QueryEngineIT {
     private static String dbId = "dbpedia-2016";
     private QueryEngine queryEngine;
@@ -61,7 +69,7 @@ public class QueryEngineIT {
 
     @Test
     public void sparqlSelectTest() {
-        SPARQLSelectResponse response  = (SPARQLSelectResponse) queryEngine.query("SELECT ?o WHERE " +
+        SPARQLSelectResponse response = (SPARQLSelectResponse) queryEngine.query("SELECT ?o WHERE " +
                 "{ <http://dbpedia.org/resource/Barack_Obama> <http://xmlns.com/foaf/0.1/depiction> ?o }");
         Assert.assertEquals("http://commons.wikimedia.org/wiki/Special:FilePath/President_Barack_Obama.jpg",
                 response.getBindings().get("o").get(0).getId());
@@ -86,7 +94,7 @@ public class QueryEngineIT {
                 JsonArray acceptedArr = entry.getJsonArray("accepted");
                 List<String> l = acceptedArr.getValuesAs(JsonString.class)
                         .stream().map(JsonString::getString).collect(Collectors.toList());
-                data.add(new Object[] { entry.getString("query"), l});
+                data.add(new Object[]{entry.getString("query"), l});
             });
             return data.iterator();
         }

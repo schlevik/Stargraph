@@ -12,10 +12,10 @@ package net.stargraph.test.it;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,48 +26,99 @@ package net.stargraph.test.it;
  * ==========================License-End===============================
  */
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
+import net.stargraph.model.KBId;
+import net.stargraph.test.TestUtils;
+import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.File;
 import java.util.List;
 
-public final class NERAndLinkingIT {
+/**
+ * This test does the same as {@link NERAndLinkingIT} but with a smaller environment.
+ * <p>
+ * Does not expect anything but a "stargraph.kb.lucene-obama" entry in application.conf,
+ * creates own tmp directory and cleans it up afterwards.
+ */
+public final class NERAndLinkingToyExampleIT {
     NER ner;
+    private String id = "lucene-obama";
+    private KBId kbId = KBId.of(id, "entities");
+    private File dataRootDir;
+    private Stargraph stargraph;
 
     @BeforeClass
     public void beforeClass() throws Exception {
         ConfigFactory.invalidateCaches();
-        Stargraph stargraph = new Stargraph();
-        ner = stargraph.getKBCore("dbpedia-2016").getNER();
+
+        Config config = ConfigFactory.load().getConfig("stargraph");
+        stargraph = new Stargraph(config, false);
+
+        dataRootDir = TestUtils.prepareObamaTestEnv(kbId.getId()).toFile();
+        stargraph.setDataRootDir(dataRootDir);
+
+        stargraph.setKBInitSet(kbId.getId());
+        stargraph.initialize();
+
+        stargraph.getIndexer(kbId).load(true, -1);
+        stargraph.getIndexer(kbId).awaitLoader();
+
+        ner = stargraph.getKBCore(id).getNER();
         Assert.assertNotNull(ner);
     }
 
     @Test
-    public void linkObamaTest() {
+    public void successfullyLinkObamaTest() {
         List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Obama");
+        System.out.println(entities);
         Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 
     @Test
-    public void NoEntitiesTest() {
+    public void dontLinkWhenNoEntitiesTest() {
         final String text = "Moreover, they were clearly meant to be exemplary invitations to revolt. And of course this will not make any sense.";
         List<LinkedNamedEntity> entities = ner.searchAndLink(text);
+        System.out.println(entities);
         Assert.assertTrue(entities.isEmpty());
     }
 
     @Test
-    public void linkTest() {
-        final String text = "What it Really Stands for Anarchy '' in Anarchism and Other Essays.Individualist anarchist " +
-                "Benjamin Tucker defined anarchism as opposition to authority as follows `` They found that they must " +
-                "turn either to the right or to the left , -- follow either the path of Authority or the path of Liberty .";
+    public void successfullyLinkBarackAndMichelleObamaTest() {
+        List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Obama is funny. So is Michelle Obama.");
+        System.out.println(entities);
+        Assert.assertEquals(entities.size(), 2);
+        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
+        Assert.assertEquals(entities.get(1).getEntity(), ModelUtils.createInstance("dbr:Michelle_Obama"));
+
+    }
+
+    @Test
+    public void unlinkedEntityIfUnknownEntityTest() {
+        final String text = "What it Really Stands for Anarchy '' " +
+                "in Anarchism and Other Essays.Individualist anarchist " +
+                "Benjamin Tucker defined anarchism as opposition to authority as follows " +
+                "`` They found that they must " +
+                "turn either to the right or to the left , -- follow either the path of " +
+                "Authority or the path of Liberty .";
 
         List<LinkedNamedEntity> entities = ner.searchAndLink(text);
-        System.out.println(entities);
+        Assert.assertEquals(entities.size(), 1);
+        Assert.assertNull(entities.get(0).getEntity());
+
+    }
+
+    @AfterClass
+    public void afterClass() {
+        stargraph.terminate();
+        TestUtils.cleanUpObamaTestEnv(dataRootDir.toPath());
     }
 }

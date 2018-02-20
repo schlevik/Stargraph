@@ -34,7 +34,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-
+@Test(enabled=false)
 public class ClueQueryTest {
 
     private static String dbId = "passage-wiki-2017";

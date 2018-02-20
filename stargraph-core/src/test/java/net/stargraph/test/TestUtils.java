@@ -26,16 +26,29 @@ package net.stargraph.test;
  * ==========================License-End===============================
  */
 
+import com.typesafe.config.Config;
+import net.stargraph.StarGraphException;
+import net.stargraph.core.Stargraph;
+import net.stargraph.core.impl.elastic.ElasticEntitySearcher;
+import net.stargraph.core.index.Indexer;
 import net.stargraph.model.KBId;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.testng.Assert;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.net.*;
+import java.nio.file.*;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public final class TestUtils {
 
@@ -78,10 +91,79 @@ public final class TestUtils {
             Files.walk(root, FileVisitOption.FOLLOW_LINKS)
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
-                    .peek(System.out::println)
                     .forEach(File::delete);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static void assertElasticRunning(Config... cfgs) {
+        Arrays.asList(cfgs).forEach(cfg -> Assert.assertTrue(
+                isElasticRunning(cfg),
+                "Elastic search not running! Refer to test doc!"
+                )
+        );
+    }
+
+    public static boolean isElasticRunning(Config cfg) {
+        String clusterName = cfg.getString("elastic.cluster-name");
+        List<String> servers = cfg.getStringList("elastic.servers");
+        return isElasticRunning(clusterName, servers);
+    }
+
+    public static boolean isElasticRunning(String clusterName, List<String> addresses) {
+        Settings settings = Settings.builder().put("cluster.name", clusterName).build();
+        TransportClient client = new PreBuiltTransportClient(settings);
+        try {
+
+            for (String addr : addresses) {
+                String[] a = addr.split(":");
+                String host = a[0];
+                int port = Integer.parseInt(a[1]);
+                client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
+            }
+        } catch (Exception e) {
+            return false;
+        }
+
+        boolean running = !client.connectedNodes().isEmpty();
+        client.close();
+        return running;
+    }
+
+    public static void assureLuceneIndexExists(Stargraph stargraph, KBId entityIndex) {
+        if (!doesLuceneIndexExist(Paths.get(stargraph.getDataRootDir()), entityIndex)) {
+            try {
+                populateEntityIndex(stargraph.getIndexer(entityIndex));
+            } catch (InterruptedException | TimeoutException | ExecutionException e) {
+                throw new TestFailureException();
+            }
+        }
+    }
+
+    public static boolean doesLuceneIndexExist(Path path, KBId kbAndIndex) {
+        Path idxPath = path.resolve(kbAndIndex.getId()).resolve(kbAndIndex.getModel()).resolve("idx");
+        return Files.exists(idxPath);
+
+    }
+
+    public static void populateEntityIndex(Indexer indexer) throws InterruptedException, TimeoutException, ExecutionException {
+        indexer.load(true, -1);
+        indexer.awaitLoader();
+
+    }
+
+    public static void assertCorefRunning(String location) {
+
+
+        try {
+            URL url = new URL(location);
+            url.openConnection();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.getResponseCode();
+        } catch (Exception e) {
+            throw new AssertionError(e);
         }
     }
 }

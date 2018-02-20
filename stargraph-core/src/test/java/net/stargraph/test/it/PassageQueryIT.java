@@ -28,11 +28,16 @@ package net.stargraph.test.it;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigList;
+import com.typesafe.config.ConfigValue;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.impl.elastic.ElasticIndexer;
+import net.stargraph.core.impl.lucene.LuceneIndexer;
 import net.stargraph.core.index.Indexer;
 import net.stargraph.core.processors.PassageProcessor;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
+import net.stargraph.core.search.Searcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.Document;
@@ -48,8 +53,20 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
-@SuppressWarnings("unchecked")
+/**
+ * Integration-tests the Passage Query.
+ * <p>
+ * Expects you have a corresponding "stargraph.kb.lucene-dbpedia" entry in application.conf and a
+ * <b>populated Lucene index</b> in the directory defined under "stargraph.data.root-dir". This probably won't be the
+ * case if you run this test for the first time. The test is configured to do it automatically,
+ * this might take some time and kill your RAM though.
+ * <p>
+ * Additionally, expects a running instance of ElasticSearch.
+ * <p>
+ * Finally, expects a running instance of PyCobalt.
+ */
 public final class PassageQueryIT {
 
     private String id = "lucene-dbpedia";
@@ -61,11 +78,15 @@ public final class PassageQueryIT {
     @BeforeClass
     public void beforeClass() throws Exception {
         ConfigFactory.invalidateCaches();
-        Config config = ConfigFactory.load();
-        stargraph = new Stargraph(config.getConfig("stargraph"), false);
+        stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
+
+
+        TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsKBId));
 
         stargraph.setKBInitSet(id);
         stargraph.initialize();
+
+        TestUtils.assureLuceneIndexExists(stargraph, entitiesKBId);
 
         queryEngine = new QueryEngine(id, stargraph);
 
@@ -74,22 +95,42 @@ public final class PassageQueryIT {
         Assert.assertNotNull(u);
         String text = new String(Files.readAllBytes(Paths.get(u)));
 
-//        Indexer indexer = stargraph.getIndexer(documentsKBId);
-//        indexer.deleteAll();
-//
-//        indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsKBId));
-//        indexer.flush();
+        // if index doesn't exist, create it
+        Searcher searcher = stargraph.getSearcher(documentsKBId);
+        if (searcher.countDocuments() != 1) {
+
+            String location = stargraph.getModelConfig(documentsKBId).getConfigList("processors")
+                    .stream()
+                    .map(proc -> proc.getConfig("coref-processor"))
+                    .findAny()
+                    .get()
+                    .getString("graphene.coreference.url");
+            TestUtils.assertCorefRunning(location);
+
+
+            Indexer indexer = stargraph.getIndexer(documentsKBId);
+
+            indexer.deleteAll();
+
+            indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsKBId));
+            indexer.flush();
+        }
     }
 
     @Test
     public void successfullyAnswerPassageQuery() {
         String passageQuery = "PASSAGE When did Barack Hussein Obama travel to India?";
         AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);
-        String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia to visit Barack Hussein Obama II 's mother and half-sister Maya , and visited the families of college friends in Pakistan and India for three weeks .";
+        String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
+                "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
+                "and visited the families of college friends in Pakistan and India for three weeks .";
         Assert.assertEquals(response.getTextAnswer().get(0), expected);
 
 
     }
 
-
+    @AfterClass
+    public void afterClass() {
+        stargraph.terminate();
+    }
 }

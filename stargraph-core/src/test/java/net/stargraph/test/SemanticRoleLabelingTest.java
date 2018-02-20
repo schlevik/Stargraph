@@ -43,6 +43,7 @@ public final class  SemanticRoleLabelingTest {
 
     @BeforeClass
     public void beforeClass() {
+        ConfigFactory.invalidateCaches();
         Analyzers analyzers = new Analyzers(ConfigFactory.load().getConfig("stargraph"));
         analyzer = analyzers.getQuestionAnalyzer(Language.EN);
     }

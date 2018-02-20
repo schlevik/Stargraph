@@ -37,26 +37,36 @@ import net.stargraph.core.query.annotator.AnnotatorFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.util.HashMap;
+
 public final class AnnotatorFactoryTest {
+
 
     @Test
     public void initCoreNLPTest() {
-        System.setProperty("stargraph.annotator.factory.class", CoreNLPAnnotatorFactory.class.getCanonicalName());
         ConfigFactory.invalidateCaches();
-        Config config = ConfigFactory.load().getConfig("stargraph");
+        Config config = buildConfig(CoreNLPAnnotatorFactory.class.getCanonicalName(), null);
         AnnotatorFactory factory = Analyzers.createAnnotatorFactory(config);
         Assert.assertNotNull(factory);
         Assert.assertEquals(factory.create().getClass(), CoreNLPAnnotator.class);
     }
 
+
     @Test
     public void initOpenNLPTest() {
-        System.setProperty("stargraph.annotator.factory.class", OpenNLPAnnotatorFactory.class.getCanonicalName());
-        System.setProperty("stargraph.annotator.factory.models-dir", "/tmp"); //nothing is being read until being used.
         ConfigFactory.invalidateCaches();
-        Config config = ConfigFactory.load().getConfig("stargraph");
+        Config config = buildConfig(OpenNLPAnnotatorFactory.class.getCanonicalName(), "/tmp");
         AnnotatorFactory factory = Analyzers.createAnnotatorFactory(config);
         Assert.assertNotNull(factory);
         Assert.assertEquals(factory.create().getClass(), OpenNLPAnnotator.class);
+    }
+
+    private Config buildConfig(String name, String modelsDir) {
+        return ConfigFactory.parseMap(new HashMap<String, String>() {{
+            put("annotator.factory.class", name);
+            if (modelsDir != null) { // hello from the python side
+                put("annotator.factory.models-dir", modelsDir);
+            }
+        }});
     }
 }

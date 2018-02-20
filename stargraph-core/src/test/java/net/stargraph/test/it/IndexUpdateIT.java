@@ -12,10 +12,10 @@ package net.stargraph.test.it;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,9 @@ import net.stargraph.core.index.Indexer;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Fact;
 import net.stargraph.model.KBId;
+import net.stargraph.test.TestUtils;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -43,31 +45,46 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Aims to test the incremental indexing features.
+ * Aims to test the incremental indexing features..
+ * <p>
+ * ..at least for ElasticSearch. Expects a running ElasticSearch instance and a corresponding
+ * "stargraph.kb.simple" KB entry in application.conf.
  */
 public final class IndexUpdateIT {
 
-    private Stargraph core;
+    private Stargraph stargraph;
     private Indexer indexer;
     private ElasticSearcher searcher;
     private KBId kbId = KBId.of("simple", "facts");
 
     @BeforeClass
-    public void before() throws Exception {
+    public void before() {
         ConfigFactory.invalidateCaches();
-        core = new Stargraph();
-        searcher = new ElasticSearcher(kbId, core);
+        stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
+
+        TestUtils.assertElasticRunning(stargraph.getModelConfig(kbId));
+
+        stargraph.setKBInitSet(kbId.getId());
+        stargraph.initialize();
+
+
+        searcher = new ElasticSearcher(kbId, stargraph);
         searcher.start();
-        indexer = new ElasticIndexer(kbId, core);
+        indexer = new ElasticIndexer(kbId, stargraph);
         indexer.start();
         indexer.deleteAll();
     }
 
     @Test
-    public void updateTest() throws InterruptedException, TimeoutException, ExecutionException {
+    public void updateTest() throws InterruptedException {
         Fact oneFact = ModelUtils.createFact(kbId, "dbr:Barack_Obama", "dbp:spouse", "dbr:Michelle_Obama");
         indexer.index(new Indexable(oneFact, kbId));
         indexer.flush();
         Assert.assertEquals(searcher.countDocuments(), 1);
+    }
+
+    @AfterClass
+    public void afterClass() {
+        stargraph.terminate();
     }
 }

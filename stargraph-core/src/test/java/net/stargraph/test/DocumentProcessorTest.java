@@ -12,10 +12,10 @@ package net.stargraph.test;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,13 +34,11 @@ import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.Document;
 import net.stargraph.model.KBId;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public final class DocumentProcessorTest {
     KBId kbId = KBId.of("obama", "documents");
@@ -48,23 +46,23 @@ public final class DocumentProcessorTest {
     String text;
 
     @BeforeClass
-    public void beforeClass() throws Exception {
+    public void beforeClass() {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load();
-        Stargraph core = new Stargraph(config.getConfig("stargraph"), false);
-        core.setKBInitSet(kbId.getId());
-        core.initialize();
+        Stargraph stargraph = Mockito.mock(Stargraph.class);
+        Config processorCfg = config.getConfig("testing-processor").withOnlyPath(PassageProcessor.name);
 
-        Config processorCfg = config.getConfig("processor").withOnlyPath(PassageProcessor.name);
-        processor = new PassageProcessor(core, processorCfg);
-        text = "Barack Obama is a nice guy. Barack Obama was the president of the United States. Barack Obama likes to eat garlic bread.";
+        processor = new PassageProcessor(stargraph, processorCfg);
+        text = "Barack Obama is a nice guy. " +
+                "Barack Obama was the president of the United States. " +
+                "Barack Obama likes to eat garlic bread.";
     }
+
     @Test
     public void processTest() {
         System.out.println(this.text);
         Holder holder = new Indexable(new Document("test.txt", "Test", this.text), this.kbId);
         processor.run(holder);
-        System.out.println(holder);
 
         Assert.assertFalse(holder.isSinkable());
 

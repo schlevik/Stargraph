@@ -47,6 +47,13 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>-Xmx4g</argLine>
+                    <excludes>
+                        <exclude>**/PassageQueryTest.java</exclude>
+                        <exclude>**/SchemaAgnosticQueryTest.java</exclude>
+                        <exclude>**/SimpleKBTest.java</exclude>
+                        <exclude>**/ClueQueryTest.java</exclude>
+                        <exclude>**/ClueAnalyzerTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 
@@ -54,6 +61,11 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
                     <argLine>-Xmx8g</argLine>
+                    <excludes>
+                        <exclude>**/QueryEngineIT.java</exclude>
+                        <exclude>**/ElasticIndexerExtendIT.java</exclude>
+                        <exclude>**/EntitySimilarityQueryIT.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
@@ -250,6 +262,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.15.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
@@ -271,6 +290,7 @@
             <artifactId>logback-core</artifactId>
             <scope>test</scope>
         </dependency>
+
 
     </dependencies>
 

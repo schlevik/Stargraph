@@ -40,7 +40,10 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@Test(enabled = false)
+/**
+ * This is already covered by the PassageQueryIT
+ */
 public class PassageQueryTest {
 
     private static String dbId = "obama";

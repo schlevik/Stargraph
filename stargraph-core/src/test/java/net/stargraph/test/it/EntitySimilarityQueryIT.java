@@ -1,4 +1,4 @@
-package net.stargraph.test;
+package net.stargraph.test.it;
 
 /*-
  * ==========================License-Start=============================
@@ -34,8 +34,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-
-public class EntitySimilarityQueryTest {
+/**
+ * This should be an IT anyways.
+ */
+@Test(enabled = false)
+public class EntitySimilarityQueryIT {
 
     private static String dbId = "dbpedia-2016";
     private QueryEngine queryEngine;

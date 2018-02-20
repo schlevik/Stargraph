@@ -28,6 +28,7 @@ package net.stargraph.test;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
 import net.stargraph.core.index.Indexer;
@@ -68,7 +69,7 @@ public final class LuceneTest {
         indexer.load(true, -1);
         indexer.awaitLoader();
         Searcher searcher = stargraph.getSearcher(kbId);
-        Assert.assertEquals(searcher.countDocuments(), 810);
+        Assert.assertEquals(searcher.countDocuments(), 756);
     }
 
     @Test
@@ -82,7 +83,7 @@ public final class LuceneTest {
                 rankingModel(RankingModel.LEVENSHTEIN).
                 threshold(Threshold.auto());
         Scores result = entitySearcher.instanceSearch(searchParams, rankParams);
-        System.out.println(result);
+        Assert.assertEquals(result.get(0).getEntry(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 
     @AfterClass

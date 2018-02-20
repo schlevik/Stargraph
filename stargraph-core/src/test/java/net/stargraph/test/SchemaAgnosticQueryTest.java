@@ -34,7 +34,10 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-
+/**
+ * This is disabled since dbpedia is not indexed.
+ */
+@Test(enabled = false)
 public class SchemaAgnosticQueryTest {
 
     private static String dbId = "dbpedia-2016";

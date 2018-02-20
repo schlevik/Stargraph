@@ -1,4 +1,4 @@
-package net.stargraph.test;
+package net.stargraph.test.it;
 
 /*-
  * ==========================License-Start=============================
@@ -34,6 +34,8 @@ import net.stargraph.core.index.Indexer;
 import net.stargraph.core.index.NullIndicesFactory;
 import net.stargraph.data.DataProviderFactory;
 import net.stargraph.model.KBId;
+import net.stargraph.test.TestData;
+import net.stargraph.test.TestDataProviderFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -42,8 +44,10 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-public final class ElasticIndexerExtendTest {
+// disabled since it's basically the same as ElasticIndexerIT.
+// to enable, consult pom.xml
+@Test(enabled = false)
+public final class ElasticIndexerExtendIT {
 
     private KBId kbId = KBId.of("mytest", "mytype");
     private List<TestData> expected;

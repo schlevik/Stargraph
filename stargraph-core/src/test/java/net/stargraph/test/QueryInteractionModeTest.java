@@ -26,6 +26,7 @@ package net.stargraph.test;
  * ==========================License-End===============================
  */
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.query.InteractionModeSelector;
 import net.stargraph.query.InteractionMode;
@@ -43,6 +44,7 @@ public final class QueryInteractionModeTest {
 
     @BeforeClass
     public void beforeClass() {
+        ConfigFactory.invalidateCaches();
         selector = new InteractionModeSelector(ConfigFactory.load().getConfig("stargraph"), Language.EN);
     }
 

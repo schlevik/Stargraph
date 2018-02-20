@@ -34,6 +34,7 @@ import net.stargraph.core.Stargraph;
 import net.stargraph.data.DataProvider;
 import net.stargraph.model.KBId;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -75,4 +76,8 @@ public class FactProviderTest {
         Assert.assertEquals(provider.getStream().count(), 1877);
     }
 
+    @AfterClass
+    public void afterClass() {
+        TestUtils.cleanUpObamaTestEnv(root);
+    }
 }
