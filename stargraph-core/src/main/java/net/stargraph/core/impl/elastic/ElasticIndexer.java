@@ -46,6 +46,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.IndexNotFoundException;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
@@ -109,7 +110,11 @@ public final class ElasticIndexer extends BaseIndexer {
 
     @Override
     protected void doDeleteAll() {
-        deleteIndex();
+        try {
+            deleteIndex();
+        } catch (IndexNotFoundException e) {
+            logger.warn("Tried deleting non-existent index. Don't worry, nothing happened.");
+        }
         createIndex();
     }
 

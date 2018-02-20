@@ -39,220 +39,233 @@ import java.util.stream.Collectors;
 
 public class ClueAnalyzer {
 
-	private Matcher matcher;
+    private Matcher matcher;
 
-   	public enum Gender {MALE_PERSON, FEMALE_PERSON, PERSON, NEUTRAL, COLLECTIVE}
-	public enum AbstractAnswerType {PERSON, LOCATION, NUMBER, TIME, DATE}
+    public enum Gender {
+        MALE_PERSON,
+        FEMALE_PERSON,
+        PERSON,
+        NEUTRAL,
+        COLLECTIVE
+    }
 
-    private Map<String,Gender> AbstractAnswerType = new HashMap<>();
-	private Map<String,Gender> pronouns = new HashMap<>();
-	private Set<String> determiners = new HashSet<>();
-	private List<String> tokens = new ArrayList<>();
-	private List<String> posPattern = new ArrayList<>();
+    public enum AbstractAnswerType {
+        PERSON,
+        LOCATION,
+        NUMBER,
+        TIME,
+        DATE
+    }
 
-	private Annotator annotator;
+    private Map<String, Gender> AbstractAnswerType = new HashMap<>();
+    private Map<String, Gender> pronouns = new HashMap<>();
+    private Set<String> determiners = new HashSet<>();
+    private List<String> tokens = new ArrayList<>();
+    private List<String> posPattern = new ArrayList<>();
 
-	public ClueAnalyzer() {
+    private Annotator annotator;
 
-		buildPronounList();
-		buildDeterminerList();
-	}
+    public ClueAnalyzer() {
 
-	public String getAnswerType(String clueText) {
+        buildPronounList();
+        buildDeterminerList();
+    }
 
-		String lat = "";
-		parse(clueText);
-		if(hasPronoun(clueText))
-			lat = getPronominalAnswerType(clueText);
-		else
-			lat = getNominalAnswerType(clueText);
+    public String getAnswerType(String clueText) {
 
-		return lat;
-	}
+        String lat = "";
+        parse(clueText);
+        if (hasPronoun(clueText))
+            lat = getPronominalAnswerType(clueText);
+        else
+            lat = getNominalAnswerType(clueText);
 
-	public String getNominalAnswerType(String clueText){
+        return lat;
+    }
 
-		if(hasDeterminer(clueText)) {
-			long detIndex = 0;
-			long nounIndex = 0;
-			detIndex = detectDeterminerIndex(clueText);
+    public String getNominalAnswerType(String clueText) {
 
-			for(long index = detIndex; index < tokens.size() ; index++) {
-				String pos = getPOSByIndex(index);
-				if (pos.equals("NN") || pos.equals("NNS")){
-					nounIndex = index;
-					break;
-				}
-			}
+        if (hasDeterminer(clueText)) {
+            long detIndex = 0;
+            long nounIndex = 0;
+            detIndex = detectDeterminerIndex(clueText);
 
-			return getTextByIndexRange(detIndex, nounIndex);
-		}
+            for (long index = detIndex; index < tokens.size(); index++) {
+                String pos = getPOSByIndex(index);
+                if (pos.equals("NN") || pos.equals("NNS")) {
+                    nounIndex = index;
+                    break;
+                }
+            }
 
-		if(hasPronoun(clueText)){
-			for(String word : clueText.split(" ")){
-				if(pronouns.containsKey(word)) {
-					return pronouns.get(word).toString();
-				}
-			}
-		}
+            return getTextByIndexRange(detIndex, nounIndex);
+        }
 
-		return "";
-	}
+        if (hasPronoun(clueText)) {
+            for (String word : clueText.split(" ")) {
+                if (pronouns.containsKey(word)) {
+                    return pronouns.get(word).toString();
+                }
+            }
+        }
 
-	public String getPronominalAnswerType(String clueText){
+        return "";
+    }
 
-		for(String word : tokens){
-			if(pronouns.containsKey(word.toLowerCase())) {
-				return pronouns.get(word.toLowerCase()).toString();
-			}
-		}
+    public String getPronominalAnswerType(String clueText) {
 
-		return "OTHER";
-	}
+        for (String word : tokens) {
+            if (pronouns.containsKey(word.toLowerCase())) {
+                return pronouns.get(word.toLowerCase()).toString();
+            }
+        }
 
-	public boolean isClue(String expression){
+        return "OTHER";
+    }
 
-		parse(expression);
+    public boolean isClue(String expression) {
 
-		if(expression.contains("?"))
-			return false;
+        parse(expression);
 
-		for(String word : tokens){
-			if(determiners.contains(word.toLowerCase()) || pronouns.containsKey(word.toLowerCase()))
-				return true;
-		}
+        if (expression.contains("?"))
+            return false;
 
-		return false;
-	}
+        for (String word : tokens) {
+            if (determiners.contains(word.toLowerCase()) || pronouns.containsKey(word.toLowerCase()))
+                return true;
+        }
 
-	public boolean entityIsInClue(String entity, String clueText){
+        return false;
+    }
 
-		if(clueText.contains(entity))
-			return true;
+    public boolean entityIsInClue(String entity, String clueText) {
 
-		return false;
-	}
+        if (clueText.contains(entity))
+            return true;
 
-	private void parse(String clueText){
+        return false;
+    }
 
-		Config config = ConfigFactory.load().getConfig("stargraph");
-		annotator = Analyzers.createAnnotatorFactory(config).create();
-		List<Word> words = annotator.run(Language.EN, clueText);
+    private void parse(String clueText) {
+        ConfigFactory.invalidateCaches();
+        Config config = ConfigFactory.load().getConfig("stargraph");
+        annotator = Analyzers.createAnnotatorFactory(config).create();
+        List<Word> words = annotator.run(Language.EN, clueText);
 
-		this.posPattern = words.stream().map(Word::getPosTagString).collect(Collectors.toList());
-		this.tokens = words.stream().map(Word::getText).collect(Collectors.toList());
-	}
+        this.posPattern = words.stream().map(Word::getPosTagString).collect(Collectors.toList());
+        this.tokens = words.stream().map(Word::getText).collect(Collectors.toList());
+    }
 
-	public long getWordIndex(String word){
+    public long getWordIndex(String word) {
 
-		long i = 0;
-		for(String elem : tokens) {
-			i++;
-			if(elem.equals(word))
-				return i;
-		}
+        long i = 0;
+        for (String elem : tokens) {
+            i++;
+            if (elem.equals(word))
+                return i;
+        }
 
-		return -1;
-	}
+        return -1;
+    }
 
-	public long getPOSIndex(String pos){
+    public long getPOSIndex(String pos) {
 
-		long i = 0;
-		for(String elem : posPattern) {
-			i++;
-			if(elem.equals(pos))
-				return i;
-		}
+        long i = 0;
+        for (String elem : posPattern) {
+            i++;
+            if (elem.equals(pos))
+                return i;
+        }
 
-		return -1;
-	}
+        return -1;
+    }
 
-	public String getTextByIndexRange(long start, long end){
+    public String getTextByIndexRange(long start, long end) {
 
-		String out = "";
-		long i = 0;
-		for(String elem : tokens) {
-			if(i >= start && i <= end)
-				out += elem + " ";
-			i++;
-		}
-		return out.trim();
-	}
+        String out = "";
+        long i = 0;
+        for (String elem : tokens) {
+            if (i >= start && i <= end)
+                out += elem + " ";
+            i++;
+        }
+        return out.trim();
+    }
 
-	public String getWordByIndex(long index){
+    public String getWordByIndex(long index) {
 
-		String out = "";
-		long i = 0;
-		for(String elem : tokens) {
-			if(i == index)
-				return elem;
-			i++;
-		}
-		return "";
-	}
+        String out = "";
+        long i = 0;
+        for (String elem : tokens) {
+            if (i == index)
+                return elem;
+            i++;
+        }
+        return "";
+    }
 
-	public String getPOSByIndex(long index){
+    public String getPOSByIndex(long index) {
 
-		String out = "";
-		long i = 0;
-		for(String elem : posPattern) {
-			if(i == index)
-				return elem;
-			i++;
-		}
-		return "";
-	}
+        String out = "";
+        long i = 0;
+        for (String elem : posPattern) {
+            if (i == index)
+                return elem;
+            i++;
+        }
+        return "";
+    }
 
-	private boolean hasPronoun(String clueText){
+    private boolean hasPronoun(String clueText) {
 
-		boolean hasPronoun = false;
-		for(String word : tokens){
-			if(pronouns.containsKey(word.toLowerCase()))
-				hasPronoun = true;
-		}
+        boolean hasPronoun = false;
+        for (String word : tokens) {
+            if (pronouns.containsKey(word.toLowerCase()))
+                hasPronoun = true;
+        }
 
-		return hasPronoun;
-	}
+        return hasPronoun;
+    }
 
-	private boolean hasDeterminer(String clueText){
+    private boolean hasDeterminer(String clueText) {
 
-		boolean hasDeterminer = false;
-		for(String word : clueText.split(" ")){
-			if(determiners.contains(word))
-				hasDeterminer = true;
-		}
+        boolean hasDeterminer = false;
+        for (String word : clueText.split(" ")) {
+            if (determiners.contains(word))
+                hasDeterminer = true;
+        }
 
-		return hasDeterminer;
-	}
+        return hasDeterminer;
+    }
 
-	private void buildPronounList(){
+    private void buildPronounList() {
 
-		pronouns.put("his", Gender.PERSON);
-		pronouns.put("her", Gender.PERSON);
-		pronouns.put("it", Gender.NEUTRAL);
-		pronouns.put("their", Gender.COLLECTIVE);
-		pronouns.put("I", Gender.NEUTRAL);
-		pronouns.put("he", Gender.PERSON);
-		pronouns.put("she", Gender.PERSON);
+        pronouns.put("his", Gender.PERSON);
+        pronouns.put("her", Gender.PERSON);
+        pronouns.put("it", Gender.NEUTRAL);
+        pronouns.put("their", Gender.COLLECTIVE);
+        pronouns.put("I", Gender.NEUTRAL);
+        pronouns.put("he", Gender.PERSON);
+        pronouns.put("she", Gender.PERSON);
 
-	}
+    }
 
-	private void buildDeterminerList(){
+    private void buildDeterminerList() {
 
-		determiners.add("this");
-		determiners.add("these");
-	}
+        determiners.add("this");
+        determiners.add("these");
+    }
 
-	private long detectDeterminerIndex(String clueText) {
+    private long detectDeterminerIndex(String clueText) {
 
-		long i = -1;
-		for(String det : determiners) {
-			i = getWordIndex(det);
-			if(i >= 0)
-				return i;
-		}
+        long i = -1;
+        for (String det : determiners) {
+            i = getWordIndex(det);
+            if (i >= 0)
+                return i;
+        }
 
-		return i;
-	}
+        return i;
+    }
 
 }

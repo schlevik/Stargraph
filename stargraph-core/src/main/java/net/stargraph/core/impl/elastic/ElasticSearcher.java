@@ -168,7 +168,6 @@ public final class ElasticSearcher extends BaseSearcher {
                     return null;
                 }
             };
-
             return scroller.getScores();
         } finally {
             double elapsedInMillis = (System.nanoTime() - start) / 1000_000;

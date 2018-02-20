@@ -40,6 +40,7 @@ import org.lambda3.text.simplification.discourse.utils.sentences.SentencesUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -50,33 +51,48 @@ import java.util.stream.Collectors;
 public final class PassageProcessor extends BaseProcessor {
     public static String name = "passage-processor";
 
+
     private Stargraph stargraph;
+    private boolean doLinking = true;
 
     public PassageProcessor(Stargraph stargraph, Config config) {
         super(config);
         this.stargraph = Objects.requireNonNull(stargraph);
+        if (getConfig().hasPath("do-linking")) {
+            doLinking = getConfig().getBoolean("do-linking");
+        }
+
     }
 
     @Override
     public void doRun(Holder<Serializable> holder) throws ProcessorException {
         Serializable entry = holder.get();
-        NER ner = stargraph.getKBCore(holder.getKBId().getId()).getNER();
 
         if (entry instanceof Document) {
-            Document document = (Document)entry;
+            Document document = (Document) entry;
+
 
             List<Passage> passages = new ArrayList<>();
-            for (String sentence : SentencesUtils.splitIntoSentences(document.getText())) {
-                List<LinkedNamedEntity> lners = ner.searchAndLink(sentence);
 
-                // only add linked entities
-                List<LabeledEntity> entities = lners.parallelStream()
-                        .filter(e -> e.getEntity() != null)
-                        .map(LinkedNamedEntity::getEntity).collect(Collectors.toList());
+            if (doLinking) {
+                NER ner = stargraph.getKBCore(holder.getKBId().getId()).getNER();
+                for (String sentence : SentencesUtils.splitIntoSentences(document.getText())) {
 
-                passages.add(new Passage(sentence, entities));
+                    List<LinkedNamedEntity> linkedNamedEntities = ner.searchAndLink(sentence);
+
+                    // only add linked entities
+                    List<LabeledEntity> entities = linkedNamedEntities.parallelStream()
+                            .filter(e -> e.getEntity() != null)
+                            .map(LinkedNamedEntity::getEntity)
+                            .collect(Collectors.toList());
+
+                    passages.add(new Passage(sentence, entities));
+                }
+            } else {
+                passages.addAll(SentencesUtils.splitIntoSentences(document.getText()).stream()
+                        .map(sentence -> new Passage(sentence, new LinkedList<>()))
+                        .collect(Collectors.toList()));
             }
-
             holder.set(new Document(
                     document.getId(),
                     document.getTitle(),

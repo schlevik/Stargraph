@@ -110,6 +110,7 @@ public final class LuceneIndexer extends BaseIndexer {
         try {
             writer = new IndexWriter(directory, getWriterConfig());
         } catch (IOException e) {
+            logger.error("Fail to initialize the directory.", e);
             throw new StarGraphException("Fail to initialize the directory.", e);
         }
     }
@@ -143,7 +144,6 @@ public final class LuceneIndexer extends BaseIndexer {
 
         throw new UnsupportedOperationException("Can't index: " + data.getClass());
     }
-
 
 
     @Override

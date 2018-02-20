@@ -31,10 +31,12 @@ import net.stargraph.core.KBCore;
 import net.stargraph.core.Namespace;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.graph.GraphSearcher;
+import net.stargraph.core.impl.lucene.LuceneSearcher;
 import net.stargraph.core.query.nli.*;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.query.response.NoResponse;
 import net.stargraph.core.query.response.SPARQLSelectResponse;
+import net.stargraph.core.search.DocumentSearcher;
 import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
@@ -125,7 +127,7 @@ public final class QueryEngine {
         PassageQuestionAnalysis analysis = analyzer.analyse(query);
 
         InstanceEntity pivot = resolvePivot(analysis.getInstance());
-        EntitySearcher searcher = core.createEntitySearcher();
+        DocumentSearcher searcher = core.createDocumentSearcher();
 
         logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
 

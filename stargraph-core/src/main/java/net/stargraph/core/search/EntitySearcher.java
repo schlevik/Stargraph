@@ -34,7 +34,7 @@ import net.stargraph.rank.Scores;
 
 import java.util.List;
 
-public interface EntitySearcher {
+public interface EntitySearcher<T extends Searcher> extends GenericIndexSearcher<T> {
 
     LabeledEntity getEntity(String dbId, String id);
 
@@ -48,6 +48,5 @@ public interface EntitySearcher {
 
     Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
 
-    Scores pivotedFullTextPassageSearch(InstanceEntity pivot,
-                                        ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
+
 }

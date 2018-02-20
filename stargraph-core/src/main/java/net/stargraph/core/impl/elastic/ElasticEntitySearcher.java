@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
-public final class ElasticEntitySearcher implements EntitySearcher {
+public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearcher> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("elastic");
 
@@ -111,8 +111,7 @@ public final class ElasticEntitySearcher implements EntitySearcher {
     @Override
     public Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
         // Coupling point: the query tied with our backend ..
-        QueryBuilder queryBuilder = matchQuery("value", searchParams.getSearchTerm())
-                .fuzziness(0).fuzzyTranspositions(false).operator(Operator.AND);
+        QueryBuilder queryBuilder = matchQuery("value", searchParams.getSearchTerm());
         // .. and at this point we add the missing information specific for this kind of search
         searchParams.model(BuiltInModel.ENTITY);
         // Fetch the 'generic' searcher instance
@@ -139,8 +138,9 @@ public final class ElasticEntitySearcher implements EntitySearcher {
                         matchQuery("hypernyms.word", searchParams.getSearchTerm()), ScoreMode.Max))
                 .should(nestedQuery("synonyms",
                         matchQuery("synonyms.word", searchParams.getSearchTerm()), ScoreMode.Max))
-                .minimumNumberShouldMatch(1);
-
+                .minimumShouldMatch(1);
+        System.out.println(">>>>>>>>>>");
+        System.out.println(queryBuilder.toString());
         Searcher searcher = core.getSearcher(searchParams.getKbId().getModel());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
@@ -175,28 +175,7 @@ public final class ElasticEntitySearcher implements EntitySearcher {
         return Rankers.apply(propScores, rankParams, searchParams.getSearchTerm());
     }
 
-    public Scores pivotedFullTextPassageSearch(InstanceEntity pivot,
-                                               ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        searchParams.model(BuiltInModel.DOCUMENT);
 
-        if (rankParams instanceof ModifiableIndraParams) {
-            core.configureDistributionalParams((ModifiableIndraParams) rankParams);
-        }
-        String term = searchParams.getSearchTerm();
-        logger.debug(marker, "performing pivoted full text passage search with pivot={} and text={}", pivot, term);
-        QueryBuilder queryBuilder = nestedQuery(
-                "passages",
-                boolQuery()
-                        .must(matchQuery("passages.text", term).operator(Operator.AND))
-                        .must(nestedQuery("passages.entities",
-                                matchQuery("passages.entities.id", pivot.getId()), ScoreMode.Max))
-                , ScoreMode.Max).innerHit(new InnerHitBuilder(), false);
-        ElasticSearcher searcher = (ElasticSearcher) core.getSearcher(searchParams.getKbId().getModel());
-        Scores scores = searcher.innerSearch(new ElasticQueryHolder(queryBuilder, searchParams));
-
-
-        return scores;
-    }
 /* This is the DSL query
     {
         "_source": false,

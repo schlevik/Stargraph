@@ -91,7 +91,7 @@ public abstract class BaseIndexer implements Indexer {
                 onStop();
                 running = false;
             } catch (Exception e) {
-                logger.error(marker, "Fail to stop.", e);
+                logger.error(marker, String.format("Fail to stop %s", this.kbId.toString()), e);
             }
 
         }

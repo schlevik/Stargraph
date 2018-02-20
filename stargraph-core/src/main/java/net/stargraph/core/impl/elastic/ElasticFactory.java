@@ -31,6 +31,7 @@ import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.core.search.DocumentSearcher;
 import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.model.KBId;
 
@@ -49,5 +50,10 @@ public final class ElasticFactory implements IndicesFactory {
     @Override
     public EntitySearcher createEntitySearcher(KBCore core) {
         return new ElasticEntitySearcher(core);
+    }
+
+    @Override
+    public DocumentSearcher createDocumentSearcher(KBCore core) {
+        return new ElasticDocumentSearcher(core);
     }
 }

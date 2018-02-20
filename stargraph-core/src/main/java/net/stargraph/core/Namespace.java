@@ -12,10 +12,10 @@ package net.stargraph.core;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -82,10 +82,10 @@ public final class Namespace extends TreeMap<String, String> {
             return shortenedURICache.get(uri, () -> {
                 // This is the computation we want to avoid using the cache.
                 if (uri.startsWith("http://")) {
-                    for (Map.Entry<String, String> entry : Namespace.this.entrySet()) {
-                        if (uri.startsWith(entry.getValue())) {
-                            logger.trace(marker, "URI starts with {}", entry.getKey());
-                            return uri.replace(entry.getValue(), entry.getKey() + ":");
+                    for (Map.Entry<String, String> entry : this.entrySet()) {
+                        if (uri.startsWith(entry.getKey())) {
+                            logger.trace(marker, "URI starts with {}", entry.getValue());
+                            return uri.replace(entry.getKey(), entry.getValue());
                         }
                     }
                 }
@@ -112,12 +112,12 @@ public final class Namespace extends TreeMap<String, String> {
 
     public boolean isFromMainNS(String uri) {
         String[] mapped = shrinkURI(uri).split(":");
-        logger.debug("Shrinked and split URI: {}", mapped);
+        logger.trace("Shrinked and split URI: {}", mapped);
         return mainNamespaces.contains(mapped[0]);
     }
 
     @SuppressWarnings("unchecked")
-    public  <S extends Serializable> S expand(S entry) {
+    public <S extends Serializable> S expand(S entry) {
         if (entry == null) {
             throw new IllegalArgumentException("Entry can't be null");
         }

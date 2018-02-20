@@ -11,6 +11,7 @@ import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
 import net.stargraph.core.index.Indexer;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.core.search.DocumentSearcher;
 import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.core.search.Searcher;
 import net.stargraph.data.DataProvider;
@@ -100,7 +101,7 @@ public final class KBCore {
                 logger.warn(marker, "No searcher created for {}", kbId);
             }
         }
-        this.ner = new NERSearcher(language, createEntitySearcher(), kbName);
+
         this.kbLoader = new KBLoader(this);
         this.running = true;
     }
@@ -166,7 +167,11 @@ public final class KBCore {
     }
 
     public NER getNER() {
-        return ner;
+        // lazy creation
+        if (ner == null) {
+            this.ner = new NERSearcher(language, createEntitySearcher(), kbName);
+        }
+        return this.ner;
     }
 
     public Namespace getNamespace() {
@@ -178,6 +183,10 @@ public final class KBCore {
         return factory.createEntitySearcher(this);
     }
 
+    public DocumentSearcher createDocumentSearcher() {
+        IndicesFactory factory = stargraph.getIndicesFactory(KBId.of(kbName, "documents"));
+        return factory.createDocumentSearcher(this);
+    }
 
     public GraphSearcher createGraphSearcher() {
         return new JenaGraphSearcher(kbName, stargraph);

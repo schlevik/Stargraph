@@ -32,10 +32,12 @@ import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.core.search.DocumentSearcher;
 import net.stargraph.core.search.EntitySearcher;
 import net.stargraph.model.KBId;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MMapDirectory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -59,6 +61,11 @@ public final class LuceneFactory implements IndicesFactory {
     @Override
     public EntitySearcher createEntitySearcher(KBCore core) {
         return new LuceneEntitySearcher(core);
+    }
+
+    @Override
+    public DocumentSearcher createDocumentSearcher(KBCore core) {
+        throw new NotImplementedException();
     }
 
     private Directory getLuceneDir(Stargraph stargraph, KBId kbId) {

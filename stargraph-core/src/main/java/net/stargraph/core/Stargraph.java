@@ -68,6 +68,12 @@ public final class Stargraph {
     private boolean initialized;
 
     /**
+     * Is used at some points to distinguish whether an exception should end the program or be
+     * ignored for the sake of robustness.
+     */
+    private boolean robust = true;
+
+    /**
      * Constructs a new Stargraph core API entry-point.
      */
     public Stargraph() {
@@ -87,6 +93,9 @@ public final class Stargraph {
         // Only KBs in this set will be initialized. Unit tests appreciates!
         this.kbInitSet = new LinkedHashSet<>();
         this.kbCoreMap = new ConcurrentHashMap<>(8);
+
+        this.robust = mainConfig.getBoolean("robust");
+
 
         // Configurable defaults
         setDataRootDir(mainConfig.getString("data.root-dir")); // absolute path is expected
@@ -305,6 +314,9 @@ public final class Stargraph {
                 kbCoreMap.put(kbName, new KBCore(kbName, this, true));
             } catch (Exception e) {
                 logger.error(marker, "Error starting '{}'", kbName, e);
+                if (!robust) {
+                    throw e;
+                }
             }
         } else {
             logger.warn(marker, "KB '{}' is disabled", kbName);

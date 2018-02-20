@@ -25,7 +25,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.List;
 import java.util.Objects;
 
-public class LuceneEntitySearcher implements EntitySearcher {
+public class LuceneEntitySearcher implements EntitySearcher<LuceneSearcher> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("lucene");
 
@@ -69,11 +69,6 @@ public class LuceneEntitySearcher implements EntitySearcher {
 
     @Override
     public Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public Scores pivotedFullTextPassageSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
         throw new NotImplementedException();
     }
 
