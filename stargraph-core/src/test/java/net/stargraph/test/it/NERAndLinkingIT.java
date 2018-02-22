@@ -33,17 +33,13 @@ import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.KBId;
-import net.stargraph.model.LabeledEntity;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Integration-tests the functionality of NER detection and linking against a kb.
@@ -67,7 +63,7 @@ public final class NERAndLinkingIT {
         stargraph.setKBInitSet(kbName);
         stargraph.initialize();
 
-        TestUtils.assureLuceneIndexExists(stargraph, entityIndex);
+        TestUtils.ensureLuceneIndexExists(stargraph, entityIndex);
 
 
         ner = stargraph.getKBCore(kbName).getNER();

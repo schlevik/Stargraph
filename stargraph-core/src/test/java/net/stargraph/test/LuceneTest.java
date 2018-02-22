@@ -41,7 +41,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.io.IOException;
 
 public final class LuceneTest {
     // lucene-obama uses lucene. DUH
@@ -88,6 +87,6 @@ public final class LuceneTest {
 
     @AfterClass
     public void afterClass() {
-        TestUtils.cleanUpObamaTestEnv(dataRootDir.toPath());
+        TestUtils.cleanUpTestEnv(dataRootDir.toPath());
     }
 }

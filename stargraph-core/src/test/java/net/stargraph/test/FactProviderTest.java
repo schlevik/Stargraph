@@ -78,6 +78,6 @@ public class FactProviderTest {
 
     @AfterClass
     public void afterClass() {
-        TestUtils.cleanUpObamaTestEnv(root);
+        TestUtils.cleanUpTestEnv(root);
     }
 }

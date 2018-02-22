@@ -12,10 +12,10 @@ package net.stargraph;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,10 +30,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigRenderOptions;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.Fact;
-import net.stargraph.model.InstanceEntity;
-import net.stargraph.model.KBId;
-import net.stargraph.model.PropertyEntity;
+import net.stargraph.model.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -97,8 +94,7 @@ public final class ModelUtils {
         Matcher matcher = pathFragmentPattern.matcher(uriStr);
         if (matcher.matches()) {
             return uriStr.replace(matcher.group(1), "");
-        }
-        else {
+        } else {
             remaining = uriStr.replace(namespace, "");
         }
 
@@ -141,6 +137,10 @@ public final class ModelUtils {
         return new InstanceEntity(uri, extractLabel(uri, true));
     }
 
+    public static CanonicalInstanceEntity createCanonicalEntity(String uri, String reference) {
+        return new CanonicalInstanceEntity(uri, extractLabel(uri, true), reference);
+    }
+
     public static PropertyEntity createProperty(String uri) {
         return new PropertyEntity(uri, extractLabel(uri, true));
     }
@@ -162,8 +162,7 @@ public final class ModelUtils {
     private static String getNamespace(String uriStr) {
         if (uriStr.startsWith("http://")) {
             return SplitIRI.namespace(uriStr);
-        }
-        else {
+        } else {
             return uriStr.split(":")[0] + ':'; //NS already resolved.
         }
     }

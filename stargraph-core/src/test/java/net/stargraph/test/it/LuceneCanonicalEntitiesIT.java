@@ -26,10 +26,11 @@ package net.stargraph.test.it;
  * ==========================License-End===============================
  */
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.corenlp.NERSearcher;
+import net.stargraph.core.impl.lucene.LuceneFactory;
 import net.stargraph.core.index.Indexer;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
@@ -37,68 +38,89 @@ import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.search.Searcher;
 import net.stargraph.data.Indexable;
-import net.stargraph.model.Document;
-import net.stargraph.model.KBId;
+import net.stargraph.model.*;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
- * Integration-tests the Passage Query.
+ * Exercises the ElasticSearch indexing and searching functionality in a controlled environment.
  * <p>
- * Expects you have a corresponding "stargraph.kb.lucene-dbpedia" entry in application.conf and a
- * <b>populated Lucene index</b> in the directory defined under "stargraph.data.root-dir". This probably won't be the
- * case if you run this test for the first time. The test is configured to do it automatically,
- * this might take some time and kill your RAM though.
- * <p>
- * Additionally, expects a running instance of ElasticSearch.
- * <p>
- * Finally, expects a running instance of PyCobalt.
+ * Expects a running ElasticSearch instance (usually localhost:9200)
+ * and a corresponding "stargraph.kb.canonical-obama" entry both specified in the application.conf.
  */
-public final class PassageQueryIT {
+public final class LuceneCanonicalEntitiesIT {
 
-    private String id = "lucene-dbpedia";
-    KBId documentsKBId = KBId.of(id, "documents");
-    KBId entitiesKBId = KBId.of(id, "entities");
-    Stargraph stargraph;
-    QueryEngine queryEngine;
+    private String id = "canonical-obama";
+    private KBId canonicalEntitiesIndex = KBId.of(id, "entities");
+    private KBId documentsIndex = KBId.of(id, "documents");
+    private Stargraph stargraph;
+    private File dataRootDir;
+    private NER ner;
+    private QueryEngine queryEngine;
+
 
     @BeforeClass
-    public void beforeClass() throws Exception {
+    public void beforeClass() throws InterruptedException, ExecutionException, TimeoutException {
         ConfigFactory.invalidateCaches();
-        stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
-
-
-        //TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsKBId));
-
-        stargraph.setKBInitSet(id);
-        stargraph.initialize();
-
-        //TestUtils.ensureLuceneIndexExists(stargraph, entitiesKBId);
-        TestUtils.populateEntityIndex(stargraph.getIndexer(entitiesKBId));
-        System.out.println(stargraph.getSearcher(entitiesKBId).countDocuments());
-        System.out.println("INDEX POPULATED!!!!");
-        Assert.assertTrue(false);
+        Config config = ConfigFactory.load().getConfig("stargraph");
+        dataRootDir = TestUtils.prepareGenericTestEnv(
+                id,
+                "dataSets/obama/facts/triples-with-aliases.nt",
+                null
+        ).toFile();
+        this.stargraph = new Stargraph(config, false);
+        this.stargraph.setKBInitSet(id);
+        this.stargraph.setDataRootDir(dataRootDir);
+        this.stargraph.initialize();
 
         queryEngine = new QueryEngine(id, stargraph);
 
+        Indexer indexer = stargraph.getIndexer(canonicalEntitiesIndex);
+        indexer.load(true, -1);
+        indexer.awaitLoader();
 
-        URI u = getClass().getClassLoader().getResource("obama.txt").toURI();
-        Assert.assertNotNull(u);
-        String text = new String(Files.readAllBytes(Paths.get(u)));
+        ner = stargraph.getKBCore(id).getNER();
+        Assert.assertNotNull(ner);
+    }
 
-        // if index doesn't exist, create it
-        Searcher searcher = stargraph.getSearcher(documentsKBId);
+
+    @Test
+    /**
+     * The actual loading was done in {@link #beforeClass()}.
+     */
+    public void bulkLoadTest() {
+        Searcher searcher = stargraph.getSearcher(canonicalEntitiesIndex);
+        Assert.assertEquals(searcher.countDocuments(), 887);
+    }
+
+
+    @Test
+    public void successfullyLinkAgainstCanonicalEntity() {
+        List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Hussein Obama");
+        System.out.println(entities);
+        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
+    }
+
+    @Test(enabled = false)
+    public void successfullyLinkObamaWikipediaArticle() throws IOException, InterruptedException, URISyntaxException {
+        TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsIndex));
+        Searcher searcher = stargraph.getSearcher(documentsIndex);
         if (searcher.countDocuments() != 1) {
 
-            String location = stargraph.getModelConfig(documentsKBId).getConfigList("processors")
+            String location = stargraph.getModelConfig(documentsIndex).getConfigList("processors")
                     .stream()
                     .map(proc -> proc.getConfig("coref-processor"))
                     .findAny()
@@ -107,39 +129,27 @@ public final class PassageQueryIT {
             TestUtils.assertCorefRunning(location);
 
 
-            Indexer indexer = stargraph.getIndexer(documentsKBId);
+            Indexer indexer = stargraph.getIndexer(documentsIndex);
 
             indexer.deleteAll();
+            URI u = getClass().getClassLoader().getResource("obama.txt").toURI();
+            Assert.assertNotNull(u);
+            String text = new String(Files.readAllBytes(Paths.get(u)));
 
-            indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsKBId));
+            indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsIndex));
             indexer.flush();
         }
-    }
-
-
-    @Test
-    public void nerLinkTest() {
-        NER ner = stargraph.getKBCore(id).getNER();
-        List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Hussein Obama");
-        System.out.println(entities);
-        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
-    }
-
-
-    @Test(enabled = false)
-    public void successfullyAnswerPassageQuery() {
         String passageQuery = "PASSAGE When did Barack Obama travel to India?";
         AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);
         String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
                 "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
                 "and visited the families of college friends in Pakistan and India for three weeks .";
         Assert.assertEquals(response.getTextAnswer().get(0), expected);
-
-
     }
 
-//    @AfterClass
-//    public void afterClass() {
-//        stargraph.terminate();
-//    }
+
+    @AfterClass
+    public void cleanUp() {
+        TestUtils.cleanUpTestEnv(dataRootDir.toPath());
+    }
 }

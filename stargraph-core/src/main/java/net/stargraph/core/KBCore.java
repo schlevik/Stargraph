@@ -10,10 +10,7 @@ import net.stargraph.core.impl.jena.JenaGraphSearcher;
 import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
 import net.stargraph.core.index.Indexer;
 import net.stargraph.core.ner.NER;
-import net.stargraph.core.search.BaseSearcher;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.search.*;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.DataProviderFactory;
 import net.stargraph.data.processor.Holder;
@@ -179,7 +176,11 @@ public final class KBCore {
     }
 
     public EntitySearcher createEntitySearcher() {
-        IndicesFactory factory = stargraph.getIndicesFactory(KBId.of(kbName, "entities"));
+        return createEntitySearcher("entities");
+    }
+
+    public EntitySearcher createEntitySearcher(String index) {
+        IndicesFactory factory = stargraph.getIndicesFactory(KBId.of(kbName, index));
         return factory.createEntitySearcher(this);
     }
 

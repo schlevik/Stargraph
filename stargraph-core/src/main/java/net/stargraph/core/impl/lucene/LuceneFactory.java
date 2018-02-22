@@ -60,7 +60,7 @@ public final class LuceneFactory implements IndicesFactory {
 
     @Override
     public EntitySearcher createEntitySearcher(KBCore core) {
-        return new LuceneEntitySearcher(core);
+        return new LuceneCanonicalEntitySearcher(core);
     }
 
     @Override

@@ -32,6 +32,7 @@ import net.stargraph.core.index.BaseIndexer;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
+import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.KBId;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -139,6 +140,12 @@ public final class LuceneIndexer extends BaseIndexer {
             InstanceEntity entity = (InstanceEntity) data;
             doc.add(new TextField("id", entity.getId(), Field.Store.YES));
             doc.add(new TextField("value", entity.getValue(), Field.Store.YES));
+            return doc;
+        } else if (data instanceof CanonicalInstanceEntity) {
+            CanonicalInstanceEntity canonicalEntity = (CanonicalInstanceEntity) data;
+            doc.add(new TextField("id", canonicalEntity.getId(), Field.Store.YES));
+            doc.add(new TextField("value", canonicalEntity.getValue(), Field.Store.YES));
+            doc.add(new TextField("reference", canonicalEntity.getReference(), Field.Store.YES));
             return doc;
         }
 

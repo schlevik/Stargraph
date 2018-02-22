@@ -34,7 +34,6 @@ import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.model.KBId;
 import net.stargraph.test.TestUtils;
-import org.apache.commons.io.filefilter.FalseFileFilter;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -119,6 +118,6 @@ public final class NERAndLinkingToyExampleIT {
     @AfterClass
     public void afterClass() {
         stargraph.terminate();
-        TestUtils.cleanUpObamaTestEnv(dataRootDir.toPath());
+        TestUtils.cleanUpTestEnv(dataRootDir.toPath());
     }
 }

@@ -30,6 +30,7 @@ import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.search.BaseSearcher;
 import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.KBId;
 import net.stargraph.rank.Score;
@@ -125,13 +126,21 @@ public final class LuceneSearcher extends BaseSearcher {
     private static Serializable fromDocument(Document document) {
         IndexableField id = document.getField("id");
         IndexableField value = document.getField("value");
+        IndexableField reference = document.getField("reference");
         if (id != null && value != null) {
+            if (reference != null) {
+                return new CanonicalInstanceEntity(
+                        id.stringValue(),
+                        value.stringValue(),
+                        reference.stringValue() // reference to canonical identifier
+                );
+            }
             return new InstanceEntity(
                     id.stringValue(), // id =
                     value.stringValue() // value =
             );
         }
-        // TODO: for the time being we can only deserialize InstanceEntity
+        // TODO: for the time being we can only deserialize InstanceEntity and CanonicalInstanceEntity
         return null;
     }
 

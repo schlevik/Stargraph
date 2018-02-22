@@ -39,6 +39,7 @@ import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.testng.Assert;
 
+import javax.management.RuntimeErrorException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,22 +72,46 @@ public final class TestUtils {
     }
 
 
+
+
     public static Path prepareObamaTestEnv(String kbID) {
+        return prepareGenericTestEnv(kbID,
+                "dataSets/obama/facts/triples.nt",
+                "dataSets/obama/facts/triples.hdt"
+        );
+//
+//        Path root;
+//        try {
+//            root = Files.createTempFile("stargraph-", "-dataDir");
+//            Path factsPath = createPath(root, KBId.of(kbID, "facts"));
+//            Path hdtPath = factsPath.resolve("triples.hdt");
+//            Path ntFilePath = factsPath.resolve("triples.nt");
+//            copyResource("dataSets/obama/facts/triples.hdt", hdtPath);
+//            copyResource("dataSets/obama/facts/triples.nt", ntFilePath);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        return root;
+    }
+
+    public static Path prepareGenericTestEnv(String kbID, String ntResourceLocation, String hdtResourceLocation) {
         Path root;
         try {
             root = Files.createTempFile("stargraph-", "-dataDir");
             Path factsPath = createPath(root, KBId.of(kbID, "facts"));
-            Path hdtPath = factsPath.resolve("triples.hdt");
             Path ntFilePath = factsPath.resolve("triples.nt");
-            copyResource("dataSets/obama/facts/triples.hdt", hdtPath);
-            copyResource("dataSets/obama/facts/triples.nt", ntFilePath);
+            copyResource(Paths.get(ntResourceLocation).toString(), ntFilePath);
+            if (hdtResourceLocation != null) {
+                Path hdtPath = factsPath.resolve("triples.hdt");
+                copyResource(hdtResourceLocation, hdtPath);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return root;
     }
 
-    public static void cleanUpObamaTestEnv(Path root) {
+    public static void cleanUpTestEnv(Path root) {
         try {
             Files.walk(root, FileVisitOption.FOLLOW_LINKS)
                     .sorted(Comparator.reverseOrder())
@@ -131,8 +156,17 @@ public final class TestUtils {
         return running;
     }
 
-    public static void assureLuceneIndexExists(Stargraph stargraph, KBId entityIndex) {
-        if (!doesLuceneIndexExist(Paths.get(stargraph.getDataRootDir()), entityIndex)) {
+    public static void ensureLuceneIndexExists(Stargraph stargraph, KBId entityIndex) {
+        boolean indexExists = true;
+        try {
+            stargraph.getSearcher(entityIndex).countDocuments();
+        } catch (StarGraphException e) {
+            if(e.getMessage().contains("Index not found")) {
+                indexExists = false;
+            }
+        }
+        if(!indexExists) {
+        //if (!doesLuceneIndexExist(Paths.get(stargraph.getDataRootDir()), entityIndex)) {
             try {
                 populateEntityIndex(stargraph.getIndexer(entityIndex));
             } catch (InterruptedException | TimeoutException | ExecutionException e) {

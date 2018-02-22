@@ -156,9 +156,6 @@ public final class Namespace extends TreeMap<String, String> {
         if (kbConfig.hasPath("namespaces")) {
             Config nsConfig = kbConfig.getConfig("namespaces");
             mainNamespaces.addAll(nsConfig.entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList()));
-            mainNamespaces.forEach((ns) -> this.put(ns, nsConfig.getString(ns)));
-            logger.info(marker, "Entry set: {}", this.entrySet());
-            logger.info(marker, "Who am I? {}", this);
             logger.info(marker, "Main Namespaces: {}", mainNamespaces);
         }
     }
