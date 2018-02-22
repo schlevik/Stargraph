@@ -85,7 +85,7 @@ public final class PassageQueryIT {
         TestUtils.populateEntityIndex(stargraph.getIndexer(entitiesKBId));
         System.out.println(stargraph.getSearcher(entitiesKBId).countDocuments());
         System.out.println("INDEX POPULATED!!!!");
-        Assert.assertTrue(false);
+//        Assert.assertTrue(false);
 
         queryEngine = new QueryEngine(id, stargraph);
 

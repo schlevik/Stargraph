@@ -134,26 +134,20 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
         //Query query = QueryFactory.create(ENTITY_QUERY_WITH_REDIRECTS);
         Graph g = model.getGraph();
 //        Triple(null, model.createProperty("<http://dbpedia.org/ontology/wikiPageRedirects>").asNode(), null
-        ExtendedIterator<Triple> exIt = g.find(NodeUtils.asNode("http://dbpedia.org/resource/Barack_Hussein_Obama"), null, null);
-//        System.out.println(">>>>>>>>>>>>");
-//        System.out.println(exIt.toSet());
-        Query query = QueryFactory.create("SELECT * WHERE {?s <http://dbpedia.org/ontology/wikiPageRedirects> ?o }");
-        QueryExecution execution = QueryExecutionFactory.create(query, model);
-        ResultSet result = execution.execSelect();
-        System.out.println(">>>>>>>>>>>>>>");
-        result.forEachRemaining(System.out::println);
+        ExtendedIterator<Triple> exIt = g.find(Node.ANY, NodeUtils.asNode("http://dbpedia.org/ontology/wikiPageRedirects"), null);
+
 
         ExtendedIterator<Tuple> redirIt = exIt.mapWith(Tuple::new);
-//        exIt = g.find(Node.ANY, null, null);
-//        ExtendedIterator<Tuple> subjIt = exIt.mapWith(triple -> new Tuple(triple.getSubject(), null));
-//        exIt = g.find(null, null, Node.ANY);
-//        ExtendedIterator<Tuple> objIt = exIt.mapWith(triple -> new Tuple(triple.getObject(), null));
+        exIt = g.find(Node.ANY, null, null);
+        ExtendedIterator<Tuple> subjIt = exIt.mapWith(triple -> new Tuple(triple.getSubject(), null));
+        exIt = g.find(null, null, Node.ANY);
+        ExtendedIterator<Tuple> objIt = exIt.mapWith(triple -> new Tuple(triple.getObject(), null));
 
 //        logger.debug(marker, "Performing following query on the model:\n{}", query.toString());
 //        QueryExecution execution = QueryExecutionFactory.create(query, model);
 //        ResultSet resultSet = execution.execSelect();
-//        return Iterators.concat(redirIt, subjIt, objIt);
-        return redirIt;
+//        return redirIt;
+        return Iterators.concat(redirIt, subjIt, objIt);
     }
 
     class Tuple {

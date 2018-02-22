@@ -7,6 +7,7 @@ import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdtjena.HDTGraph;
 
+import javax.ws.rs.core.PathSegment;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -17,7 +18,7 @@ public class Test {
     public void Test() throws IOException {
         File hdtFile = Paths.get("/home/viktor/stargraph-data/lucene-dbpedia/facts/triples.hdt").toFile();
         String hdtFilePathStr = hdtFile.getAbsolutePath();
-        HDT hdt = HDTManager.loadHDT(hdtFilePathStr, null);
+        HDT hdt = HDTManager.loadIndexedHDT(hdtFilePathStr, null);
 
         HDTGraph graph = new HDTGraph(hdt);
 
