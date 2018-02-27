@@ -81,10 +81,10 @@ public final class PassageQueryIT {
         stargraph.setKBInitSet(id);
         stargraph.initialize();
 
-        //TestUtils.ensureLuceneIndexExists(stargraph, entitiesKBId);
-        TestUtils.populateEntityIndex(stargraph.getIndexer(entitiesKBId));
-        System.out.println(stargraph.getSearcher(entitiesKBId).countDocuments());
-        System.out.println("INDEX POPULATED!!!!");
+        TestUtils.ensureLuceneIndexExists(stargraph, entitiesKBId);
+//        TestUtils.populateEntityIndex(stargraph.getIndexer(entitiesKBId));
+//        System.out.println(stargraph.getSearcher(entitiesKBId).countDocuments());
+//        System.out.println("INDEX POPULATED!!!!");
 //        Assert.assertTrue(false);
 
         queryEngine = new QueryEngine(id, stargraph);

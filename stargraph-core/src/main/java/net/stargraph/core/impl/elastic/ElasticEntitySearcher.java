@@ -139,8 +139,6 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
                 .should(nestedQuery("synonyms",
                         matchQuery("synonyms.word", searchParams.getSearchTerm()), ScoreMode.Max))
                 .minimumShouldMatch(1);
-        System.out.println(">>>>>>>>>>");
-        System.out.println(queryBuilder.toString());
         Searcher searcher = core.getSearcher(searchParams.getKbId().getModel());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
