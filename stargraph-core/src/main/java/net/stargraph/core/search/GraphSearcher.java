@@ -26,27 +26,20 @@ package net.stargraph.core.search;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
-import net.stargraph.rank.ModifiableRankParams;
-import net.stargraph.rank.ModifiableSearchParams;
-import net.stargraph.rank.Scores;
 
 import java.util.List;
+import java.util.Map;
 
-public interface EntitySearcher<T extends Searcher> extends GenericIndexSearcher<T> {
+public interface GraphSearcher extends Searchable<Map<String, List<LabeledEntity>>, String> {
 
-    LabeledEntity getEntity(String dbId, String id);
+    @Override
+    default Map<String, List<LabeledEntity>> search(String query) {
+        return select(query);
+    }
 
-    List<LabeledEntity> getEntities(String dbId, List<String> ids);
+    Map<String, List<LabeledEntity>> select(String sparqlQuery);
 
-    Scores classSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores propertySearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
+    boolean ask(String sparqlQuery);
 
 }

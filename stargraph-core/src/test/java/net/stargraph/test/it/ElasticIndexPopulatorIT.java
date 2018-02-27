@@ -31,13 +31,12 @@ import com.typesafe.config.ConfigFactory;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.search.EntitySearchBuilder;
 import net.stargraph.model.*;
 import net.stargraph.rank.*;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -53,7 +52,7 @@ import static net.stargraph.test.TestUtils.createPath;
  * Expects a running ElasticSearch instance (usually localhost:9200)
  * and a corresponding "stargraph.kb.elastic-obama" entry both specified in the application.conf.
  */
-public final class ElasticIndexerIT {
+public final class ElasticIndexPopulatorIT {
 
     private KBCore core;
     private String kbName = "elastic-obama";
@@ -92,7 +91,7 @@ public final class ElasticIndexerIT {
     //TODO: need to investigate what fails here
     @Test
     public void classSearchTest() {
-        EntitySearcher searcher = core.createEntitySearcher();
+        EntitySearchBuilder searcher = core.createEntitySearcher();
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("president");
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein();
         Scores scores = searcher.classSearch(searchParams, rankParams);
@@ -106,7 +105,7 @@ public final class ElasticIndexerIT {
     //TODO: i feel thresholds are trolling a bit
     @Test
     public void instanceSearchTest() {
-        EntitySearcher searcher = core.createEntitySearcher();
+        EntitySearchBuilder searcher = core.createEntitySearcher();
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("baraCk Obuma");
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
@@ -120,7 +119,7 @@ public final class ElasticIndexerIT {
     //TODO: this test fails, it just returns something different for some reason.
     @Test(enabled = false)
     public void propertySearchTest() {
-        EntitySearcher searcher = core.createEntitySearcher();
+        EntitySearchBuilder searcher = core.createEntitySearcher();
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("position");
         ModifiableRankParams rankParams = ParamsBuilder.word2vec().threshold(Threshold.auto());
@@ -132,7 +131,7 @@ public final class ElasticIndexerIT {
 
     @Test
     public void pivotedSearchTest() {
-        EntitySearcher searcher = core.createEntitySearcher();
+        EntitySearchBuilder searcher = core.createEntitySearcher();
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("school");
         ModifiableRankParams rankParams = ParamsBuilder.word2vec().threshold(Threshold.auto());
@@ -146,37 +145,37 @@ public final class ElasticIndexerIT {
 
     @Test
     public void getEntitiesTest() {
-        EntitySearcher searcher = core.createEntitySearcher();
+        EntitySearchBuilder searcher = core.createEntitySearcher();
         LabeledEntity obama = searcher.getEntity("obama", "dbr:Barack_Obama");
         Assert.assertEquals(new InstanceEntity("dbr:Barack_Obama", "Barack Obama"), obama);
     }
 
     @Test
     public void getIndexerTest() throws Exception {
-        Assert.assertNotNull(core.getIndexer(factsId.getModel()));
-        Assert.assertNotNull(core.getIndexer(entitiesId.getModel()));
-        Assert.assertNotNull(core.getIndexer(propsId.getModel()));
+        Assert.assertNotNull(core.getIndexPopulator(factsId.getModel()));
+        Assert.assertNotNull(core.getIndexPopulator(entitiesId.getModel()));
+        Assert.assertNotNull(core.getIndexPopulator(propsId.getModel()));
     }
 
     @Test(expectedExceptions = StarGraphException.class)
     public void getUnknownIndexerTest() {
-        core.getIndexer("unknown");
+        core.getIndexPopulator("unknown");
     }
 
     private void loadFacts() throws Exception {
-        Indexer indexer = core.getIndexer(factsId.getModel());
+        IndexPopulator indexer = core.getIndexPopulator(factsId.getModel());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }
 
     private void loadProperties() throws Exception {
-        Indexer indexer = core.getIndexer(propsId.getModel());
+        IndexPopulator indexer = core.getIndexPopulator(propsId.getModel());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }
 
     private void loadEntities() throws Exception {
-        Indexer indexer = core.getIndexer(entitiesId.getModel());
+        IndexPopulator indexer = core.getIndexPopulator(entitiesId.getModel());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }

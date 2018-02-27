@@ -1,4 +1,4 @@
-package net.stargraph.core.index;
+package net.stargraph.core.search;
 
 /*-
  * ==========================License-Start=============================
@@ -12,10 +12,10 @@ package net.stargraph.core.index;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,38 +26,27 @@ package net.stargraph.core.index;
  * ==========================License-End===============================
  */
 
-import net.stargraph.data.DataProvider;
-import net.stargraph.data.Indexable;
-import net.stargraph.data.processor.Holder;
+import net.stargraph.model.InstanceEntity;
+import net.stargraph.model.LabeledEntity;
+import net.stargraph.rank.ModifiableRankParams;
+import net.stargraph.rank.ModifiableSearchParams;
+import net.stargraph.rank.Scores;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-/**
- * Definition of an indexer.
- */
-public interface Indexer {
+public interface EntitySearchBuilder<T extends IndexSearcher> extends GenericSearchBuilder<T> {
 
-    void start();
+    LabeledEntity getEntity(String dbId, String id);
 
-    void stop();
+    List<LabeledEntity> getEntities(String dbId, List<String> ids);
 
-    void load();
+    Scores classSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
 
-    void load(boolean reset, int limit);
+    Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
 
-    void awaitLoader() throws InterruptedException, TimeoutException, ExecutionException;
+    Scores propertySearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
 
-    void awaitLoader(long time, TimeUnit unit) throws InterruptedException, TimeoutException, ExecutionException;
+    Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
 
-    void index(Indexable data) throws InterruptedException;
 
-    void flush();
-
-    void deleteAll();
-
-    void extend(DataProvider<? extends Holder> dataProvider);
 }

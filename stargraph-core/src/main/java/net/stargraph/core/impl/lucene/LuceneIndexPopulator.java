@@ -28,9 +28,8 @@ package net.stargraph.core.impl.lucene;
 
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.BaseIndexer;
+import net.stargraph.core.index.BaseIndexPopulator;
 import net.stargraph.data.DataProvider;
-import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
@@ -41,22 +40,18 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.io.StringReader;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 
-public final class LuceneIndexer extends BaseIndexer {
+public final class LuceneIndexPopulator extends BaseIndexPopulator {
     private Directory directory;
     private IndexWriter writer;
     private IndexWriterConfig writerConfig;
 
-    public LuceneIndexer(KBId kbId, Stargraph stargraph, Directory directory) {
+    public LuceneIndexPopulator(KBId kbId, Stargraph stargraph, Directory directory) {
         super(kbId, stargraph);
         this.directory = Objects.requireNonNull(directory);
     }

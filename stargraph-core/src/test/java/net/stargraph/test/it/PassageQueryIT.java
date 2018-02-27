@@ -29,19 +29,17 @@ package net.stargraph.test.it;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.corenlp.NERSearcher;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.search.IndexSearcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
 import net.stargraph.model.KBId;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -82,8 +80,8 @@ public final class PassageQueryIT {
         stargraph.initialize();
 
         TestUtils.ensureLuceneIndexExists(stargraph, entitiesKBId);
-//        TestUtils.populateEntityIndex(stargraph.getIndexer(entitiesKBId));
-//        System.out.println(stargraph.getSearcher(entitiesKBId).countDocuments());
+//        TestUtils.populateEntityIndex(stargraph.getIndexPopulator(entitiesKBId));
+//        System.out.println(stargraph.getIndexSearcher(entitiesKBId).countDocuments());
 //        System.out.println("INDEX POPULATED!!!!");
 //        Assert.assertTrue(false);
 
@@ -95,7 +93,7 @@ public final class PassageQueryIT {
         String text = new String(Files.readAllBytes(Paths.get(u)));
 
         // if index doesn't exist, create it
-        Searcher searcher = stargraph.getSearcher(documentsKBId);
+        IndexSearcher searcher = stargraph.getSearcher(documentsKBId);
         if (searcher.countDocuments() != 1) {
 
             String location = stargraph.getModelConfig(documentsKBId).getConfigList("processors")
@@ -107,7 +105,7 @@ public final class PassageQueryIT {
             TestUtils.assertCorefRunning(location);
 
 
-            Indexer indexer = stargraph.getIndexer(documentsKBId);
+            IndexPopulator indexer = stargraph.getIndexer(documentsKBId);
 
             indexer.deleteAll();
 

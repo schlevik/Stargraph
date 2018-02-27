@@ -1,4 +1,4 @@
-package net.stargraph.core.graph;
+package net.stargraph.core.search;
 
 /*-
  * ==========================License-Start=============================
@@ -12,10 +12,10 @@ package net.stargraph.core.graph;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,15 +26,19 @@ package net.stargraph.core.graph;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.LabeledEntity;
+import net.stargraph.rank.Scores;
 
-import java.util.List;
-import java.util.Map;
+/**
+ * Definition of a Searcher.
+ */
+public interface IndexSearcher<Q extends SearchQueryHolder> extends Searchable<Scores, Q> {
 
-public interface GraphSearcher {
+    void start();
 
-    Map<String, List<LabeledEntity>> select(String sparqlQuery);
+    void stop();
 
-    boolean ask(String sparqlQuery);
+    Scores search(Q holder);
+
+    long countDocuments();
 
 }

@@ -1,4 +1,4 @@
-package net.stargraph.test;
+package net.stargraph.core.index;
 
 /*-
  * ==========================License-Start=============================
@@ -26,45 +26,46 @@ package net.stargraph.test;
  * ==========================License-End===============================
  */
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.index.NullIndicesFactory;
-import net.stargraph.data.DataProviderFactory;
+import net.stargraph.data.DataProvider;
+import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.Serializable;
+import java.util.Iterator;
 
-public final class NullIndexerExtendTest {
+/**
+ * IndexPopulator that doesn't do anything. Useful for testing without the backend.
+ * Prints on stdout whatever it gets.
+ */
+final class NullIndexPopulator extends BaseIndexPopulator {
 
-    private KBId kbId = KBId.of("mytest", "mytype");
-    private List<TestData> expected;
-    private Stargraph stargraph;
-    private Indexer indexer;
-    private final DataProviderFactory dataProviderFactory = new TestDataProviderFactory();
-
-    @BeforeClass
-    public void before() {
-        ConfigFactory.invalidateCaches();
-        Config config = ConfigFactory.load().getConfig("stargraph");
-        this.stargraph = new Stargraph(config, false);
-        this.stargraph.setKBInitSet(kbId.getId());
-        this.stargraph.setDefaultIndicesFactory(new NullIndicesFactory());
-        this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(kbId);
-        List<String> expected = Arrays.asList("data#1", "data#2", "data#3");
-        this.expected = expected.stream().map(s -> new TestData(s)).collect(Collectors.toList());
+    NullIndexPopulator(KBId kbId, Stargraph core) {
+        super(kbId, core);
     }
 
-    @Test
-    public void successWhenExtendIndexTest() {
-        this.indexer.extend(this.dataProviderFactory.create(this.kbId, this.expected));
+    @Override
+    protected void beforeLoad(boolean reset) {
+        logger.warn("This is the NullIndexPopulator.");
     }
 
+    @Override
+    protected void doIndex(Serializable data, KBId kbId) throws InterruptedException {
+        //that'it, nothing is done.
+        System.out.println(data);
+    }
 
+    @Override
+    public void extend(DataProvider<? extends Holder> data) {
+        Iterator<? extends Holder> dataIterator = data.iterator();
+        while (dataIterator.hasNext()) {
+            Holder datum = dataIterator.next();
+            try {
+                doIndex(datum.get(), this.kbId);
+            } catch (InterruptedException e) {
+                System.out.println("Interrupted.");
+            }
+        }
+    }
 }
+

@@ -26,19 +26,19 @@ package net.stargraph.core;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.index.BaseIndexer;
-import net.stargraph.core.search.BaseSearcher;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.core.index.BaseIndexPopulator;
+import net.stargraph.core.search.BaseIndexSearcher;
+import net.stargraph.core.search.DocumentSearchBuilder;
+import net.stargraph.core.search.EntitySearchBuilder;
 import net.stargraph.model.KBId;
 
 public interface IndicesFactory {
 
-    BaseIndexer createIndexer(KBId kbId, Stargraph stargraph);
+    BaseIndexPopulator createIndexer(KBId kbId, Stargraph stargraph);
 
-    BaseSearcher createSearcher(KBId kbId, Stargraph stargraph);
+    BaseIndexSearcher createSearcher(KBId kbId, Stargraph stargraph);
 
-    EntitySearcher createEntitySearcher(KBCore core);
+    EntitySearchBuilder createEntitySearcher(KBCore core);
 
-    DocumentSearcher createDocumentSearcher(KBCore core);
+    DocumentSearchBuilder createDocumentSearcher(KBCore core);
 }

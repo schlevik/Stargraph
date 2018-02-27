@@ -38,7 +38,7 @@ public final class SPARQLSelectResponse extends QueryResponse {
     private Map<String, List<LabeledEntity>> bindings;
 
     public SPARQLSelectResponse(InteractionMode interactionMode, String userQuery, Map<String, List<LabeledEntity>> bindings) {
-        super(interactionMode, userQuery);
+        super(interactionMode, userQuery, null);
         this.bindings = Objects.requireNonNull(bindings);
     }
 

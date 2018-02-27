@@ -28,31 +28,25 @@ package net.stargraph.core.impl.elastic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.BaseSearcher;
-import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.core.search.BaseIndexSearcher;
 import net.stargraph.core.serializer.ObjectSerializer;
 import net.stargraph.model.BuiltInModel;
 import net.stargraph.model.KBId;
-import net.stargraph.model.Passage;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
-public final class ElasticSearcher extends BaseSearcher {
+public final class ElasticIndexSearcher extends BaseIndexSearcher<ElasticQueryHolder> {
     private ObjectMapper mapper;
     private ElasticClient esClient;
 
-    public ElasticSearcher(KBId kbId, Stargraph core) {
+    public ElasticIndexSearcher(KBId kbId, Stargraph core) {
         super(kbId, core);
         this.mapper = ObjectSerializer.createMapper(kbId);
     }
@@ -88,7 +82,7 @@ public final class ElasticSearcher extends BaseSearcher {
      * @param holder The query to execute the inner search on. Given to the {@link ElasticScroller} to actually execute.
      * @return Returns {@link Scores}, which is a list of inner hits with their corresponding scores.
      */
-    public Scores innerSearch(SearchQueryHolder holder) {
+    public Scores innerSearch(ElasticQueryHolder holder) {
         long start = System.nanoTime();
         int size = 0;
 
@@ -148,7 +142,7 @@ public final class ElasticSearcher extends BaseSearcher {
     }
 
     @Override
-    public Scores search(SearchQueryHolder holder) {
+    public Scores search(ElasticQueryHolder holder) {
         ElasticScroller scroller = null;
         long start = System.nanoTime();
 

@@ -3,12 +3,10 @@ package net.stargraph.core;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
 import net.stargraph.StarGraphException;
-import net.stargraph.core.graph.GraphSearcher;
+import net.stargraph.core.search.GraphSearcher;
 import net.stargraph.core.impl.corenlp.NERSearcher;
-import net.stargraph.core.impl.elastic.ElasticEntitySearcher;
 import net.stargraph.core.impl.jena.JenaGraphSearcher;
-import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.*;
 import net.stargraph.data.DataProvider;
@@ -18,9 +16,7 @@ import net.stargraph.model.KBId;
 import net.stargraph.query.Language;
 import net.stargraph.rank.ModifiableIndraParams;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -48,8 +44,8 @@ public final class KBCore {
     private Namespace namespace;
     private Stargraph stargraph;
     private NER ner;
-    private Map<String, Indexer> indexers;
-    private Map<String, Searcher> searchers;
+    private Map<String, IndexPopulator> indexPopulators;
+    private Map<String, IndexSearcher> indexSearchers;
     private boolean running;
 
     public KBCore(String kbName, Stargraph stargraph, boolean start) {
@@ -58,8 +54,8 @@ public final class KBCore {
         this.mainConfig = stargraph.getMainConfig();
         this.kbConfig = mainConfig.getConfig(String.format("kb.%s", kbName));
         this.marker = MarkerFactory.getMarker(kbName);
-        this.indexers = new ConcurrentHashMap<>();
-        this.searchers = new ConcurrentHashMap<>();
+        this.indexPopulators = new ConcurrentHashMap<>();
+        this.indexSearchers = new ConcurrentHashMap<>();
         this.language = Language.valueOf(kbConfig.getString("language").toUpperCase());
         this.namespace = Namespace.create(kbConfig);
 
@@ -80,20 +76,20 @@ public final class KBCore {
             final KBId kbId = KBId.of(kbName, modelId);
             IndicesFactory factory = stargraph.getIndicesFactory(kbId);
 
-            Indexer indexer = factory.createIndexer(kbId, stargraph);
+            IndexPopulator indexPopulator = factory.createIndexer(kbId, stargraph);
 
-            if (indexer != null) {
-                indexer.start();
-                indexers.put(modelId, indexer);
+            if (indexPopulator != null) {
+                indexPopulator.start();
+                indexPopulators.put(modelId, indexPopulator);
             } else {
-                logger.warn(marker, "No indexer created for {}", kbId);
+                logger.warn(marker, "No indexPopulator created for {}", kbId);
             }
 
-            BaseSearcher searcher = factory.createSearcher(kbId, stargraph);
+            BaseIndexSearcher searcher = factory.createSearcher(kbId, stargraph);
 
             if (searcher != null) {
                 searcher.start();
-                searchers.put(modelId, searcher);
+                indexSearchers.put(modelId, searcher);
             } else {
                 logger.warn(marker, "No searcher created for {}", kbId);
             }
@@ -110,8 +106,8 @@ public final class KBCore {
         }
         logger.info(marker, "Terminating '{}'", kbName);
 
-        indexers.values().forEach(Indexer::stop);
-        searchers.values().forEach(Searcher::stop);
+        indexPopulators.values().forEach(IndexPopulator::stop);
+        indexSearchers.values().forEach(IndexSearcher::stop);
 
         this.running = false;
     }
@@ -142,18 +138,18 @@ public final class KBCore {
         return stargraph.getGraphModelFactory(kbName).getModel(kbName);
     }
 
-    public Indexer getIndexer(String modelId) {
+    public IndexPopulator getIndexPopulator(String modelId) {
         checkRunning();
-        if (indexers.containsKey(modelId)) {
-            return indexers.get(modelId);
+        if (indexPopulators.containsKey(modelId)) {
+            return indexPopulators.get(modelId);
         }
-        throw new StarGraphException("Indexer not found nor initialized: " + KBId.of(kbName, modelId));
+        throw new StarGraphException("IndexPopulator not found nor initialized: " + KBId.of(kbName, modelId));
     }
 
-    public Searcher getSearcher(String modelId) {
+    public IndexSearcher getIndexSearcher(String modelId) {
         checkRunning();
-        if (searchers.containsKey(modelId)) {
-            return searchers.get(modelId);
+        if (indexSearchers.containsKey(modelId)) {
+            return indexSearchers.get(modelId);
         }
         throw new StarGraphException("Searcher not found nor initialized: " + KBId.of(kbName, modelId));
     }
@@ -175,16 +171,16 @@ public final class KBCore {
         return namespace;
     }
 
-    public EntitySearcher createEntitySearcher() {
+    public EntitySearchBuilder createEntitySearcher() {
         return createEntitySearcher("entities");
     }
 
-    public EntitySearcher createEntitySearcher(String index) {
+    public EntitySearchBuilder createEntitySearcher(String index) {
         IndicesFactory factory = stargraph.getIndicesFactory(KBId.of(kbName, index));
         return factory.createEntitySearcher(this);
     }
 
-    public DocumentSearcher createDocumentSearcher() {
+    public DocumentSearchBuilder createDocumentSearcher() {
         IndicesFactory factory = stargraph.getIndicesFactory(KBId.of(kbName, "documents"));
         return factory.createDocumentSearcher(this);
     }
@@ -210,7 +206,7 @@ public final class KBCore {
         /*
          * Main idea:
          * 1) add all statements to graph V
-         * 2) get all indexers for this KB
+         * 2) get all indexPopulators for this KB
          * 3) for each indexer, index newly incoming data
          * 4) uuuuh yea, sth like that
          */
@@ -223,7 +219,7 @@ public final class KBCore {
         for (KBId kbId : this.getKBIds()) {
             logger.debug("For KBid {}...", kbId);
             // create <? extends Holder> from List of statements.
-            Indexer indexer = indexers.get(kbId.getModel());
+            IndexPopulator indexer = indexPopulators.get(kbId.getModel());
             logger.debug("Got indexer of type {}", indexer.getClass());
             // create dataProvider from given model
             DataProviderFactory dataProviderFactory = stargraph.createDataProviderFactory(kbId);

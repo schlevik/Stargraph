@@ -29,31 +29,29 @@ package net.stargraph.test;
 import net.stargraph.core.IndicesFactory;
 import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.BaseIndexer;
-import net.stargraph.core.search.BaseSearcher;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.core.index.BaseIndexPopulator;
+import net.stargraph.core.search.BaseIndexSearcher;
+import net.stargraph.core.search.DocumentSearchBuilder;
+import net.stargraph.core.search.EntitySearchBuilder;
 import net.stargraph.data.DataProvider;
-import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * Let's eat our own dog food for a while!
- * Indexer only stores the intended indexed expected.
+ * IndexPopulator only stores the intended indexed expected.
  */
-public final class TestDataIndexer extends BaseIndexer {
+public final class TestDataIndexPopulator extends BaseIndexPopulator {
 
     private List<TestData> indexed;
     private long lazyTime;
 
-    public TestDataIndexer(KBId kbId, Stargraph stargraph, long lazyTime) {
+    public TestDataIndexPopulator(KBId kbId, Stargraph stargraph, long lazyTime) {
         super(kbId, stargraph);
         this.indexed = new ArrayList<>();
         this.lazyTime = lazyTime;
@@ -94,22 +92,22 @@ public final class TestDataIndexer extends BaseIndexer {
     static class Factory implements IndicesFactory {
 
         @Override
-        public BaseIndexer createIndexer(KBId kbId, Stargraph stargraph) {
-            return new TestDataIndexer(kbId, stargraph, 500);
+        public BaseIndexPopulator createIndexer(KBId kbId, Stargraph stargraph) {
+            return new TestDataIndexPopulator(kbId, stargraph, 500);
         }
 
         @Override
-        public BaseSearcher createSearcher(KBId kbId, Stargraph stargraph) {
+        public BaseIndexSearcher createSearcher(KBId kbId, Stargraph stargraph) {
             return null;
         }
 
         @Override
-        public EntitySearcher createEntitySearcher(KBCore core) {
+        public EntitySearchBuilder createEntitySearcher(KBCore core) {
             return null;
         }
 
         @Override
-        public DocumentSearcher createDocumentSearcher(KBCore core) {
+        public DocumentSearchBuilder createDocumentSearcher(KBCore core) {
             throw new NotImplementedException();
         }
     }

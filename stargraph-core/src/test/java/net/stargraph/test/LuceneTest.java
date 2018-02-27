@@ -30,9 +30,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.impl.lucene.LuceneEntitySearchBuilder;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.search.IndexSearcher;
 import net.stargraph.model.KBId;
 import net.stargraph.rank.*;
 import org.testng.Assert;
@@ -64,16 +64,16 @@ public final class LuceneTest {
 
     @Test
     public void bulkLoadTest() throws Exception {
-        Indexer indexer = stargraph.getIndexer(kbId);
+        IndexPopulator indexer = stargraph.getIndexer(kbId);
         indexer.load(true, -1);
         indexer.awaitLoader();
-        Searcher searcher = stargraph.getSearcher(kbId);
+        IndexSearcher searcher = stargraph.getSearcher(kbId);
         Assert.assertEquals(searcher.countDocuments(), 756);
     }
 
     @Test
     public void searchTest() {
-        LuceneEntitySearcher entitySearcher = new LuceneEntitySearcher(this.stargraph.getKBCore(id));
+        LuceneEntitySearchBuilder entitySearcher = new LuceneEntitySearchBuilder(this.stargraph.getKBCore(id));
         ModifiableSearchParams searchParams = ModifiableSearchParams
                 .create(id)
                 .term("Barack Obama")

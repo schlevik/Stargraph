@@ -29,17 +29,14 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.elastic.ElasticEntitySearcher;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.model.KBId;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.testng.Assert;
 
-import javax.management.RuntimeErrorException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -181,7 +178,7 @@ public final class TestUtils {
 
     }
 
-    public static void populateEntityIndex(Indexer indexer) throws InterruptedException, TimeoutException, ExecutionException {
+    public static void populateEntityIndex(IndexPopulator indexer) throws InterruptedException, TimeoutException, ExecutionException {
         indexer.load(true, -1);
         indexer.awaitLoader();
 

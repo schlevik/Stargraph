@@ -30,8 +30,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticFactory;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.index.NullIndicesFactory;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.DataProviderFactory;
 import net.stargraph.model.KBId;
 import net.stargraph.test.TestData;
@@ -44,7 +43,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-// disabled since it's basically the same as ElasticIndexerIT.
+// disabled since it's basically the same as ElasticIndexPopulatorIT.
 // to enable, consult pom.xml
 @Test(enabled = false)
 public final class ElasticIndexerExtendIT {
@@ -52,7 +51,7 @@ public final class ElasticIndexerExtendIT {
     private KBId kbId = KBId.of("mytest", "mytype");
     private List<TestData> expected;
     private Stargraph stargraph;
-    private Indexer indexer;
+    private IndexPopulator indexer;
     private final DataProviderFactory dataProviderFactory = new TestDataProviderFactory();
 
     @BeforeClass

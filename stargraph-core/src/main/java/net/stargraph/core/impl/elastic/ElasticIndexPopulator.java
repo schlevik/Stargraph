@@ -29,11 +29,8 @@ package net.stargraph.core.impl.elastic;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.BaseIndexer;
+import net.stargraph.core.index.BaseIndexPopulator;
 import net.stargraph.core.index.IndexingException;
-import net.stargraph.data.DataProvider;
-import net.stargraph.data.Indexable;
-import net.stargraph.data.processor.Holder;
 import net.stargraph.model.KBId;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
@@ -47,24 +44,21 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.IndexNotFoundException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Indexer backed by Elastic Search engine.
+ * IndexPopulator backed by Elastic Search engine.
  */
-public final class ElasticIndexer extends BaseIndexer {
+public final class ElasticIndexPopulator extends BaseIndexPopulator {
 
     private ElasticClient esClient;
     private BulkProcessor bulkProcessor;
     private ConcurrentHashMap<String, IndexRequest> indexRequests;
 
-    public ElasticIndexer(KBId kbId, Stargraph core) {
+    public ElasticIndexPopulator(KBId kbId, Stargraph core) {
         super(kbId, core);
         this.indexRequests = new ConcurrentHashMap<>();
     }

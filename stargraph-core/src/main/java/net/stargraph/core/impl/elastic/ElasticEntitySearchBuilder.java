@@ -28,18 +28,15 @@ package net.stargraph.core.impl.elastic;
 
 import net.stargraph.core.KBCore;
 import net.stargraph.core.Namespace;
-import net.stargraph.core.search.EntitySearcher;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.search.IndexSearcher;
 import net.stargraph.model.BuiltInModel;
 import net.stargraph.model.Fact;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.rank.*;
 import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -52,13 +49,13 @@ import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
-public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearcher> {
+public final class ElasticEntitySearchBuilder implements EntitySearchBuilder<ElasticIndexSearcher> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("elastic");
 
     private KBCore core;
 
-    public ElasticEntitySearcher(KBCore core) {
+    public ElasticEntitySearchBuilder(KBCore core) {
         this.core = Objects.requireNonNull(core);
     }
 
@@ -78,7 +75,7 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
         List idList = ids.stream().map(ns::shrinkURI).collect(Collectors.toList());
         ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).model(BuiltInModel.ENTITY);
         QueryBuilder queryBuilder = termsQuery("id", idList);
-        Searcher searcher = core.getSearcher(searchParams.getKbId().getModel());
+        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
         return scores.stream().map(s -> (LabeledEntity) s.getEntry()).collect(Collectors.toList());
     }
@@ -99,7 +96,7 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
                         matchQuery("o.value", searchParams.getSearchTerm()), ScoreMode.Max))
                 .minimumShouldMatch("1");
 
-        Searcher searcher = core.getSearcher(searchParams.getKbId().getModel());
+        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
         List<Score> classes2Score = scores.stream()
@@ -115,7 +112,7 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
         // .. and at this point we add the missing information specific for this kind of search
         searchParams.model(BuiltInModel.ENTITY);
         // Fetch the 'generic' searcher instance
-        Searcher searcher = core.getSearcher(searchParams.getKbId().getModel());
+        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
         // Fetch initial candidates from the search engine
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
         // Re-Rank
@@ -139,7 +136,7 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
                 .should(nestedQuery("synonyms",
                         matchQuery("synonyms.word", searchParams.getSearchTerm()), ScoreMode.Max))
                 .minimumShouldMatch(1);
-        Searcher searcher = core.getSearcher(searchParams.getKbId().getModel());
+        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
         return Rankers.apply(scores, rankParams, searchParams.getSearchTerm());
@@ -159,7 +156,7 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
                 .should(nestedQuery("s", termQuery("s.id", pivot.getId()), ScoreMode.Max))
                 .should(nestedQuery("o", termQuery("o.id", pivot.getId()), ScoreMode.Max)).minimumNumberShouldMatch(1);
 
-        Searcher searcher = core.getSearcher(searchParams.getKbId().getModel());
+        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
         // We have to remap the facts to properties, the real target of the ranker call.

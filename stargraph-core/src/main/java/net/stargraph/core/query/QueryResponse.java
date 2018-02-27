@@ -12,10 +12,10 @@ package net.stargraph.core.query;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,14 +33,20 @@ import java.util.Objects;
 public abstract class QueryResponse {
     private String userQuery;
     private InteractionMode interactionMode;
+    private QueryResolver source;
 
-    public QueryResponse(InteractionMode interactionMode, String userQuery) {
+    public QueryResponse(InteractionMode interactionMode, String userQuery, QueryResolver source) {
         this.interactionMode = Objects.requireNonNull(interactionMode);
         this.userQuery = Objects.requireNonNull(userQuery);
+        this.source = source;
     }
 
     public InteractionMode getInteractionMode() {
         return interactionMode;
+    }
+
+    public QueryResolver getSource() {
+        return source;
     }
 
     public String getUserQuery() {

@@ -29,9 +29,9 @@ package net.stargraph.test.it;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.elastic.ElasticIndexer;
-import net.stargraph.core.impl.elastic.ElasticSearcher;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.impl.elastic.ElasticIndexPopulator;
+import net.stargraph.core.impl.elastic.ElasticIndexSearcher;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Fact;
 import net.stargraph.model.KBId;
@@ -40,9 +40,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Aims to test the incremental indexing features..
@@ -53,8 +50,8 @@ import java.util.concurrent.TimeoutException;
 public final class IndexUpdateIT {
 
     private Stargraph stargraph;
-    private Indexer indexer;
-    private ElasticSearcher searcher;
+    private IndexPopulator indexer;
+    private ElasticIndexSearcher searcher;
     private KBId kbId = KBId.of("simple", "facts");
 
     @BeforeClass
@@ -68,9 +65,9 @@ public final class IndexUpdateIT {
         stargraph.initialize();
 
 
-        searcher = new ElasticSearcher(kbId, stargraph);
+        searcher = new ElasticIndexSearcher(kbId, stargraph);
         searcher.start();
-        indexer = new ElasticIndexer(kbId, stargraph);
+        indexer = new ElasticIndexPopulator(kbId, stargraph);
         indexer.start();
         indexer.deleteAll();
     }

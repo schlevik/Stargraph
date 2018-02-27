@@ -30,10 +30,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticFactory;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.search.DocumentSearchBuilder;
+import net.stargraph.core.search.IndexSearcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.rank.*;
@@ -53,7 +52,7 @@ public final class DocumentIndexIT {
 
     private KBId kbId = KBId.of("obama", "documents");
     private Stargraph stargraph;
-    private Indexer indexer;
+    private IndexPopulator indexer;
 
     @BeforeClass
     public void before() throws InterruptedException {
@@ -70,7 +69,7 @@ public final class DocumentIndexIT {
         this.indexer = stargraph.getIndexer(kbId);
 
 
-        Searcher searcher = stargraph.getSearcher(kbId);
+        IndexSearcher searcher = stargraph.getSearcher(kbId);
         if (searcher.countDocuments() != 1) {
             indexer.deleteAll();
 
@@ -84,7 +83,7 @@ public final class DocumentIndexIT {
 
     @Test
     public void queryDocumentIndexTest() {
-        DocumentSearcher documentSearcher = this.stargraph.getKBCore("obama").createDocumentSearcher();
+        DocumentSearchBuilder documentSearcher = this.stargraph.getKBCore("obama").createDocumentSearcher();
         InstanceEntity obama = new InstanceEntity("dbr:Barack_Obama", "Barack Obama");
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama");
         searchParams.term("like to eat");

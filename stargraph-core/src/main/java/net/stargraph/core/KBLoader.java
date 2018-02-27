@@ -27,8 +27,8 @@ package net.stargraph.core;
  */
 
 import net.stargraph.StarGraphException;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.search.IndexSearcher;
 import net.stargraph.model.KBId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,9 +107,9 @@ public final class KBLoader {
         List<KBId> failing = new ArrayList<>();
         core.getKBIds().forEach(kbId -> { // why not parallel?
             try {
-                Indexer indexer = core.getIndexer(kbId.getModel());
-                indexer.load(true, -1);
-                indexer.awaitLoader();
+                IndexPopulator indexPopulator = core.getIndexPopulator(kbId.getModel());
+                indexPopulator.load(true, -1);
+                indexPopulator.awaitLoader();
                 successful.add(kbId);
             } catch (Exception e) {
                 logger.error(marker, "Fail to load {}", kbId);
@@ -126,7 +126,7 @@ public final class KBLoader {
     }
 
     private boolean containsData(KBId kbId) {
-        Searcher searcher = core.getSearcher(kbId.getModel());
+        IndexSearcher searcher = core.getIndexSearcher(kbId.getModel());
         return searcher.countDocuments() > 0;
     }
 }

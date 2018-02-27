@@ -30,10 +30,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.StarGraphException;
-import net.stargraph.core.impl.hdt.HDTModelFactory;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.processors.Processors;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.search.IndexSearcher;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.DataProviderFactory;
 import net.stargraph.data.processor.Holder;
@@ -138,12 +137,12 @@ public final class Stargraph {
         return dataRootDir;
     }
 
-    public Indexer getIndexer(KBId kbId) {
-        return getKBCore(kbId.getId()).getIndexer(kbId.getModel());
+    public IndexPopulator getIndexer(KBId kbId) {
+        return getKBCore(kbId.getId()).getIndexPopulator(kbId.getModel());
     }
 
-    public Searcher getSearcher(KBId kbId) {
-        return getKBCore(kbId.getId()).getSearcher(kbId.getModel());
+    public IndexSearcher getSearcher(KBId kbId) {
+        return getKBCore(kbId.getId()).getIndexSearcher(kbId.getModel());
     }
 
     public void setKBInitSet(String... kbIds) {

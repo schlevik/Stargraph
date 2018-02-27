@@ -28,7 +28,7 @@ package net.stargraph.core.impl.lucene;
 
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.BaseSearcher;
+import net.stargraph.core.search.BaseIndexSearcher;
 import net.stargraph.core.search.SearchQueryHolder;
 import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
@@ -51,32 +51,28 @@ import org.slf4j.MarkerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
-public final class LuceneSearcher extends BaseSearcher {
-    private static Logger logger = LoggerFactory.getLogger(LuceneSearcher.class);
+public final class LuceneIndexSearcher extends BaseIndexSearcher<LuceneQueryHolder> {
+    private static Logger logger = LoggerFactory.getLogger(LuceneIndexSearcher.class);
     private static Marker marker = MarkerFactory.getMarker("lucene");
 
     private Directory directory;
     private IndexReader indexReader;
     private IndexSearcher indexSearcher;
 
-    public LuceneSearcher(KBId kbId, Stargraph core, Directory directory) {
+    public LuceneIndexSearcher(KBId kbId, Stargraph core, Directory directory) {
         super(kbId, core);
         this.directory = Objects.requireNonNull(directory);
     }
 
     @Override
-    public Scores search(SearchQueryHolder holder) {
+    public Scores search(LuceneQueryHolder holder) {
         TopDocs results;
         Scores scores = new Scores();
         IndexSearcher searcher = getLuceneSearcher();
         // unpack query, cast it as you know that it's a lucene query (what else could it be?)
-        Query query = (Query) holder.getQuery();
+        Query query = holder.getQuery();
         try {
             // perform query
             int limit = holder.getSearchParams().getLimit();

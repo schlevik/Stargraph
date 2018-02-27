@@ -29,7 +29,7 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.KBId;
 import org.testng.Assert;
@@ -37,16 +37,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public final class IndexerTest {
+public final class IndexPopulatorTest {
 
     private KBId kbId = KBId.of("mytest", "mytype");
     private List<TestData> expected;
     private Stargraph stargraph;
-    private Indexer indexer;
+    private IndexPopulator indexer;
 
     @BeforeClass
     public void before() {
@@ -54,7 +53,7 @@ public final class IndexerTest {
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
         this.stargraph.setKBInitSet(kbId.getId());
-        this.stargraph.setDefaultIndicesFactory(new TestDataIndexer.Factory());
+        this.stargraph.setDefaultIndicesFactory(new TestDataIndexPopulator.Factory());
         this.stargraph.initialize();
         this.indexer = stargraph.getIndexer(kbId);
         List<String> expected = Arrays.asList("first", "second", "third");
@@ -65,7 +64,7 @@ public final class IndexerTest {
     public void bulkLoadTest() throws Exception {
         indexer.load(true, -1);
         indexer.awaitLoader();
-        Assert.assertEquals(expected, ((TestDataIndexer) indexer).getIndexed());
+        Assert.assertEquals(expected, ((TestDataIndexPopulator) indexer).getIndexed());
     }
 
     @Test(expectedExceptions = IllegalStateException.class)
@@ -76,7 +75,7 @@ public final class IndexerTest {
             indexer.load();
         } finally {
             indexer.awaitLoader();
-            Assert.assertEquals(expected, ((TestDataIndexer) indexer).getIndexed());
+            Assert.assertEquals(expected, ((TestDataIndexPopulator) indexer).getIndexed());
         }
     }
 
@@ -87,7 +86,7 @@ public final class IndexerTest {
             indexer.index(new Indexable(new TestData("4th"), kbId));
         } finally {
             indexer.awaitLoader();
-            Assert.assertEquals(expected, ((TestDataIndexer) indexer).getIndexed());
+            Assert.assertEquals(expected, ((TestDataIndexPopulator) indexer).getIndexed());
         }
     }
 
@@ -107,7 +106,7 @@ public final class IndexerTest {
         indexer.awaitLoader();
         indexer.load();
         indexer.awaitLoader();
-        Assert.assertEquals(2 * expected.size(), ((TestDataIndexer) indexer).getIndexed().size());
+        Assert.assertEquals(2 * expected.size(), ((TestDataIndexPopulator) indexer).getIndexed().size());
     }
 
     @Test
@@ -116,14 +115,14 @@ public final class IndexerTest {
         indexer.awaitLoader();
         indexer.load(true, -1);
         indexer.awaitLoader();
-        Assert.assertEquals(expected, ((TestDataIndexer) indexer).getIndexed());
+        Assert.assertEquals(expected, ((TestDataIndexPopulator) indexer).getIndexed());
     }
 
     @Test
     public void limitLoadingTest() throws Exception {
         indexer.load(true, 3); //first two entries will fail for sure.
         indexer.awaitLoader();
-        Assert.assertEquals(((TestDataIndexer) indexer).getIndexed(),
+        Assert.assertEquals(((TestDataIndexPopulator) indexer).getIndexed(),
                 expected);
     }
 

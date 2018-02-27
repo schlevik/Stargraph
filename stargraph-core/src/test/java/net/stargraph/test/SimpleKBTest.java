@@ -30,8 +30,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.hdt.HDTModelFactory;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.index.NullIndicesFactory;
 import net.stargraph.model.KBId;
 import org.testng.annotations.BeforeClass;
@@ -71,14 +70,14 @@ public final class SimpleKBTest {
 
     @Test
     public void factLoadTest() throws Exception {
-        Indexer indexer = stargraph.getIndexer(factsId);
+        IndexPopulator indexer = stargraph.getIndexer(factsId);
         indexer.load(true, -1);
         indexer.awaitLoader();
     }
 
     @Test
     public void entitiesLoadTest() throws Exception {
-        Indexer indexer = stargraph.getIndexer(entitiesId);
+        IndexPopulator indexer = stargraph.getIndexer(entitiesId);
         indexer.load(true, -1);
         indexer.awaitLoader();
     }

@@ -29,31 +29,31 @@ package net.stargraph.core.index;
 import net.stargraph.core.IndicesFactory;
 import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.BaseSearcher;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.core.search.BaseIndexSearcher;
+import net.stargraph.core.search.DocumentSearchBuilder;
+import net.stargraph.core.search.EntitySearchBuilder;
 import net.stargraph.model.KBId;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public final class NullIndicesFactory implements IndicesFactory {
 
     @Override
-    public BaseIndexer createIndexer(KBId kbId, Stargraph stargraph) {
-        return new NullIndexer(kbId, stargraph);
+    public BaseIndexPopulator createIndexer(KBId kbId, Stargraph stargraph) {
+        return new NullIndexPopulator(kbId, stargraph);
     }
 
     @Override
-    public BaseSearcher createSearcher(KBId kbId, Stargraph stargraph) {
+    public BaseIndexSearcher createSearcher(KBId kbId, Stargraph stargraph) {
         return null;
     }
 
     @Override
-    public EntitySearcher createEntitySearcher(KBCore core) {
+    public EntitySearchBuilder createEntitySearcher(KBCore core) {
         return null;
     }
 
     @Override
-    public DocumentSearcher createDocumentSearcher(KBCore core) {
+    public DocumentSearchBuilder createDocumentSearcher(KBCore core) {
         throw new NotImplementedException();
     }
 }

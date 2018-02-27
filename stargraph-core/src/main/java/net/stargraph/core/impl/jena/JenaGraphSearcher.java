@@ -30,8 +30,8 @@ import net.stargraph.ModelUtils;
 import net.stargraph.core.KBCore;
 import net.stargraph.core.Namespace;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.graph.GraphSearcher;
-import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.core.search.GraphSearcher;
+import net.stargraph.core.search.EntitySearchBuilder;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.model.ValueEntity;
 import org.apache.jena.graph.impl.LiteralLabel;
@@ -76,7 +76,7 @@ public final class JenaGraphSearcher implements GraphSearcher {
         long startTime = System.currentTimeMillis();
 
         Map<String, List<LabeledEntity>> result = new LinkedHashMap<>();
-        EntitySearcher entitySearcher = core.createEntitySearcher();
+        EntitySearchBuilder entitySearchBuilder = core.createEntitySearcher();
 
         try (QueryExecution qexec = QueryExecutionFactory.create(sparqlQuery, core.getGraphModel())) {
             ResultSet results = qexec.execSelect();
@@ -90,7 +90,7 @@ public final class JenaGraphSearcher implements GraphSearcher {
                     if (!jBinding.get(jVar).isLiteral()) {
                         String id = jBinding.get(jVar).getURI();
                         List<LabeledEntity> entities = result.computeIfAbsent(jVar.getVarName(), (v) -> new ArrayList<>());
-                        LabeledEntity labeledEntity = ns.isFromMainNS(id) ? entitySearcher.getEntity(dbId, id) : ModelUtils.createInstance(id);
+                        LabeledEntity labeledEntity = ns.isFromMainNS(id) ? entitySearchBuilder.getEntity(dbId, id) : ModelUtils.createInstance(id);
                         entities.add(labeledEntity);
                     } else {
                         LiteralLabel lit = jBinding.get(jVar).getLiteral();

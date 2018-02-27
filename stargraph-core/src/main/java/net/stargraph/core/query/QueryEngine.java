@@ -30,14 +30,13 @@ import net.stargraph.StarGraphException;
 import net.stargraph.core.KBCore;
 import net.stargraph.core.Namespace;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.graph.GraphSearcher;
-import net.stargraph.core.impl.lucene.LuceneSearcher;
+import net.stargraph.core.search.GraphSearcher;
 import net.stargraph.core.query.nli.*;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.query.response.NoResponse;
 import net.stargraph.core.query.response.SPARQLSelectResponse;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.core.search.DocumentSearchBuilder;
+import net.stargraph.core.search.EntitySearchBuilder;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.model.Passage;
@@ -54,6 +53,12 @@ import java.util.stream.Collectors;
 
 import static net.stargraph.query.InteractionMode.*;
 
+/**
+ * This class holds and ties together all existing {@link QueryResolver}s.
+ * <p>
+ * The input query is passed to all registered {@link QueryResolver}s which can append their answer to the query,
+ * if they have one.
+ */
 public final class QueryEngine {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("query");
@@ -73,6 +78,7 @@ public final class QueryEngine {
         this.graphSearcher = core.createGraphSearcher();
         this.namespace = core.getNamespace();
         this.language = core.getLanguage();
+
         this.modeSelector = new InteractionModeSelector(stargraph.getMainConfig(), language);
     }
 
@@ -127,7 +133,7 @@ public final class QueryEngine {
         PassageQuestionAnalysis analysis = analyzer.analyse(query);
 
         InstanceEntity pivot = resolvePivot(analysis.getInstance());
-        DocumentSearcher searcher = core.createDocumentSearcher();
+        DocumentSearchBuilder searcher = core.createDocumentSearcher();
 
         logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
 
@@ -288,7 +294,7 @@ public final class QueryEngine {
 
     private void resolveClass(DataModelBinding binding, SPARQLQueryBuilder builder) {
         if (binding.getModelType() == DataModelType.CLASS) {
-            EntitySearcher searcher = core.createEntitySearcher();
+            EntitySearchBuilder searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.word2vec();
             Scores scores = searcher.classSearch(searchParams, rankParams);
@@ -300,7 +306,7 @@ public final class QueryEngine {
         if ((binding.getModelType() == DataModelType.CLASS
                 || binding.getModelType() == DataModelType.PROPERTY) && !builder.isResolved(binding)) {
 
-            EntitySearcher searcher = core.createEntitySearcher();
+            EntitySearchBuilder searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.word2vec();
             Scores scores = searcher.pivotedSearch(pivot, searchParams, rankParams);
@@ -315,7 +321,7 @@ public final class QueryEngine {
         }
 
         if (binding.getModelType() == DataModelType.INSTANCE) {
-            EntitySearcher searcher = core.createEntitySearcher();
+            EntitySearchBuilder searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
             Scores scores = searcher.instanceSearch(searchParams, rankParams);
@@ -328,7 +334,7 @@ public final class QueryEngine {
 
     private InstanceEntity resolvePivot(DataModelBinding binding) {
         if (binding.getModelType() == DataModelType.INSTANCE) {
-            EntitySearcher searcher = core.createEntitySearcher();
+            EntitySearchBuilder searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
             Scores scores = searcher.instanceSearch(searchParams, rankParams);
@@ -340,7 +346,7 @@ public final class QueryEngine {
     }
 
     private InstanceEntity resolveInstance(String instanceTerm) {
-        EntitySearcher searcher = core.createEntitySearcher();
+        EntitySearchBuilder searcher = core.createEntitySearcher();
         ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(instanceTerm);
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
         Scores scores = searcher.instanceSearch(searchParams, rankParams);

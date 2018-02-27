@@ -28,7 +28,7 @@ package net.stargraph.server;
 
 import net.stargraph.core.KBCore;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
 import net.stargraph.model.KBId;
@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,8 +75,8 @@ final class KBResourceImpl implements KBResource {
     @Override
     public Response load(String id, String type, boolean reset, int limit) {
         KBCore core = stargraph.getKBCore(id);
-        Indexer indexer = core.getIndexer(type);
-        indexer.load(reset, limit);
+        IndexPopulator indexPopulator = core.getIndexPopulator(type);
+        indexPopulator.load(reset, limit);
         return ResourceUtils.createAckResponse(true);
     }
 
@@ -92,7 +91,7 @@ final class KBResourceImpl implements KBResource {
     public Response upload(String id, String type, FormDataMultiPart form) {
         KBCore core = stargraph.getKBCore(id);
         final KBId kbId = KBId.of(id, type);
-        Indexer indexer = core.getIndexer(type);
+        IndexPopulator indexPopulator = core.getIndexPopulator(type);
 
         // get file information
         FormDataBodyPart filePart = form.getField("file");
@@ -112,8 +111,8 @@ final class KBResourceImpl implements KBResource {
             if (type.equals("documents")) {
                 String docId = fileName; //TODO get from other source?
                 String docTitle = FilenameUtils.removeExtension(fileName); //TODO get from other source?
-                indexer.index(new Indexable(new Document(docId, docTitle, null, content), kbId));
-                indexer.flush();
+                indexPopulator.index(new Indexable(new Document(docId, docTitle, null, content), kbId));
+                indexPopulator.flush();
             } else {
                 logger.error(marker, "Type not supported yet: " + type);
                 return Response.status(Response.Status.NOT_IMPLEMENTED).build();

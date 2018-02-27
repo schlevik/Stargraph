@@ -1,4 +1,4 @@
-package net.stargraph.core.search;
+package net.stargraph.core.index;
 
 /*-
  * ==========================License-Start=============================
@@ -26,19 +26,38 @@ package net.stargraph.core.search;
  * ==========================License-End===============================
  */
 
-import net.stargraph.rank.Scores;
+import net.stargraph.data.DataProvider;
+import net.stargraph.data.Indexable;
+import net.stargraph.data.processor.Holder;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
- * Definition of a Searcher.
+ * Definition of an indexer.
  */
-public interface Searcher {
+public interface IndexPopulator {
 
     void start();
 
     void stop();
 
-    Scores search(SearchQueryHolder holder);
+    void load();
 
-    long countDocuments();
+    void load(boolean reset, int limit);
 
+    void awaitLoader() throws InterruptedException, TimeoutException, ExecutionException;
+
+    void awaitLoader(long time, TimeUnit unit) throws InterruptedException, TimeoutException, ExecutionException;
+
+    void index(Indexable data) throws InterruptedException;
+
+    void flush();
+
+    void deleteAll();
+
+    void extend(DataProvider<? extends Holder> dataProvider);
 }

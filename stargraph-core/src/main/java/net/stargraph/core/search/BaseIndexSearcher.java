@@ -12,10 +12,10 @@ package net.stargraph.core.search;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,14 +35,14 @@ import org.slf4j.MarkerFactory;
 
 import java.util.Objects;
 
-public abstract class BaseSearcher implements Searcher {
+public abstract class BaseIndexSearcher<T extends SearchQueryHolder> implements IndexSearcher<T> {
     protected Logger logger = LoggerFactory.getLogger(getClass());
     protected Marker marker = MarkerFactory.getMarker("search");
     protected Stargraph stargraph;
     protected KBId kbId;
     private boolean running;
 
-    public BaseSearcher(KBId kbId, Stargraph stargraph) {
+    public BaseIndexSearcher(KBId kbId, Stargraph stargraph) {
         this.stargraph = Objects.requireNonNull(stargraph);
         this.kbId = Objects.requireNonNull(kbId);
     }
@@ -64,8 +64,7 @@ public abstract class BaseSearcher implements Searcher {
             try {
                 onStop();
                 running = false;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logger.error(marker, "Fail to stop.", e);
             }
 

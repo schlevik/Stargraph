@@ -30,13 +30,12 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.lucene.LuceneFactory;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.search.IndexSearcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.test.TestUtils;
@@ -88,7 +87,7 @@ public final class LuceneCanonicalEntitiesIT {
 
         queryEngine = new QueryEngine(id, stargraph);
 
-        Indexer indexer = stargraph.getIndexer(canonicalEntitiesIndex);
+        IndexPopulator indexer = stargraph.getIndexer(canonicalEntitiesIndex);
         indexer.load(true, -1);
         indexer.awaitLoader();
 
@@ -102,7 +101,7 @@ public final class LuceneCanonicalEntitiesIT {
      * The actual loading was done in {@link #beforeClass()}.
      */
     public void bulkLoadTest() {
-        Searcher searcher = stargraph.getSearcher(canonicalEntitiesIndex);
+        IndexSearcher searcher = stargraph.getSearcher(canonicalEntitiesIndex);
         Assert.assertEquals(searcher.countDocuments(), 887);
     }
 
@@ -117,7 +116,7 @@ public final class LuceneCanonicalEntitiesIT {
     @Test(enabled = false)
     public void successfullyLinkObamaWikipediaArticle() throws IOException, InterruptedException, URISyntaxException {
         TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsIndex));
-        Searcher searcher = stargraph.getSearcher(documentsIndex);
+        IndexSearcher searcher = stargraph.getSearcher(documentsIndex);
         if (searcher.countDocuments() != 1) {
 
             String location = stargraph.getModelConfig(documentsIndex).getConfigList("processors")
@@ -129,7 +128,7 @@ public final class LuceneCanonicalEntitiesIT {
             TestUtils.assertCorefRunning(location);
 
 
-            Indexer indexer = stargraph.getIndexer(documentsIndex);
+            IndexPopulator indexer = stargraph.getIndexer(documentsIndex);
 
             indexer.deleteAll();
             URI u = getClass().getClassLoader().getResource("obama.txt").toURI();

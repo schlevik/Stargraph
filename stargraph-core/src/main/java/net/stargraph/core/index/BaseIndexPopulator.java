@@ -50,7 +50,7 @@ import java.util.concurrent.*;
 /**
  * Full state default indexer.
  */
-public abstract class BaseIndexer implements Indexer {
+public abstract class BaseIndexPopulator implements IndexPopulator {
     protected Logger logger = LoggerFactory.getLogger(getClass());
     protected Marker marker = MarkerFactory.getMarker("index");
     protected KBId kbId;
@@ -65,7 +65,7 @@ public abstract class BaseIndexer implements Indexer {
     private boolean loading;
     private boolean running;
 
-    public BaseIndexer(KBId kbId, Stargraph stargraph) {
+    public BaseIndexPopulator(KBId kbId, Stargraph stargraph) {
         this.stargraph = Objects.requireNonNull(stargraph);
         this.kbId = Objects.requireNonNull(kbId);
         this.loading = false;
@@ -85,7 +85,7 @@ public abstract class BaseIndexer implements Indexer {
     @Override
     public synchronized final void stop() {
         if (!running) {
-            logger.error(marker, "Indexer already stopped.");
+            logger.error(marker, "IndexPopulator already stopped.");
         } else {
             try {
                 onStop();
