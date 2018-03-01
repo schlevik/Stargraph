@@ -31,7 +31,7 @@ import net.stargraph.StarGraphException;
 import net.stargraph.core.serializer.ObjectSerializer;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,18 +50,18 @@ public final class DocumentIterator implements Iterator<Indexable> {
     private static Marker marker = MarkerFactory.getMarker("core");
 
     private Stargraph core;
-    private final KBId kbId;
+    private final IndexID indexID;
     private final ObjectMapper mapper;
     private final Iterator<String> lineIt;
     private Document next;
 
 
-    public DocumentIterator(Stargraph core, KBId kbId) {
+    public DocumentIterator(Stargraph core, IndexID indexID) {
         this.core = Objects.requireNonNull(core);
-        this.kbId = Objects.requireNonNull(kbId);
-        this.mapper = ObjectSerializer.createMapper(kbId);
+        this.indexID = Objects.requireNonNull(indexID);
+        this.mapper = ObjectSerializer.createMapper(indexID);
 
-        Path filePath = getFilePath(kbId.getId());
+        Path filePath = getFilePath(indexID.getKnowledgeBase());
         File file = filePath.toFile();
         try {
             this.lineIt = FileUtils.lineIterator(file, "UTF-8");
@@ -100,7 +100,7 @@ public final class DocumentIterator implements Iterator<Indexable> {
 
     @Override
     public Indexable next() {
-        Indexable indexable = new Indexable(next, kbId);
+        Indexable indexable = new Indexable(next, indexID);
         parseNext();
         return indexable;
     }

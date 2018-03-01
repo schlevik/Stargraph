@@ -26,10 +26,10 @@ package net.stargraph.core.impl.elastic;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.KBCore;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Namespace;
-import net.stargraph.core.search.EntitySearchBuilder;
-import net.stargraph.core.search.IndexSearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.model.BuiltInModel;
 import net.stargraph.model.Fact;
 import net.stargraph.model.InstanceEntity;
@@ -49,13 +49,13 @@ import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
-public final class ElasticEntitySearchBuilder implements EntitySearchBuilder<ElasticIndexSearcher> {
+public final class ElasticEntityIndexSearcher implements EntityIndexSearcher<ElasticIndexSearchExecutor> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("elastic");
 
-    private KBCore core;
+    private KnowledgeBase core;
 
-    public ElasticEntitySearchBuilder(KBCore core) {
+    public ElasticEntityIndexSearcher(KnowledgeBase core) {
         this.core = Objects.requireNonNull(core);
     }
 
@@ -75,7 +75,7 @@ public final class ElasticEntitySearchBuilder implements EntitySearchBuilder<Ela
         List idList = ids.stream().map(ns::shrinkURI).collect(Collectors.toList());
         ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).model(BuiltInModel.ENTITY);
         QueryBuilder queryBuilder = termsQuery("id", idList);
-        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
+        IndexSearchExecutor searcher = core.getSearchExecutor(searchParams.getKbId().getIndex());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
         return scores.stream().map(s -> (LabeledEntity) s.getEntry()).collect(Collectors.toList());
     }
@@ -96,7 +96,7 @@ public final class ElasticEntitySearchBuilder implements EntitySearchBuilder<Ela
                         matchQuery("o.value", searchParams.getSearchTerm()), ScoreMode.Max))
                 .minimumShouldMatch("1");
 
-        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
+        IndexSearchExecutor searcher = core.getSearchExecutor(searchParams.getKbId().getIndex());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
         List<Score> classes2Score = scores.stream()
@@ -112,7 +112,7 @@ public final class ElasticEntitySearchBuilder implements EntitySearchBuilder<Ela
         // .. and at this point we add the missing information specific for this kind of search
         searchParams.model(BuiltInModel.ENTITY);
         // Fetch the 'generic' searcher instance
-        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
+        IndexSearchExecutor searcher = core.getSearchExecutor(searchParams.getKbId().getIndex());
         // Fetch initial candidates from the search engine
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
         // Re-Rank
@@ -136,7 +136,7 @@ public final class ElasticEntitySearchBuilder implements EntitySearchBuilder<Ela
                 .should(nestedQuery("synonyms",
                         matchQuery("synonyms.word", searchParams.getSearchTerm()), ScoreMode.Max))
                 .minimumShouldMatch(1);
-        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
+        IndexSearchExecutor searcher = core.getSearchExecutor(searchParams.getKbId().getIndex());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
         return Rankers.apply(scores, rankParams, searchParams.getSearchTerm());
@@ -156,7 +156,7 @@ public final class ElasticEntitySearchBuilder implements EntitySearchBuilder<Ela
                 .should(nestedQuery("s", termQuery("s.id", pivot.getId()), ScoreMode.Max))
                 .should(nestedQuery("o", termQuery("o.id", pivot.getId()), ScoreMode.Max)).minimumNumberShouldMatch(1);
 
-        IndexSearcher searcher = core.getIndexSearcher(searchParams.getKbId().getModel());
+        IndexSearchExecutor searcher = core.getSearchExecutor(searchParams.getKbId().getIndex());
         Scores scores = searcher.search(new ElasticQueryHolder(queryBuilder, searchParams));
 
         // We have to remap the facts to properties, the real target of the ranker call.

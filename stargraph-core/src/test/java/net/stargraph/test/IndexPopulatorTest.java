@@ -31,7 +31,7 @@ import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 
 public final class IndexPopulatorTest {
 
-    private KBId kbId = KBId.of("mytest", "mytype");
+    private IndexID indexID = IndexID.of("mytest", "mytype");
     private List<TestData> expected;
     private Stargraph stargraph;
     private IndexPopulator indexer;
@@ -52,10 +52,10 @@ public final class IndexPopulatorTest {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
-        this.stargraph.setKBInitSet(kbId.getId());
+        this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
         this.stargraph.setDefaultIndicesFactory(new TestDataIndexPopulator.Factory());
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(kbId);
+        this.indexer = stargraph.getIndexer(indexID);
         List<String> expected = Arrays.asList("first", "second", "third");
         this.expected = expected.stream().map(s -> new TestData(false, false, s)).collect(Collectors.toList());
     }
@@ -83,7 +83,7 @@ public final class IndexPopulatorTest {
     public void updateWhileLoadingFailTest() throws Exception {
         try {
             indexer.load(true, -1);
-            indexer.index(new Indexable(new TestData("4th"), kbId));
+            indexer.index(new Indexable(new TestData("4th"), indexID));
         } finally {
             indexer.awaitLoader();
             Assert.assertEquals(expected, ((TestDataIndexPopulator) indexer).getIndexed());

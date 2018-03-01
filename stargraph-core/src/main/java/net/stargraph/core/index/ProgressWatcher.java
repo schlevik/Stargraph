@@ -26,7 +26,7 @@ package net.stargraph.core.index;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -53,13 +53,13 @@ public final class ProgressWatcher {
     private long stopTime;
     private long elapsedTime;
     private ScheduledExecutorService executor;
-    private KBId kbId;
+    private IndexID indexID;
     private boolean logStats;
     private String dataRootDir;
 
 
-    public ProgressWatcher(KBId kbId, String dataRootDir, boolean logStats) {
-        this.kbId = Objects.requireNonNull(kbId);
+    public ProgressWatcher(IndexID indexID, String dataRootDir, boolean logStats) {
+        this.indexID = Objects.requireNonNull(indexID);
         this.dataRootDir = Objects.requireNonNull(dataRootDir);
         this.logStats = logStats;
     }
@@ -132,7 +132,7 @@ public final class ProgressWatcher {
 
     private void logStats() {
         if (logStats) {
-            File csvFile = Paths.get(dataRootDir, kbId.getId(), String.format("indexing-time-%s.csv", kbId.getModel())).toFile();
+            File csvFile = Paths.get(dataRootDir, indexID.getKnowledgeBase(), String.format("indexing-time-%s.csv", indexID.getIndex())).toFile();
             logger.info(marker, "Logging stats to {}", csvFile);
 
             boolean exists = csvFile.exists();

@@ -1,4 +1,4 @@
-package net.stargraph.core.search;
+package net.stargraph.core.search.database;
 
 /*-
  * ==========================License-Start=============================
@@ -26,27 +26,19 @@ package net.stargraph.core.search;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
-import net.stargraph.rank.ModifiableRankParams;
-import net.stargraph.rank.ModifiableSearchParams;
-import net.stargraph.rank.Scores;
 
 import java.util.List;
+import java.util.Map;
 
-public interface EntitySearchBuilder<T extends IndexSearcher> extends SearchBuilder<T> {
+public interface GraphSearcher extends Database<SparqlQuery, SparqlResult> {
 
-    LabeledEntity getEntity(String dbId, String id);
+    Map<String, List<LabeledEntity>> select(String sparqlQuery);
 
-    List<LabeledEntity> getEntities(String dbId, List<String> ids);
+    boolean ask(String sparqlQuery);
 
-    Scores classSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores propertySearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-
+    @Override
+    default DBType getType() {
+        return DBType.Graph;
+    }
 }

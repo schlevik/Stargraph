@@ -1,7 +1,7 @@
 package net.stargraph.core.impl.elastic;
 
-import net.stargraph.core.KBCore;
-import net.stargraph.core.search.DocumentSearchBuilder;
+import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
 import net.stargraph.model.BuiltInModel;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.rank.ModifiableIndraParams;
@@ -23,12 +23,12 @@ import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 
-public class ElasticDocumentSearchBuilder implements DocumentSearchBuilder<ElasticIndexSearcher> {
-    KBCore core;
+public class ElasticDocumentIndexSearcher implements DocumentIndexSearcher<ElasticIndexSearchExecutor> {
+    KnowledgeBase core;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("elastic");
 
-    public ElasticDocumentSearchBuilder(KBCore core) {
+    public ElasticDocumentIndexSearcher(KnowledgeBase core) {
         this.core = Objects.requireNonNull(core);
     }
 
@@ -50,7 +50,7 @@ public class ElasticDocumentSearchBuilder implements DocumentSearchBuilder<Elast
                 ScoreMode.Max)
                 .innerHit(new InnerHitBuilder(), false);
 
-        ElasticIndexSearcher searcher = getBackendSearcher(core, searchParams.getKbId().getModel());
+        ElasticIndexSearchExecutor searcher = getSearchExecutor(core, searchParams.getKbId().getIndex());
         Scores scores = searcher.innerSearch(new ElasticQueryHolder(queryBuilder, searchParams));
 
 

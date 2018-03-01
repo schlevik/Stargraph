@@ -75,7 +75,7 @@ public final class PassageProcessor extends BaseProcessor {
             List<Passage> passages = new ArrayList<>();
 
             if (doLinking) {
-                NER ner = stargraph.getKBCore(holder.getKBId().getId()).getNER();
+                NER ner = stargraph.getKBCore(holder.getKBId().getKnowledgeBase()).getNER();
                 for (String sentence : SentencesUtils.splitIntoSentences(document.getText())) {
 
                     List<LinkedNamedEntity> linkedNamedEntities = ner.searchAndLink(sentence);

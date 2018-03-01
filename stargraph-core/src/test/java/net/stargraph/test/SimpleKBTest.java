@@ -32,7 +32,7 @@ import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.index.NullIndicesFactory;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -50,8 +50,8 @@ import static net.stargraph.test.TestUtils.createPath;
 public final class SimpleKBTest {
     private String kbName = "simple";
     private Stargraph stargraph;
-    private KBId factsId = KBId.of(kbName, "facts");
-    private KBId entitiesId = KBId.of(kbName, "entities");
+    private IndexID factsId = IndexID.of(kbName, "facts");
+    private IndexID entitiesId = IndexID.of(kbName, "entities");
 
     @BeforeClass
     public void before() throws IOException {

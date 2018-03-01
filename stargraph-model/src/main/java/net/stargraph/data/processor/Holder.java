@@ -26,7 +26,7 @@ package net.stargraph.data.processor;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.io.Serializable;
 
@@ -45,5 +45,5 @@ public interface Holder<T extends Serializable> {
 
     boolean isSinkable();
 
-    KBId getKBId();
+    IndexID getKBId();
 }

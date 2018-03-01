@@ -31,8 +31,8 @@ import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
+import net.stargraph.model.IndexID;
 import net.stargraph.model.InstanceEntity;
-import net.stargraph.model.KBId;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -53,7 +53,7 @@ public final class NERAndLinkingIT {
     NER ner;
     String kbName = "lucene-dbpedia";
     Stargraph stargraph;
-    KBId entityIndex = KBId.of(kbName, "entities");
+    IndexID entityIndex = IndexID.of(kbName, "entities");
 
     @BeforeClass
     public void beforeClass() {

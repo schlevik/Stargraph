@@ -29,10 +29,10 @@ package net.stargraph.test.it;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.StarGraphException;
-import net.stargraph.core.KBCore;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.IndexPopulator;
-import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.*;
 import net.stargraph.rank.*;
 import net.stargraph.test.TestUtils;
@@ -54,11 +54,11 @@ import static net.stargraph.test.TestUtils.createPath;
  */
 public final class ElasticIndexPopulatorIT {
 
-    private KBCore core;
+    private KnowledgeBase core;
     private String kbName = "elastic-obama";
-    private KBId factsId = KBId.of(kbName, "facts");
-    private KBId propsId = KBId.of(kbName, "relations");
-    private KBId entitiesId = KBId.of(kbName, "entities");
+    private IndexID factsId = IndexID.of(kbName, "facts");
+    private IndexID propsId = IndexID.of(kbName, "relations");
+    private IndexID entitiesId = IndexID.of(kbName, "entities");
 
     @BeforeClass
     public void before() throws Exception {
@@ -91,7 +91,7 @@ public final class ElasticIndexPopulatorIT {
     //TODO: need to investigate what fails here
     @Test
     public void classSearchTest() {
-        EntitySearchBuilder searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.createEntitySearcher();
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("president");
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein();
         Scores scores = searcher.classSearch(searchParams, rankParams);
@@ -105,7 +105,7 @@ public final class ElasticIndexPopulatorIT {
     //TODO: i feel thresholds are trolling a bit
     @Test
     public void instanceSearchTest() {
-        EntitySearchBuilder searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.createEntitySearcher();
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("baraCk Obuma");
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
@@ -119,7 +119,7 @@ public final class ElasticIndexPopulatorIT {
     //TODO: this test fails, it just returns something different for some reason.
     @Test(enabled = false)
     public void propertySearchTest() {
-        EntitySearchBuilder searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.createEntitySearcher();
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("position");
         ModifiableRankParams rankParams = ParamsBuilder.word2vec().threshold(Threshold.auto());
@@ -131,7 +131,7 @@ public final class ElasticIndexPopulatorIT {
 
     @Test
     public void pivotedSearchTest() {
-        EntitySearchBuilder searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.createEntitySearcher();
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("school");
         ModifiableRankParams rankParams = ParamsBuilder.word2vec().threshold(Threshold.auto());
@@ -145,16 +145,16 @@ public final class ElasticIndexPopulatorIT {
 
     @Test
     public void getEntitiesTest() {
-        EntitySearchBuilder searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.createEntitySearcher();
         LabeledEntity obama = searcher.getEntity("obama", "dbr:Barack_Obama");
         Assert.assertEquals(new InstanceEntity("dbr:Barack_Obama", "Barack Obama"), obama);
     }
 
     @Test
     public void getIndexerTest() throws Exception {
-        Assert.assertNotNull(core.getIndexPopulator(factsId.getModel()));
-        Assert.assertNotNull(core.getIndexPopulator(entitiesId.getModel()));
-        Assert.assertNotNull(core.getIndexPopulator(propsId.getModel()));
+        Assert.assertNotNull(core.getIndexPopulator(factsId.getIndex()));
+        Assert.assertNotNull(core.getIndexPopulator(entitiesId.getIndex()));
+        Assert.assertNotNull(core.getIndexPopulator(propsId.getIndex()));
     }
 
     @Test(expectedExceptions = StarGraphException.class)
@@ -163,19 +163,19 @@ public final class ElasticIndexPopulatorIT {
     }
 
     private void loadFacts() throws Exception {
-        IndexPopulator indexer = core.getIndexPopulator(factsId.getModel());
+        IndexPopulator indexer = core.getIndexPopulator(factsId.getIndex());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }
 
     private void loadProperties() throws Exception {
-        IndexPopulator indexer = core.getIndexPopulator(propsId.getModel());
+        IndexPopulator indexer = core.getIndexPopulator(propsId.getIndex());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }
 
     private void loadEntities() throws Exception {
-        IndexPopulator indexer = core.getIndexPopulator(entitiesId.getModel());
+        IndexPopulator indexer = core.getIndexPopulator(entitiesId.getIndex());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }

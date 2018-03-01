@@ -27,7 +27,7 @@ package net.stargraph.data;
  */
 
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -38,23 +38,23 @@ import java.util.Objects;
 public final class Indexable implements Holder<Serializable> {
 
     private Serializable data;
-    private KBId kbId;
+    private IndexID indexID;
     private boolean sink;
 
     /**
      * Constructs a indexable data with useful information about its origin (source).
      *
      * @param data   The piece of serializable data to be indexed.
-     * @param kbId Identifies the origin of data.
+     * @param indexID Identifies the origin of data.
      */
-    public Indexable(Serializable data, KBId kbId) {
+    public Indexable(Serializable data, IndexID indexID) {
         set(data);
-        if (kbId == null) {
-            throw new IllegalArgumentException("kbId can't null.");
+        if (indexID == null) {
+            throw new IllegalArgumentException("indexID can't null.");
         }
 
         this.data = data;
-        this.kbId = kbId;
+        this.indexID = indexID;
         this.sink = false;
     }
 
@@ -62,13 +62,13 @@ public final class Indexable implements Holder<Serializable> {
     public String toString() {
         return "Indexable{" +
                 "data=" + data.toString() +
-                ", where=" + kbId +
+                ", where=" + indexID +
                 '}';
     }
 
     @Override
-    public KBId getKBId() {
-        return kbId;
+    public IndexID getKBId() {
+        return indexID;
     }
 
 
@@ -104,11 +104,11 @@ public final class Indexable implements Holder<Serializable> {
         if (o == null || getClass() != o.getClass()) return false;
         Indexable indexable = (Indexable) o;
         return Objects.equals(data, indexable.data) &&
-                Objects.equals(kbId, indexable.kbId);
+                Objects.equals(indexID, indexable.indexID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(data, kbId);
+        return Objects.hash(data, indexID);
     }
 }

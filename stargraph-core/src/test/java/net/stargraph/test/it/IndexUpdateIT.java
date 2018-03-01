@@ -30,11 +30,11 @@ import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticIndexPopulator;
-import net.stargraph.core.impl.elastic.ElasticIndexSearcher;
+import net.stargraph.core.impl.elastic.ElasticIndexSearchExecutor;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Fact;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -51,31 +51,31 @@ public final class IndexUpdateIT {
 
     private Stargraph stargraph;
     private IndexPopulator indexer;
-    private ElasticIndexSearcher searcher;
-    private KBId kbId = KBId.of("simple", "facts");
+    private ElasticIndexSearchExecutor searcher;
+    private IndexID indexID = IndexID.of("simple", "facts");
 
     @BeforeClass
     public void before() {
         ConfigFactory.invalidateCaches();
         stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
 
-        TestUtils.assertElasticRunning(stargraph.getModelConfig(kbId));
+        TestUtils.assertElasticRunning(stargraph.getModelConfig(indexID));
 
-        stargraph.setKBInitSet(kbId.getId());
+        stargraph.setKBInitSet(indexID.getKnowledgeBase());
         stargraph.initialize();
 
 
-        searcher = new ElasticIndexSearcher(kbId, stargraph);
+        searcher = new ElasticIndexSearchExecutor(indexID, stargraph);
         searcher.start();
-        indexer = new ElasticIndexPopulator(kbId, stargraph);
+        indexer = new ElasticIndexPopulator(indexID, stargraph);
         indexer.start();
         indexer.deleteAll();
     }
 
     @Test
     public void updateTest() throws InterruptedException {
-        Fact oneFact = ModelUtils.createFact(kbId, "dbr:Barack_Obama", "dbp:spouse", "dbr:Michelle_Obama");
-        indexer.index(new Indexable(oneFact, kbId));
+        Fact oneFact = ModelUtils.createFact(indexID, "dbr:Barack_Obama", "dbp:spouse", "dbr:Michelle_Obama");
+        indexer.index(new Indexable(oneFact, indexID));
         indexer.flush();
         Assert.assertEquals(searcher.countDocuments(), 1);
     }

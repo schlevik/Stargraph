@@ -29,7 +29,7 @@ package net.stargraph.core.index;
 import net.stargraph.core.Stargraph;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -40,8 +40,8 @@ import java.util.Iterator;
  */
 final class NullIndexPopulator extends BaseIndexPopulator {
 
-    NullIndexPopulator(KBId kbId, Stargraph core) {
-        super(kbId, core);
+    NullIndexPopulator(IndexID indexID, Stargraph core) {
+        super(indexID, core);
     }
 
     @Override
@@ -50,7 +50,7 @@ final class NullIndexPopulator extends BaseIndexPopulator {
     }
 
     @Override
-    protected void doIndex(Serializable data, KBId kbId) throws InterruptedException {
+    protected void doIndex(Serializable data, IndexID indexID) throws InterruptedException {
         //that'it, nothing is done.
         System.out.println(data);
     }
@@ -61,7 +61,7 @@ final class NullIndexPopulator extends BaseIndexPopulator {
         while (dataIterator.hasNext()) {
             Holder datum = dataIterator.next();
             try {
-                doIndex(datum.get(), this.kbId);
+                doIndex(datum.get(), this.indexID);
             } catch (InterruptedException e) {
                 System.out.println("Interrupted.");
             }

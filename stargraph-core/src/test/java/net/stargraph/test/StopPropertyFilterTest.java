@@ -33,7 +33,7 @@ import net.stargraph.core.processors.Processors;
 import net.stargraph.core.processors.StopPropertyFilterProcessor;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.data.processor.Processor;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -43,13 +43,13 @@ import java.util.List;
 
 @SuppressWarnings("unchecked")
 public class StopPropertyFilterTest {
-    private KBId kbId = KBId.of("any", "thing");
+    private IndexID indexID = IndexID.of("any", "thing");
 
     @Test
     public void simpleTest() {
         Config cfg = buildConfig(Collections.singletonList("^rdf:type$"));
 
-        Holder holder = ModelUtils.createWrappedProperty(kbId, "rdf:type");
+        Holder holder = ModelUtils.createWrappedProperty(indexID, "rdf:type");
         Assert.assertFalse(holder.isSinkable());
 
         Processor processor = Processors.create(cfg);
@@ -62,7 +62,7 @@ public class StopPropertyFilterTest {
     public void noFilterTest() {
         Config cfg = buildConfig(Collections.emptyList());
 
-        Holder holder = ModelUtils.createWrappedProperty(kbId, "rdf:type");
+        Holder holder = ModelUtils.createWrappedProperty(indexID, "rdf:type");
         Assert.assertFalse(holder.isSinkable());
 
         Processor processor = Processors.create(cfg);
@@ -75,7 +75,7 @@ public class StopPropertyFilterTest {
     public void noMatchTest() {
         Config cfg = buildConfig(Collections.emptyList());
 
-        Holder holder = ModelUtils.createWrappedProperty(kbId, "rdf:x");
+        Holder holder = ModelUtils.createWrappedProperty(indexID, "rdf:x");
         Assert.assertFalse(holder.isSinkable());
 
         Processor processor = Processors.create(cfg);

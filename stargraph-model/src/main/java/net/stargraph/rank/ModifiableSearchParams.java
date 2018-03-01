@@ -27,7 +27,7 @@ package net.stargraph.rank;
  */
 
 import net.stargraph.model.BuiltInModel;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 public final class ModifiableSearchParams {
 
@@ -67,8 +67,8 @@ public final class ModifiableSearchParams {
         return limit;
     }
 
-    public final KBId getKbId() {
-        return KBId.of(kbId, modelId);
+    public final IndexID getKbId() {
+        return IndexID.of(kbId, modelId);
     }
 
     public final String getSearchTerm() {

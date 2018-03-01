@@ -30,14 +30,14 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import net.stargraph.model.InstanceEntity;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.io.IOException;
 
 class InstanceDeserializer extends AbstractDeserializer<InstanceEntity> {
 
-    InstanceDeserializer(KBId kbId) {
-        super(kbId, InstanceEntity.class);
+    InstanceDeserializer(IndexID indexID) {
+        super(indexID, InstanceEntity.class);
     }
 
     @Override

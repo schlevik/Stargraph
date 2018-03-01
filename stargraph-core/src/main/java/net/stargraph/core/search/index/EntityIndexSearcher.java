@@ -1,4 +1,4 @@
-package net.stargraph.core.search;
+package net.stargraph.core.search.index;
 
 /*-
  * ==========================License-Start=============================
@@ -26,19 +26,28 @@ package net.stargraph.core.search;
  * ==========================License-End===============================
  */
 
+import net.stargraph.core.search.executor.IndexSearchExecutor;
+import net.stargraph.model.InstanceEntity;
+import net.stargraph.model.LabeledEntity;
+import net.stargraph.rank.ModifiableRankParams;
+import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Scores;
 
-/**
- * Definition of a Searcher.
- */
-public interface IndexSearcher<Q extends SearchQueryHolder> extends Searchable<Scores, Q> {
+import java.util.List;
 
-    void start();
+public interface EntityIndexSearcher<T extends IndexSearchExecutor> extends IndexSearcher<T> {
 
-    void stop();
+    LabeledEntity getEntity(String dbId, String id);
 
-    Scores search(Q holder);
+    List<LabeledEntity> getEntities(String dbId, List<String> ids);
 
-    long countDocuments();
+    Scores classSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
+
+    Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
+
+    Scores propertySearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
+
+    Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
+
 
 }

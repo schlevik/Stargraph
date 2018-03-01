@@ -27,14 +27,14 @@ package net.stargraph.data;
  */
 
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.util.List;
 
 public interface DataProviderFactory {
 
-    DataProvider<? extends Holder> create(KBId kbId);
+    DataProvider<? extends Holder> create(IndexID indexID);
 
-    DataProvider<? extends Holder> create(KBId kbId, List data);
+    DataProvider<? extends Holder> create(IndexID indexID, List data);
 
 }

@@ -31,7 +31,7 @@ import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexPopulator;
 import net.stargraph.core.index.IndexingException;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
@@ -58,8 +58,8 @@ public final class ElasticIndexPopulator extends BaseIndexPopulator {
     private BulkProcessor bulkProcessor;
     private ConcurrentHashMap<String, IndexRequest> indexRequests;
 
-    public ElasticIndexPopulator(KBId kbId, Stargraph core) {
-        super(kbId, core);
+    public ElasticIndexPopulator(IndexID indexID, Stargraph core) {
+        super(indexID, core);
         this.indexRequests = new ConcurrentHashMap<>();
     }
 
@@ -128,13 +128,13 @@ public final class ElasticIndexPopulator extends BaseIndexPopulator {
         ForceMergeResponse res = esClient.prepareForceMerge().get();
         logger.debug(marker, "..forced merge..");
         if (res.getFailedShards() > 0) {
-            logger.warn("Flush request failure detected on {}", kbId);
+            logger.warn("Flush request failure detected on {}", indexID);
         }
     }
 
     @Override
     protected void onStart() {
-        this.esClient = new ElasticClient(stargraph, this.kbId);
+        this.esClient = new ElasticClient(stargraph, this.indexID);
         this.bulkProcessor = createBulkProcessor();
     }
 
@@ -155,7 +155,7 @@ public final class ElasticIndexPopulator extends BaseIndexPopulator {
 
 
     @Override
-    protected void doIndex(Serializable data, KBId kbId) throws InterruptedException {
+    protected void doIndex(Serializable data, IndexID indexID) throws InterruptedException {
         if (bulkProcessor == null) {
             throw new StarGraphException("Back-end is unreachable now.");
         }
@@ -182,7 +182,7 @@ public final class ElasticIndexPopulator extends BaseIndexPopulator {
         CreateIndexResponse res = esClient.prepareCreate().setSettings(settings).get();
 
         if (!res.isAcknowledged()) {
-            throw new IndexingException("Fail to create index for " + this.kbId);
+            throw new IndexingException("Fail to create index for " + this.indexID);
         }
     }
 
@@ -197,9 +197,9 @@ public final class ElasticIndexPopulator extends BaseIndexPopulator {
     private BulkProcessor createBulkProcessor() {
         int processors = Runtime.getRuntime().availableProcessors();
         processors = processors > 1 ? processors - 1 : 1;
-        int concurrency = stargraph.getModelConfig(kbId).getInt("elastic.bulk.concurrency");
+        int concurrency = stargraph.getModelConfig(indexID).getInt("elastic.bulk.concurrency");
         concurrency = concurrency > 0 ? concurrency : processors;
-        int bulkActions = stargraph.getModelConfig(kbId).getInt("elastic.bulk.actions");
+        int bulkActions = stargraph.getModelConfig(indexID).getInt("elastic.bulk.actions");
 
         logger.info(marker, "Creating Bulk Processor. Concurrency = {}, actions = {}.", concurrency, bulkActions);
 

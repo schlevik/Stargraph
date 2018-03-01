@@ -35,19 +35,19 @@ import net.stargraph.model.*;
  */
 public final class ObjectSerializer {
 
-    public static ObjectMapper createMapper(KBId kbId) {
+    public static ObjectMapper createMapper(IndexID indexID) {
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
-        module.addSerializer(Fact.class, new FactSerializer(kbId));
-        module.addDeserializer(Fact.class, new FactDeSerializer(kbId));
-        module.addSerializer(PropertyEntity.class, new PropertySerializer(kbId));
-        module.addDeserializer(PropertyEntity.class, new PropertyDeserializer(kbId));
-        module.addSerializer(InstanceEntity.class, new InstanceSerializer(kbId));
-        module.addDeserializer(InstanceEntity.class, new InstanceDeserializer(kbId));
-        module.addSerializer(ClassEntity.class, new ClassSerializer(kbId));
-        module.addSerializer(Document.class, new DocumentSerializer(kbId));
-        module.addDeserializer(Document.class, new DocumentDeserializer(kbId));
-        module.addDeserializer(Passage.class, new PassageDeserializer(kbId));
+        module.addSerializer(Fact.class, new FactSerializer(indexID));
+        module.addDeserializer(Fact.class, new FactDeSerializer(indexID));
+        module.addSerializer(PropertyEntity.class, new PropertySerializer(indexID));
+        module.addDeserializer(PropertyEntity.class, new PropertyDeserializer(indexID));
+        module.addSerializer(InstanceEntity.class, new InstanceSerializer(indexID));
+        module.addDeserializer(InstanceEntity.class, new InstanceDeserializer(indexID));
+        module.addSerializer(ClassEntity.class, new ClassSerializer(indexID));
+        module.addSerializer(Document.class, new DocumentSerializer(indexID));
+        module.addDeserializer(Document.class, new DocumentDeserializer(indexID));
+        module.addDeserializer(Passage.class, new PassageDeserializer(indexID));
         mapper.registerModule(module);
         return mapper;
     }

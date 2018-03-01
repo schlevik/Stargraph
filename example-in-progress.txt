@@ -84,19 +84,47 @@ query(text, kb):
    queryResolver.query(query, kb)
 
 in QueryResolver:
+execute(query, kb):
+  SpecificIndexSearcher is = kb.getIndexSearcher(IndexID.of(kb, requiredIndexName))
+  Scores result = is.specificSearch(specific, params)
+  OtherSpecificIndexSearcher is2 = kb.getIndexSearcher(IndexID.of(kb, otherRequiredIndexName))
+  Scores newResult = is.otherSpecificSearch(other, params, from, result)
+  DatabaseQuery qry = new SPARQLQuery(some, params)
+  SparqlResult dbResult = kb.executeDatabaseQuery(qry).get(SparqlResult.class)
+  DatabaseQuery qry2 = new DocumentQuery(dbResult.something(), somethingElse)
+  query.append(qry2.getSomething(), qry.getSomethingElse())
+
 query(query, kb):
-  if (kb.isComposed):
-    for (subkb : kb.ComposedOf):
-        query(query, subkb)
+  kb.executeQuery(this)
+
+in KnowledgeBase:
+executeQuery(QueryResolver qr, Query q):
+  if isList():
+    this.getKBs().forEach(kb -> executeQuery(qr, q))
   else:
-    stuff = analyze(query.text)
-    EntitySearcher searcher1 = kb.getSearcher("entities")
-    Scores result = searcher1.do_specific_searcher1_method(stuff)
-    DatabaseSearcher dbSearcher = kb.getDBSearcher()
-    DatabaseQuery fromResult = new DatabaseQuery.build(result, "some", "other", "stuff")
-    definite_result = dbSearcher.search(fromResult)
-    query.append(definite_result)
+    qr.execute(q, this)
 
+getIndexSearcher(indexID):
+  return this.getIndex(indexID).getSearcher()
 
+Map<indexID, Index> indices;
+Index getIndex(String name):
+  index = this.indices.get(indexID)
+  if index == null:
+    if isComposed():
+      composedOf().getIndex(name)
+    else:
+      // well fuck
 
+DatabaseResult executeDatabaseQuery(DatabaseQuery query):
+  return this.getDatabase(query.getType()).query(query)
+
+Database getDatabase(DBType type):
+  if this.database.getType() == type:
+    return this.database
+  else:
+    if isComposed():
+      composedOf().getDatabase()
+    else:
+      // well fuck
 

@@ -1,4 +1,4 @@
-package net.stargraph.core.search;
+package net.stargraph.core.search.executor;
 
 /*-
  * ==========================License-Start=============================
@@ -26,20 +26,20 @@ package net.stargraph.core.search;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.LabeledEntity;
+import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.rank.Scores;
 
-import java.util.List;
-import java.util.Map;
+/**
+ * Definition of a Searcher.
+ */
+public interface IndexSearchExecutor<Q> {
 
-public interface GraphSearcher extends Searchable<Map<String, List<LabeledEntity>>, String> {
+    void start();
 
-    @Override
-    default Map<String, List<LabeledEntity>> search(String query) {
-        return select(query);
-    }
+    void stop();
 
-    Map<String, List<LabeledEntity>> select(String sparqlQuery);
+    Scores search(SearchQueryHolder<Q> holder);
 
-    boolean ask(String sparqlQuery);
+    long countDocuments();
 
 }

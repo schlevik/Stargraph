@@ -36,7 +36,7 @@ import net.stargraph.data.processor.FatalProcessorException;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.data.processor.ProcessorChain;
 import net.stargraph.data.processor.ProcessorException;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -53,7 +53,7 @@ import java.util.concurrent.*;
 public abstract class BaseIndexPopulator implements IndexPopulator {
     protected Logger logger = LoggerFactory.getLogger(getClass());
     protected Marker marker = MarkerFactory.getMarker("index");
-    protected KBId kbId;
+    protected IndexID indexID;
     protected ObjectMapper mapper;
     protected Stargraph stargraph;
 
@@ -65,12 +65,12 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
     private boolean loading;
     private boolean running;
 
-    public BaseIndexPopulator(KBId kbId, Stargraph stargraph) {
+    public BaseIndexPopulator(IndexID indexID, Stargraph stargraph) {
         this.stargraph = Objects.requireNonNull(stargraph);
-        this.kbId = Objects.requireNonNull(kbId);
+        this.indexID = Objects.requireNonNull(indexID);
         this.loading = false;
-        this.mapper = ObjectSerializer.createMapper(kbId);
-        this.processorChain = stargraph.createProcessorChain(kbId);
+        this.mapper = ObjectSerializer.createMapper(indexID);
+        this.processorChain = stargraph.createProcessorChain(indexID);
     }
 
     @Override
@@ -91,7 +91,7 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
                 onStop();
                 running = false;
             } catch (Exception e) {
-                logger.error(marker, String.format("Fail to stop %s", this.kbId.toString()), e);
+                logger.error(marker, String.format("Fail to stop %s", this.indexID.toString()), e);
             }
 
         }
@@ -155,7 +155,7 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
 
     protected abstract void beforeLoad(boolean reset);
 
-    protected abstract void doIndex(Serializable data, KBId kbId) throws InterruptedException;
+    protected abstract void doIndex(Serializable data, IndexID indexID) throws InterruptedException;
 
     protected void doFlush() {
         // Specific implementation detail
@@ -180,8 +180,8 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
     private void doBeforeLoad(boolean reset) {
         logger.debug(marker, "Before loading..");
         boolean logStats = stargraph.getMainConfig().getBoolean("progress-watcher.log-stats");
-        this.loaderProgress = new ProgressWatcher(kbId, stargraph.getDataRootDir(), logStats);
-        this.dataProvider = stargraph.createDataProvider(kbId);
+        this.loaderProgress = new ProgressWatcher(indexID, stargraph.getDataRootDir(), logStats);
+        this.dataProvider = stargraph.createDataProvider(indexID);
         beforeLoad(reset);
     }
 
@@ -213,7 +213,7 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
                     logger.info(marker, "Indexing {}", data);
                 }
 
-                doIndex(data, kbId);
+                doIndex(data, indexID);
 
             } else {
                 sink(holder);
@@ -232,7 +232,7 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
             throw new IllegalStateException("Loader is already in progress. ");
         }
 
-        logger.info(marker, "Loading {}, [reset={}, limit={}]", kbId, reset, limit);
+        logger.info(marker, "Loading {}, [reset={}, limit={}]", indexID, reset, limit);
         loading = true;
 
         if (reset) {
@@ -262,7 +262,7 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
                             break;
                         }
 
-                        if (!data.getKBId().equals(kbId)) {
+                        if (!data.getKBId().equals(indexID)) {
                             throw new StarGraphException("Can't consume data from '{}" + data.getKBId() + "'");
                         }
 

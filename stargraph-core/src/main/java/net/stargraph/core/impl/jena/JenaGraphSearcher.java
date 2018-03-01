@@ -27,11 +27,14 @@ package net.stargraph.core.impl.jena;
  */
 
 import net.stargraph.ModelUtils;
-import net.stargraph.core.KBCore;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Namespace;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.GraphSearcher;
-import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.core.search.database.GraphSearcher;
+import net.stargraph.core.search.database.SparqlQuery;
+import net.stargraph.core.search.database.SparqlResult;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.model.ValueEntity;
 import org.apache.jena.graph.impl.LiteralLabel;
@@ -51,7 +54,7 @@ public final class JenaGraphSearcher implements GraphSearcher {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("jena");
     private Namespace ns;
-    private KBCore core;
+    private KnowledgeBase core;
     private String dbId;
 
     public JenaGraphSearcher(String dbId, Stargraph stargraph) {
@@ -60,8 +63,9 @@ public final class JenaGraphSearcher implements GraphSearcher {
         this.ns = stargraph.getKBCore(dbId).getNamespace();
     }
 
+
     @Override
-    public Map<String, List<LabeledEntity>> select(String sparqlQuery) {
+    public SparqlResult select(String sparqlQuery) {
         return doSparqlQuery(sparqlQuery);
     }
 
@@ -70,13 +74,13 @@ public final class JenaGraphSearcher implements GraphSearcher {
         return false;
     }
 
-    private Map<String, List<LabeledEntity>> doSparqlQuery(String sparqlQuery) {
+    private SparqlResult doSparqlQuery(String sparqlQuery) {
         logger.debug(marker, "Executing: {}", sparqlQuery);
 
         long startTime = System.currentTimeMillis();
 
-        Map<String, List<LabeledEntity>> result = new LinkedHashMap<>();
-        EntitySearchBuilder entitySearchBuilder = core.createEntitySearcher();
+        SparqlResult result = new SparqlResult();
+        EntityIndexSearcher entitySearchBuilder = core.createEntitySearcher();
 
         try (QueryExecution qexec = QueryExecutionFactory.create(sparqlQuery, core.getGraphModel())) {
             ResultSet results = qexec.execSelect();
@@ -105,11 +109,16 @@ public final class JenaGraphSearcher implements GraphSearcher {
 
         if (!result.isEmpty()) {
             logger.info(marker, "SPARQL {} query took {}s", sparqlQuery, millis / 1000.0);
-        }
-        else {
+        } else {
             logger.warn(marker, "No matches for {}", sparqlQuery);
         }
 
         return result;
+    }
+
+
+    @Override
+    public SparqlResult query(SparqlQuery query) {
+        return doSparqlQuery(query.getQuery());
     }
 }

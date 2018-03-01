@@ -27,33 +27,33 @@ package net.stargraph.core.impl.elastic;
  */
 
 import net.stargraph.core.IndicesFactory;
-import net.stargraph.core.KBCore;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexPopulator;
-import net.stargraph.core.search.BaseIndexSearcher;
-import net.stargraph.core.search.DocumentSearchBuilder;
-import net.stargraph.core.search.EntitySearchBuilder;
-import net.stargraph.model.KBId;
+import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.model.IndexID;
 
 public final class ElasticFactory implements IndicesFactory {
 
     @Override
-    public BaseIndexPopulator createIndexer(KBId kbId, Stargraph stargraph) {
-        return new ElasticIndexPopulator(kbId, stargraph);
+    public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
+        return new ElasticIndexPopulator(indexID, stargraph);
     }
 
     @Override
-    public BaseIndexSearcher createSearcher(KBId kbId, Stargraph stargraph) {
-        return new ElasticIndexSearcher(kbId, stargraph);
+    public BaseIndexSearchExecutor createSearcher(IndexID indexID, Stargraph stargraph) {
+        return new ElasticIndexSearchExecutor(indexID, stargraph);
     }
 
     @Override
-    public EntitySearchBuilder createEntitySearcher(KBCore core) {
-        return new ElasticEntitySearchBuilder(core);
+    public EntityIndexSearcher createEntitySearcher(KnowledgeBase core) {
+        return new ElasticEntityIndexSearcher(core);
     }
 
     @Override
-    public DocumentSearchBuilder createDocumentSearcher(KBCore core) {
-        return new ElasticDocumentSearchBuilder(core);
+    public DocumentIndexSearcher createDocumentSearcher(KnowledgeBase core) {
+        return new ElasticDocumentIndexSearcher(core);
     }
 }

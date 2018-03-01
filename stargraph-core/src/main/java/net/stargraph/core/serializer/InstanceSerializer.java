@@ -29,14 +29,14 @@ package net.stargraph.core.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import net.stargraph.model.InstanceEntity;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.io.IOException;
 
 class InstanceSerializer extends AbstractSerializer<InstanceEntity> {
 
-    InstanceSerializer(KBId kbId) {
-        super(kbId, InstanceEntity.class);
+    InstanceSerializer(IndexID indexID) {
+        super(indexID, InstanceEntity.class);
     }
 
     @Override

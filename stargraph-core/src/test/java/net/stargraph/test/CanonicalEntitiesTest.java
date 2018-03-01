@@ -31,7 +31,7 @@ import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.*;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.testng.Assert;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
 
 public class CanonicalEntitiesTest {
     private Stargraph stargraph;
-    private KBId canonicalEntitiesIndex = KBId.of("canonical-obama", "canonical-entities");
+    private IndexID canonicalEntitiesIndex = IndexID.of("canonical-obama", "canonical-entities");
     private Path testEnv;
     private CanonicalEntityProviderFactory dataProviderFactory;
 //    private DataProvider data;
@@ -59,19 +59,19 @@ public class CanonicalEntitiesTest {
     @BeforeClass
     public void beforeClass() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         testEnv = TestUtils.prepareGenericTestEnv(
-                canonicalEntitiesIndex.getId(),
+                canonicalEntitiesIndex.getKnowledgeBase(),
                 "dataSets/obama/facts/triples-with-aliases.nt",
                 null
         );
         ConfigFactory.invalidateCaches();
         Config kbConfig = ConfigFactory.load().getConfig("stargraph.kb.canonical-obama");
         stargraph = mock(Stargraph.class);
-        KBCore core = mock(KBCore.class);
+        KnowledgeBase core = mock(KnowledgeBase.class);
         Model model = ModelFactory.createDefaultModel();
         model.read(testEnv.resolve("canonical-obama/facts/triples.nt").toString());
 
 //        when(stargraph.createDataProvider(canonicalEntitiesIndex)).thenReturn(data);
-        when(stargraph.getKBCore(canonicalEntitiesIndex.getId())).thenReturn(core);
+        when(stargraph.getKBCore(canonicalEntitiesIndex.getKnowledgeBase())).thenReturn(core);
         when(core.getGraphModel()).thenReturn(model);
         when(stargraph.getDataRootDir()).thenReturn(testEnv.toString());
 

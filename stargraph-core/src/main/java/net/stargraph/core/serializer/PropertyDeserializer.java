@@ -29,15 +29,15 @@ package net.stargraph.core.serializer;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.model.PropertyEntity;
 
 import java.io.IOException;
 
 class PropertyDeserializer extends AbstractDeserializer<PropertyEntity> {
 
-    PropertyDeserializer(KBId kbId) {
-        super(kbId, PropertyEntity.class);
+    PropertyDeserializer(IndexID indexID) {
+        super(indexID, PropertyEntity.class);
     }
 
     @Override

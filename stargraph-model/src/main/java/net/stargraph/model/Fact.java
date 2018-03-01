@@ -34,23 +34,23 @@ import java.util.Objects;
  * A Fact.
  */
 public final class Fact implements Hashable {
-    private KBId kbId;
+    private IndexID indexID;
     private ContextId subject;
     private PropertyEntity predicate;
     private LabeledEntity object;
 
-    public Fact(KBId kbId, ContextId subject, PropertyEntity predicate, LabeledEntity object) {
-        if (kbId == null || subject == null || predicate == null || object == null) {
+    public Fact(IndexID indexID, ContextId subject, PropertyEntity predicate, LabeledEntity object) {
+        if (indexID == null || subject == null || predicate == null || object == null) {
             throw new IllegalArgumentException();
         }
-        this.kbId = kbId;
+        this.indexID = indexID;
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
     }
 
-    public KBId getKBId() {
-        return kbId;
+    public IndexID getKBId() {
+        return indexID;
     }
 
     public ContextId getSubject() {
@@ -79,7 +79,7 @@ public final class Fact implements Hashable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Fact fact = (Fact) o;
-        return Objects.equals(kbId, fact.kbId) &&
+        return Objects.equals(indexID, fact.indexID) &&
                 Objects.equals(subject, fact.subject) &&
                 Objects.equals(predicate, fact.predicate) &&
                 Objects.equals(object, fact.object);
@@ -87,6 +87,6 @@ public final class Fact implements Hashable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(kbId, subject, predicate, object);
+        return Objects.hash(indexID, subject, predicate, object);
     }
 }

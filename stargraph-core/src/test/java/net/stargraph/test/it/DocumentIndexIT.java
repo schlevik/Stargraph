@@ -31,8 +31,8 @@ import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticFactory;
 import net.stargraph.core.index.IndexPopulator;
-import net.stargraph.core.search.DocumentSearchBuilder;
-import net.stargraph.core.search.IndexSearcher;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.rank.*;
@@ -50,7 +50,7 @@ import java.util.ArrayList;
  */
 public final class DocumentIndexIT {
 
-    private KBId kbId = KBId.of("obama", "documents");
+    private IndexID indexID = IndexID.of("obama", "documents");
     private Stargraph stargraph;
     private IndexPopulator indexer;
 
@@ -61,29 +61,29 @@ public final class DocumentIndexIT {
         this.stargraph = new Stargraph(config, false);
 
         // assure ElasticSearch is running
-        TestUtils.assertElasticRunning(stargraph.getModelConfig(kbId));
+        TestUtils.assertElasticRunning(stargraph.getModelConfig(indexID));
 
-        this.stargraph.setKBInitSet(kbId.getId());
+        this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
         this.stargraph.setDefaultIndicesFactory(new ElasticFactory());
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(kbId);
+        this.indexer = stargraph.getIndexer(indexID);
 
 
-        IndexSearcher searcher = stargraph.getSearcher(kbId);
+        IndexSearchExecutor searcher = stargraph.getSearcher(indexID);
         if (searcher.countDocuments() != 1) {
             indexer.deleteAll();
 
             String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
                     "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread.";
 
-            indexer.index(new Indexable(new Document("test.txt", "Test", text), kbId));
+            indexer.index(new Indexable(new Document("test.txt", "Test", text), indexID));
             indexer.flush();
         }
     }
 
     @Test
     public void queryDocumentIndexTest() {
-        DocumentSearchBuilder documentSearcher = this.stargraph.getKBCore("obama").createDocumentSearcher();
+        DocumentIndexSearcher documentSearcher = this.stargraph.getKBCore("obama").createDocumentSearcher();
         InstanceEntity obama = new InstanceEntity("dbr:Barack_Obama", "Barack Obama");
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama");
         searchParams.term("like to eat");

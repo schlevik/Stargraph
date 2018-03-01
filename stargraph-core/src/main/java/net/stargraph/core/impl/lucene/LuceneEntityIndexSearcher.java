@@ -1,7 +1,7 @@
 package net.stargraph.core.impl.lucene;
 
-import net.stargraph.core.KBCore;
-import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.BuiltInModel;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
@@ -21,14 +21,14 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.List;
 import java.util.Objects;
 
-public class LuceneEntitySearchBuilder implements EntitySearchBuilder<LuceneIndexSearcher> {
+public class LuceneEntityIndexSearcher implements EntityIndexSearcher<LuceneIndexSearchExecutor> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("lucene");
 
-    private KBCore core;
+    private KnowledgeBase core;
 
 
-    public LuceneEntitySearchBuilder(KBCore core) {
+    public LuceneEntityIndexSearcher(KnowledgeBase core) {
         this.core = Objects.requireNonNull(core);
     }
 
@@ -53,7 +53,7 @@ public class LuceneEntitySearchBuilder implements EntitySearchBuilder<LuceneInde
         QueryBuilder queryBuilder = new QueryBuilder(new StandardAnalyzer());
         Query query = queryBuilder.createPhraseQuery("value", searchParams.getSearchTerm(), 0);
         searchParams.model(BuiltInModel.ENTITY);
-        LuceneIndexSearcher searcher = getBackendSearcher(core, searchParams.getKbId().getModel());
+        LuceneIndexSearchExecutor searcher = getSearchExecutor(core, searchParams.getKbId().getIndex());
         Scores scores = searcher.search(new LuceneQueryHolder(query, searchParams));
         return Rankers.apply(scores, rankParams, searchParams.getSearchTerm());
     }

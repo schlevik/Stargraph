@@ -35,7 +35,7 @@ import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.search.IndexSearcher;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.test.TestUtils;
@@ -63,8 +63,8 @@ import java.util.concurrent.TimeoutException;
 public final class LuceneCanonicalEntitiesIT {
 
     private String id = "canonical-obama";
-    private KBId canonicalEntitiesIndex = KBId.of(id, "entities");
-    private KBId documentsIndex = KBId.of(id, "documents");
+    private IndexID canonicalEntitiesIndex = IndexID.of(id, "entities");
+    private IndexID documentsIndex = IndexID.of(id, "documents");
     private Stargraph stargraph;
     private File dataRootDir;
     private NER ner;
@@ -101,7 +101,7 @@ public final class LuceneCanonicalEntitiesIT {
      * The actual loading was done in {@link #beforeClass()}.
      */
     public void bulkLoadTest() {
-        IndexSearcher searcher = stargraph.getSearcher(canonicalEntitiesIndex);
+        IndexSearchExecutor searcher = stargraph.getSearcher(canonicalEntitiesIndex);
         Assert.assertEquals(searcher.countDocuments(), 887);
     }
 
@@ -116,7 +116,7 @@ public final class LuceneCanonicalEntitiesIT {
     @Test(enabled = false)
     public void successfullyLinkObamaWikipediaArticle() throws IOException, InterruptedException, URISyntaxException {
         TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsIndex));
-        IndexSearcher searcher = stargraph.getSearcher(documentsIndex);
+        IndexSearchExecutor searcher = stargraph.getSearcher(documentsIndex);
         if (searcher.countDocuments() != 1) {
 
             String location = stargraph.getModelConfig(documentsIndex).getConfigList("processors")

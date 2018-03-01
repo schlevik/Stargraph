@@ -27,15 +27,15 @@ package net.stargraph.test;
  */
 
 import net.stargraph.core.IndicesFactory;
-import net.stargraph.core.KBCore;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexPopulator;
-import net.stargraph.core.search.BaseIndexSearcher;
-import net.stargraph.core.search.DocumentSearchBuilder;
-import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
@@ -51,8 +51,8 @@ public final class TestDataIndexPopulator extends BaseIndexPopulator {
     private List<TestData> indexed;
     private long lazyTime;
 
-    public TestDataIndexPopulator(KBId kbId, Stargraph stargraph, long lazyTime) {
-        super(kbId, stargraph);
+    public TestDataIndexPopulator(IndexID indexID, Stargraph stargraph, long lazyTime) {
+        super(indexID, stargraph);
         this.indexed = new ArrayList<>();
         this.lazyTime = lazyTime;
     }
@@ -65,7 +65,7 @@ public final class TestDataIndexPopulator extends BaseIndexPopulator {
     }
 
     @Override
-    protected void doIndex(Serializable data, KBId kbId) throws InterruptedException {
+    protected void doIndex(Serializable data, IndexID indexID) throws InterruptedException {
         if (lazyTime > 0) {
             Thread.sleep(lazyTime);
         }
@@ -92,22 +92,22 @@ public final class TestDataIndexPopulator extends BaseIndexPopulator {
     static class Factory implements IndicesFactory {
 
         @Override
-        public BaseIndexPopulator createIndexer(KBId kbId, Stargraph stargraph) {
-            return new TestDataIndexPopulator(kbId, stargraph, 500);
+        public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
+            return new TestDataIndexPopulator(indexID, stargraph, 500);
         }
 
         @Override
-        public BaseIndexSearcher createSearcher(KBId kbId, Stargraph stargraph) {
+        public BaseIndexSearchExecutor createSearcher(IndexID indexID, Stargraph stargraph) {
             return null;
         }
 
         @Override
-        public EntitySearchBuilder createEntitySearcher(KBCore core) {
+        public EntityIndexSearcher createEntitySearcher(KnowledgeBase core) {
             return null;
         }
 
         @Override
-        public DocumentSearchBuilder createDocumentSearcher(KBCore core) {
+        public DocumentIndexSearcher createDocumentSearcher(KnowledgeBase core) {
             throw new NotImplementedException();
         }
     }

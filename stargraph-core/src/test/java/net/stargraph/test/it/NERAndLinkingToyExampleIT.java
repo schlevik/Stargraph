@@ -32,7 +32,7 @@ import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -51,7 +51,7 @@ import java.util.List;
 public final class NERAndLinkingToyExampleIT {
     NER ner;
     private String id = "lucene-obama";
-    private KBId kbId = KBId.of(id, "entities");
+    private IndexID indexID = IndexID.of(id, "entities");
     private File dataRootDir;
     private Stargraph stargraph;
 
@@ -62,14 +62,14 @@ public final class NERAndLinkingToyExampleIT {
         Config config = ConfigFactory.load().getConfig("stargraph");
         stargraph = new Stargraph(config, false);
 
-        dataRootDir = TestUtils.prepareObamaTestEnv(kbId.getId()).toFile();
+        dataRootDir = TestUtils.prepareObamaTestEnv(indexID.getKnowledgeBase()).toFile();
         stargraph.setDataRootDir(dataRootDir);
 
-        stargraph.setKBInitSet(kbId.getId());
+        stargraph.setKBInitSet(indexID.getKnowledgeBase());
         stargraph.initialize();
 
-        stargraph.getIndexer(kbId).load(true, -1);
-        stargraph.getIndexer(kbId).awaitLoader();
+        stargraph.getIndexer(indexID).load(true, -1);
+        stargraph.getIndexer(indexID).awaitLoader();
 
         ner = stargraph.getKBCore(id).getNER();
         Assert.assertNotNull(ner);

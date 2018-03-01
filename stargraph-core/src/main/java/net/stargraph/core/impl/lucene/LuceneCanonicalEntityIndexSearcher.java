@@ -1,8 +1,8 @@
 package net.stargraph.core.impl.lucene;
 
 import net.stargraph.ModelUtils;
-import net.stargraph.core.KBCore;
-import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.BuiltInModel;
 import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
@@ -21,14 +21,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class LuceneCanonicalEntitySearchBuilder implements EntitySearchBuilder<LuceneIndexSearcher> {
+public class LuceneCanonicalEntityIndexSearcher implements EntityIndexSearcher<LuceneIndexSearchExecutor> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("lucene");
 
-    private KBCore core;
+    private KnowledgeBase core;
 
 
-    public LuceneCanonicalEntitySearchBuilder(KBCore core) {
+    public LuceneCanonicalEntityIndexSearcher(KnowledgeBase core) {
         this.core = Objects.requireNonNull(core);
         logger.info(marker, "I WAS CREATED!!!");
     }
@@ -55,7 +55,7 @@ public class LuceneCanonicalEntitySearchBuilder implements EntitySearchBuilder<L
         QueryBuilder queryBuilder = new QueryBuilder(new StandardAnalyzer());
         Query query = queryBuilder.createPhraseQuery("value", searchParams.getSearchTerm(), 0);
         searchParams.model(BuiltInModel.ENTITY);
-        LuceneIndexSearcher searcher = this.getBackendSearcher(core, searchParams.getKbId().getModel());
+        LuceneIndexSearchExecutor searcher = this.getSearchExecutor(core, searchParams.getKbId().getIndex());
 
         Scores scores = searcher.search(new LuceneQueryHolder(query, searchParams));
         scores = replaceCanonical(scores);
@@ -80,7 +80,7 @@ public class LuceneCanonicalEntitySearchBuilder implements EntitySearchBuilder<L
                 .collect(Collectors.toList()));
         // this instead of distinct
         //.filter(score -> {
-        //                    String id = ((LabeledEntity) score.getEntry()).getId();
+        //                    String id = ((LabeledEntity) score.getEntry()).getKnowledgeBase();
         //                    return ids.add(id);
         //                }).
     }

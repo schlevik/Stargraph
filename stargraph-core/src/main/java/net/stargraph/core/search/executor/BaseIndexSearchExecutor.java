@@ -1,4 +1,4 @@
-package net.stargraph.core.search;
+package net.stargraph.core.search.executor;
 
 /*-
  * ==========================License-Start=============================
@@ -27,7 +27,7 @@ package net.stargraph.core.search;
  */
 
 import net.stargraph.core.Stargraph;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -35,16 +35,16 @@ import org.slf4j.MarkerFactory;
 
 import java.util.Objects;
 
-public abstract class BaseIndexSearcher<T extends SearchQueryHolder> implements IndexSearcher<T> {
+public abstract class BaseIndexSearchExecutor<T> implements IndexSearchExecutor<T> {
     protected Logger logger = LoggerFactory.getLogger(getClass());
     protected Marker marker = MarkerFactory.getMarker("search");
     protected Stargraph stargraph;
-    protected KBId kbId;
+    protected IndexID indexID;
     private boolean running;
 
-    public BaseIndexSearcher(KBId kbId, Stargraph stargraph) {
+    public BaseIndexSearchExecutor(IndexID indexID, Stargraph stargraph) {
         this.stargraph = Objects.requireNonNull(stargraph);
-        this.kbId = Objects.requireNonNull(kbId);
+        this.indexID = Objects.requireNonNull(indexID);
     }
 
     @Override

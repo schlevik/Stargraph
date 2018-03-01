@@ -26,12 +26,12 @@ package net.stargraph.server;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.KBCore;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.rest.KBResource;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -64,8 +64,8 @@ final class KBResourceImpl implements KBResource {
     @Override
     public List<String> getKBs() {
         List<String> kbIdList = new ArrayList<>();
-        stargraph.getKBs().forEach(core -> kbIdList.addAll(core.getKBIds().stream()
-                .map(kbId -> String.format("%s/%s", kbId.getId(), kbId.getModel()))
+        stargraph.getKBs().forEach(core -> kbIdList.addAll(core.getIndexIDs().stream()
+                .map(kbId -> String.format("%s/%s", kbId.getKnowledgeBase(), kbId.getIndex()))
                 .sorted(String::compareTo)
                 .collect(Collectors.toList())));
 
@@ -74,7 +74,7 @@ final class KBResourceImpl implements KBResource {
 
     @Override
     public Response load(String id, String type, boolean reset, int limit) {
-        KBCore core = stargraph.getKBCore(id);
+        KnowledgeBase core = stargraph.getKBCore(id);
         IndexPopulator indexPopulator = core.getIndexPopulator(type);
         indexPopulator.load(reset, limit);
         return ResourceUtils.createAckResponse(true);
@@ -82,15 +82,15 @@ final class KBResourceImpl implements KBResource {
 
     @Override
     public Response loadAll(String id, String resetKey) {
-        KBCore core = stargraph.getKBCore(id);
+        KnowledgeBase core = stargraph.getKBCore(id);
         core.getLoader().loadAll(resetKey);
         return ResourceUtils.createAckResponse(true);
     }
 
     @Override
     public Response upload(String id, String type, FormDataMultiPart form) {
-        KBCore core = stargraph.getKBCore(id);
-        final KBId kbId = KBId.of(id, type);
+        KnowledgeBase core = stargraph.getKBCore(id);
+        final IndexID indexID = IndexID.of(id, type);
         IndexPopulator indexPopulator = core.getIndexPopulator(type);
 
         // get file information
@@ -111,7 +111,7 @@ final class KBResourceImpl implements KBResource {
             if (type.equals("documents")) {
                 String docId = fileName; //TODO get from other source?
                 String docTitle = FilenameUtils.removeExtension(fileName); //TODO get from other source?
-                indexPopulator.index(new Indexable(new Document(docId, docTitle, null, content), kbId));
+                indexPopulator.index(new Indexable(new Document(docId, docTitle, null, content), indexID));
                 indexPopulator.flush();
             } else {
                 logger.error(marker, "Type not supported yet: " + type);

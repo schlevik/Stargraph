@@ -32,8 +32,8 @@ import net.stargraph.core.index.BaseIndexPopulator;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.CanonicalInstanceEntity;
+import net.stargraph.model.IndexID;
 import net.stargraph.model.InstanceEntity;
-import net.stargraph.model.KBId;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -51,8 +51,8 @@ public final class LuceneIndexPopulator extends BaseIndexPopulator {
     private IndexWriter writer;
     private IndexWriterConfig writerConfig;
 
-    public LuceneIndexPopulator(KBId kbId, Stargraph stargraph, Directory directory) {
-        super(kbId, stargraph);
+    public LuceneIndexPopulator(IndexID indexID, Stargraph stargraph, Directory directory) {
+        super(indexID, stargraph);
         this.directory = Objects.requireNonNull(directory);
     }
 
@@ -64,7 +64,7 @@ public final class LuceneIndexPopulator extends BaseIndexPopulator {
     }
 
     @Override
-    protected void doIndex(Serializable data, KBId kbId) throws InterruptedException {
+    protected void doIndex(Serializable data, IndexID indexID) throws InterruptedException {
         try {
             writer.addDocument(createDocument(data));
         } catch (IOException e) {

@@ -30,7 +30,7 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
-import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.query.Language;
 import net.stargraph.rank.ModifiableSearchParams;
@@ -48,11 +48,11 @@ public final class NERSearcher implements NER {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Marker marker = MarkerFactory.getMarker("ner");
     private CoreNLPNERClassifier ner;
-    private EntitySearchBuilder entitySearchBuilder;
+    private EntityIndexSearcher entitySearchBuilder;
     private String entitySearcherDbId;
     private boolean reverseNameOrder;
 
-    public NERSearcher(Language language, EntitySearchBuilder entitySearchBuilder, String entitySearcherDbId) {
+    public NERSearcher(Language language, EntityIndexSearcher entitySearchBuilder, String entitySearcherDbId) {
         this.ner = new CoreNLPNERClassifier(Objects.requireNonNull(language));
         this.entitySearchBuilder = Objects.requireNonNull(entitySearchBuilder);
         this.entitySearcherDbId = Objects.requireNonNull(entitySearcherDbId);

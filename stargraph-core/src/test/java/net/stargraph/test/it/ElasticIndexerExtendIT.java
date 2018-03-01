@@ -32,7 +32,7 @@ import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticFactory;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.DataProviderFactory;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.test.TestData;
 import net.stargraph.test.TestDataProviderFactory;
 import org.testng.annotations.BeforeClass;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 @Test(enabled = false)
 public final class ElasticIndexerExtendIT {
 
-    private KBId kbId = KBId.of("mytest", "mytype");
+    private IndexID indexID = IndexID.of("mytest", "mytype");
     private List<TestData> expected;
     private Stargraph stargraph;
     private IndexPopulator indexer;
@@ -59,10 +59,10 @@ public final class ElasticIndexerExtendIT {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
-        this.stargraph.setKBInitSet(kbId.getId());
+        this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
         this.stargraph.setDefaultIndicesFactory(new ElasticFactory());
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(kbId);
+        this.indexer = stargraph.getIndexer(indexID);
         List<String> expected = Arrays.asList("Four", "Five", "Six", "Seven");
         this.expected = expected.stream().map(s -> new TestData(s)).collect(Collectors.toList());
         indexer.load(true, -1);
@@ -71,7 +71,7 @@ public final class ElasticIndexerExtendIT {
 
     @Test
     public void successWhenExtendIndexTest() {
-        this.indexer.extend(this.dataProviderFactory.create(this.kbId, this.expected));
+        this.indexer.extend(this.dataProviderFactory.create(this.indexID, this.expected));
     }
 
 

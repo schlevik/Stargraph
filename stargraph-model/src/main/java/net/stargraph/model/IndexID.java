@@ -2,7 +2,7 @@ package net.stargraph.model;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -29,31 +29,31 @@ package net.stargraph.model;
 import java.io.Serializable;
 
 /**
- * Identity for a tuple (kb, model)
+ * Identity for a tuple (kb, index)
  */
-public final class KBId implements Serializable {
+public final class IndexID implements Serializable {
 
-    private String id;
-    private String model;
+    private String knowledgeBase;
+    private String index;
 
-    private KBId(String id, String model) {
-        this.id = id;
-        this.model = model;
+    private IndexID(String knowledgeBase, String index) {
+        this.knowledgeBase = knowledgeBase;
+        this.index = index;
     }
 
-    public static KBId of(String id, String model) {
+    public static IndexID of(String id, String model) {
         if (id == null || model == null || id.isEmpty() || model.isEmpty()) {
-            throw new IllegalArgumentException(String.format("id=%s, type=%s", id, model));
+            throw new IllegalArgumentException(String.format("knowledgeBase=%s, index=%s", id, model));
         }
-        return new KBId(id, model);
+        return new IndexID(id, model);
     }
 
     public String getModelPath() {
-        return String.format("kb.%s.model.%s", id, model);
+        return String.format("kb.%s.index.%s", knowledgeBase, index);
     }
 
     public String getKBPath() {
-        return String.format("kb.%s", id);
+        return String.format("kb.%s", knowledgeBase);
     }
 
     @Override
@@ -61,30 +61,30 @@ public final class KBId implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        KBId kbId = (KBId) o;
+        IndexID indexID = (IndexID) o;
 
-        return id.equals(kbId.id) && model.equals(kbId.model);
+        return knowledgeBase.equals(indexID.knowledgeBase) && index.equals(indexID.index);
 
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + model.hashCode();
+        int result = knowledgeBase.hashCode();
+        result = 31 * result + index.hashCode();
         return result;
     }
 
     @Override
     public String toString() {
-        return String.format("%s.%s", id, model);
+        return String.format("%s.%s", knowledgeBase, index);
     }
 
-    public String getId() {
-        return id;
+    public String getKnowledgeBase() {
+        return knowledgeBase;
     }
 
-    public String getModel() {
-        return model;
+    public String getIndex() {
+        return index;
     }
 
 }

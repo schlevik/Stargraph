@@ -27,16 +27,16 @@ package net.stargraph.core.query;
  */
 
 import net.stargraph.StarGraphException;
-import net.stargraph.core.KBCore;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Namespace;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.GraphSearcher;
+import net.stargraph.core.search.database.GraphSearcher;
 import net.stargraph.core.query.nli.*;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.query.response.NoResponse;
 import net.stargraph.core.query.response.SPARQLSelectResponse;
-import net.stargraph.core.search.DocumentSearchBuilder;
-import net.stargraph.core.search.EntitySearchBuilder;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.model.Passage;
@@ -64,7 +64,7 @@ public final class QueryEngine {
     private Marker marker = MarkerFactory.getMarker("query");
 
     private String dbId;
-    private KBCore core;
+    private KnowledgeBase core;
     private Analyzers analyzers;
     private GraphSearcher graphSearcher;
     private InteractionModeSelector modeSelector;
@@ -135,7 +135,7 @@ public final class QueryEngine {
         PassageQuestionAnalysis analysis = analyzer.analyse(query);
 
         InstanceEntity pivot = resolvePivot(analysis.getInstance());
-        DocumentSearchBuilder searcher = core.createDocumentSearcher();
+        DocumentIndexSearcher searcher = core.createDocumentSearcher();
 
         logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
 
@@ -165,7 +165,7 @@ public final class QueryEngine {
         // 2) make it do the following: annotate, apply _only_ INSTANCE rules, clean up, create a INSTANCE/rest view
         // relevantPassages = documents.passages.pivotedFullTextSearch(entity, rest)
         // ---- how to do this?
-        // > well implement it in in the KBCore i guess
+        // > well implement it in in the KnowledgeBase i guess
         // return sorted relevant passages
         return new NoResponse(PASSAGE, userQuery);
     }
@@ -242,9 +242,9 @@ public final class QueryEngine {
         Set<LabeledEntity> entities = new HashSet<>();
         Set<String> textAnswers = new HashSet<>();
         // \TODO Call document search
-        // Document document = core.getDocumentSearcher().getDocument(entities.entrySet().iterator().next().getKey().getId());
+        // Document document = core.getDocumentSearcher().getDocument(entities.entrySet().iterator().next().getKey().getKnowledgeBase());
         // \TODO Equate document with normalized entity id
-        // final Entity def = new Entity(document.getId());
+        // final Entity def = new Entity(document.getKnowledgeBase());
         // Definition is the summary of the document
         // document.getSummary()
 
@@ -296,7 +296,7 @@ public final class QueryEngine {
 
     private void resolveClass(DataModelBinding binding, SPARQLQueryBuilder builder) {
         if (binding.getModelType() == DataModelType.CLASS) {
-            EntitySearchBuilder searcher = core.createEntitySearcher();
+            EntityIndexSearcher searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.word2vec();
             Scores scores = searcher.classSearch(searchParams, rankParams);
@@ -308,7 +308,7 @@ public final class QueryEngine {
         if ((binding.getModelType() == DataModelType.CLASS
                 || binding.getModelType() == DataModelType.PROPERTY) && !builder.isResolved(binding)) {
 
-            EntitySearchBuilder searcher = core.createEntitySearcher();
+            EntityIndexSearcher searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.word2vec();
             Scores scores = searcher.pivotedSearch(pivot, searchParams, rankParams);
@@ -323,7 +323,7 @@ public final class QueryEngine {
         }
 
         if (binding.getModelType() == DataModelType.INSTANCE) {
-            EntitySearchBuilder searcher = core.createEntitySearcher();
+            EntityIndexSearcher searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
             Scores scores = searcher.instanceSearch(searchParams, rankParams);
@@ -336,7 +336,7 @@ public final class QueryEngine {
 
     private InstanceEntity resolvePivot(DataModelBinding binding) {
         if (binding.getModelType() == DataModelType.INSTANCE) {
-            EntitySearchBuilder searcher = core.createEntitySearcher();
+            EntityIndexSearcher searcher = core.createEntitySearcher();
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
             Scores scores = searcher.instanceSearch(searchParams, rankParams);
@@ -348,7 +348,7 @@ public final class QueryEngine {
     }
 
     private InstanceEntity resolveInstance(String instanceTerm) {
-        EntitySearchBuilder searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.createEntitySearcher();
         ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(instanceTerm);
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
         Scores scores = searcher.instanceSearch(searchParams, rankParams);

@@ -27,18 +27,18 @@ package net.stargraph.test;
  */
 
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.util.Iterator;
 import java.util.List;
 
 public final class TestDataIterator implements Iterator<Indexable> {
 
-    private KBId kbId;
+    private IndexID indexID;
     private Iterator<TestData> innerIt;
 
-    public TestDataIterator(KBId kbId, List<TestData> dataList) {
-        this.kbId = kbId;
+    public TestDataIterator(IndexID indexID, List<TestData> dataList) {
+        this.indexID = indexID;
         this.innerIt = dataList.iterator();
     }
 
@@ -54,6 +54,6 @@ public final class TestDataIterator implements Iterator<Indexable> {
         if (testData.failOnProvider) {
             throw new TestFailureException();
         }
-        return new Indexable(testData, kbId);
+        return new Indexable(testData, indexID);
     }
 }

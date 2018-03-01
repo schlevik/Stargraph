@@ -1,22 +1,20 @@
 package net.stargraph.core.query;
 
-import net.stargraph.core.KBCore;
-import net.stargraph.core.search.DocumentSearchBuilder;
-import net.stargraph.core.search.EntitySearchBuilder;
-import net.stargraph.core.search.SearchBuilder;
+import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.index.IndexSearcher;
+import net.stargraph.model.IndexID;
 
 public abstract class BaseQueryResolver implements QueryResolver {
-    private KBCore knowledgeBase;
+    private KnowledgeBase knowledgeBase;
 
     public BaseQueryResolver() {
-        EntitySearchBuilder builder = getSearchBuilder("entities");
-        DocumentSearchBuilder builder1 = getSearchBuilder("documents");
-
 
     }
 
-    protected final <T extends SearchBuilder> T getSearchBuilder(String searchable) {
-        return knowledgeBase.getSearchBuilder(searchable);
+    protected final <T extends IndexSearcher> T getIndexSearcher(IndexID indexID) {
+        return (T) knowledgeBase.getIndex(indexID).getSearcher();
     }
 
 

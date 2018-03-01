@@ -26,7 +26,7 @@ package net.stargraph.core;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
@@ -36,28 +36,27 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 abstract class TripleIterator<T> implements Iterator<T> {
     protected Logger logger = LoggerFactory.getLogger(getClass());
     protected Marker marker = MarkerFactory.getMarker("core");
-    protected KBId kbId;
+    protected IndexID indexID;
     protected Model model;
 
     private StmtIterator innerIt;
     private Statement currentStmt;
     private Namespace namespace;
 
-    TripleIterator(Stargraph stargraph, KBId kbId) {
-        this(stargraph, kbId, stargraph.getKBCore(kbId.getId()).getGraphModel());
+    TripleIterator(Stargraph stargraph, IndexID indexID) {
+        this(stargraph, indexID, stargraph.getKBCore(indexID.getKnowledgeBase()).getGraphModel());
     }
 
-    TripleIterator(Stargraph stargraph, KBId kbId, Model model) {
+    TripleIterator(Stargraph stargraph, IndexID indexID, Model model) {
         this.model = model;
-        this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
-        this.kbId = Objects.requireNonNull(kbId);
+        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
+        this.indexID = Objects.requireNonNull(indexID);
         this.innerIt = Objects.requireNonNull(model).listStatements();
     }
 

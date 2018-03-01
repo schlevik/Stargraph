@@ -28,32 +28,34 @@ package net.stargraph.core.impl.elastic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.BaseIndexSearcher;
+import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
 import net.stargraph.core.serializer.ObjectSerializer;
 import net.stargraph.model.BuiltInModel;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
 import java.io.IOException;
 import java.io.Serializable;
 
-public final class ElasticIndexSearcher extends BaseIndexSearcher<ElasticQueryHolder> {
+public final class ElasticIndexSearchExecutor extends BaseIndexSearchExecutor<QueryBuilder> {
     private ObjectMapper mapper;
     private ElasticClient esClient;
 
-    public ElasticIndexSearcher(KBId kbId, Stargraph core) {
-        super(kbId, core);
-        this.mapper = ObjectSerializer.createMapper(kbId);
+    public ElasticIndexSearchExecutor(IndexID indexID, Stargraph core) {
+        super(indexID, core);
+        this.mapper = ObjectSerializer.createMapper(indexID);
     }
 
     @Override
     protected void onStart() {
-        this.esClient = new ElasticClient(stargraph, this.kbId);
+        this.esClient = new ElasticClient(stargraph, this.indexID);
     }
 
     @Override
@@ -87,7 +89,7 @@ public final class ElasticIndexSearcher extends BaseIndexSearcher<ElasticQueryHo
         int size = 0;
 
         try {
-            String modelName = holder.getSearchParams().getKbId().getModel();
+            String modelName = holder.getSearchParams().getKbId().getIndex();
             Class<Serializable> modelClass = BuiltInModel.getModelClass(modelName);
             Scores innerScores = new Scores();
             ElasticScroller scroller = new ElasticScroller(esClient, holder) {
@@ -142,12 +144,12 @@ public final class ElasticIndexSearcher extends BaseIndexSearcher<ElasticQueryHo
     }
 
     @Override
-    public Scores search(ElasticQueryHolder holder) {
+    public Scores search(SearchQueryHolder<QueryBuilder> holder) {
         ElasticScroller scroller = null;
         long start = System.nanoTime();
 
         try {
-            String modelName = holder.getSearchParams().getKbId().getModel();
+            String modelName = holder.getSearchParams().getKbId().getIndex();
             Class<Serializable> modelClass = BuiltInModel.getModelClass(modelName);
 
             scroller = new ElasticScroller(esClient, holder) {

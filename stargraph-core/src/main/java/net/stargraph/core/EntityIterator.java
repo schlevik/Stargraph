@@ -28,7 +28,7 @@ package net.stargraph.core;
 
 import com.google.common.collect.Iterators;
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
@@ -51,24 +51,24 @@ public final class EntityIterator implements Iterator<Indexable> {
     private Model model;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
-    private KBId kbId;
-    private KBCore core;
+    private IndexID indexID;
+    private KnowledgeBase core;
     private Namespace namespace;
     private Iterator<Node> iterator;
     private Node currentNode;
 
-    public EntityIterator(Stargraph stargraph, KBId kbId) {
-        this.kbId = Objects.requireNonNull(kbId);
-        this.core = stargraph.getKBCore(kbId.getId());
-        this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
+    public EntityIterator(Stargraph stargraph, IndexID indexID) {
+        this.indexID = Objects.requireNonNull(indexID);
+        this.core = stargraph.getKBCore(indexID.getKnowledgeBase());
+        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
         this.model = core.getGraphModel();
         this.iterator = createIterator();
     }
 
-    public EntityIterator(Stargraph stargraph, KBId kbId, List data) {
-        this.kbId = Objects.requireNonNull(kbId);
-        this.core = stargraph.getKBCore(kbId.getId());
-        this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
+    public EntityIterator(Stargraph stargraph, IndexID indexID, List data) {
+        this.indexID = Objects.requireNonNull(indexID);
+        this.core = stargraph.getKBCore(indexID.getKnowledgeBase());
+        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
         this.model = ModelFactory.createDefaultModel().add(data);
         this.iterator = createIterator();
 
@@ -104,7 +104,7 @@ public final class EntityIterator implements Iterator<Indexable> {
             if (currentNode == null) {
                 throw new NoSuchElementException();
             }
-            return new Indexable(createInstance(applyNS(currentNode.getURI())), kbId);
+            return new Indexable(createInstance(applyNS(currentNode.getURI())), indexID);
         } finally {
             currentNode = null;
         }

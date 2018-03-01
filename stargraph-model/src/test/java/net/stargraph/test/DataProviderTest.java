@@ -28,7 +28,7 @@ package net.stargraph.test;
 
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -74,7 +74,7 @@ public class DataProviderTest {
 
 
     private static List<Indexable> wrap(List<Serializable> data) {
-        return data.stream().map(s -> new Indexable(s, KBId.of("testdb", "test"))).collect(Collectors.toList());
+        return data.stream().map(s -> new Indexable(s, IndexID.of("testdb", "test"))).collect(Collectors.toList());
     }
 
 }

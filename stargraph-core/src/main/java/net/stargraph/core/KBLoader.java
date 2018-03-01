@@ -28,8 +28,8 @@ package net.stargraph.core;
 
 import net.stargraph.StarGraphException;
 import net.stargraph.core.index.IndexPopulator;
-import net.stargraph.core.search.IndexSearcher;
-import net.stargraph.model.KBId;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
+import net.stargraph.model.IndexID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -49,11 +49,11 @@ public final class KBLoader {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
     private ExecutorService executor;
-    private KBCore core;
+    private KnowledgeBase core;
     private boolean loading;
     private String lastResetKey;
 
-    KBLoader(KBCore core) {
+    KBLoader(KnowledgeBase core) {
         this.core = Objects.requireNonNull(core);
         this.executor = Executors.newSingleThreadExecutor();
         this.lastResetKey = null;
@@ -64,7 +64,7 @@ public final class KBLoader {
             throw new StarGraphException("Loaders are in progress...");
         }
 
-        boolean hasSomeData = core.getKBIds().parallelStream().anyMatch(this::containsData);
+        boolean hasSomeData = core.getIndexIDs().parallelStream().anyMatch(this::containsData);
 
         if (hasSomeData) {
             if (lastResetKey == null) {
@@ -103,11 +103,11 @@ public final class KBLoader {
 
     private void doLoadAll(String dbId) throws InterruptedException {
         logger.warn(marker, "Loading ALL DATA of '{}'. This can take some time ;) ..", dbId);
-        List<KBId> successful = new ArrayList<>();
-        List<KBId> failing = new ArrayList<>();
-        core.getKBIds().forEach(kbId -> { // why not parallel?
+        List<IndexID> successful = new ArrayList<>();
+        List<IndexID> failing = new ArrayList<>();
+        core.getIndexIDs().forEach(kbId -> { // why not parallel?
             try {
-                IndexPopulator indexPopulator = core.getIndexPopulator(kbId.getModel());
+                IndexPopulator indexPopulator = core.getIndexPopulator(kbId.getIndex());
                 indexPopulator.load(true, -1);
                 indexPopulator.awaitLoader();
                 successful.add(kbId);
@@ -125,8 +125,8 @@ public final class KBLoader {
         }
     }
 
-    private boolean containsData(KBId kbId) {
-        IndexSearcher searcher = core.getIndexSearcher(kbId.getModel());
+    private boolean containsData(IndexID indexID) {
+        IndexSearchExecutor searcher = core.getSearchExecutor(indexID.getIndex());
         return searcher.countDocuments() > 0;
     }
 }

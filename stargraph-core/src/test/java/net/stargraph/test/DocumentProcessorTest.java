@@ -33,7 +33,7 @@ import net.stargraph.core.processors.PassageProcessor;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.Document;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -41,7 +41,7 @@ import org.testng.annotations.Test;
 
 
 public final class DocumentProcessorTest {
-    KBId kbId = KBId.of("obama", "documents");
+    IndexID indexID = IndexID.of("obama", "documents");
     PassageProcessor processor;
     String text;
 
@@ -61,7 +61,7 @@ public final class DocumentProcessorTest {
     @Test
     public void processTest() {
         System.out.println(this.text);
-        Holder holder = new Indexable(new Document("test.txt", "Test", this.text), this.kbId);
+        Holder holder = new Indexable(new Document("test.txt", "Test", this.text), this.indexID);
         processor.run(holder);
 
         Assert.assertFalse(holder.isSinkable());

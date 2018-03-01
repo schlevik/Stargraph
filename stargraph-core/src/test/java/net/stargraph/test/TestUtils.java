@@ -30,7 +30,7 @@ import com.typesafe.config.Config;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.IndexPopulator;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
@@ -50,9 +50,9 @@ import java.util.concurrent.TimeoutException;
 
 public final class TestUtils {
 
-    public static Path createPath(Path root, KBId kbId) throws IOException {
+    public static Path createPath(Path root, IndexID indexID) throws IOException {
         Files.delete(root);
-        return Files.createDirectories(root.resolve(kbId.getId()).resolve(kbId.getModel()));
+        return Files.createDirectories(root.resolve(indexID.getKnowledgeBase()).resolve(indexID.getIndex()));
     }
 
     public static File copyResource(String resourceLocation, Path target) {
@@ -80,7 +80,7 @@ public final class TestUtils {
 //        Path root;
 //        try {
 //            root = Files.createTempFile("stargraph-", "-dataDir");
-//            Path factsPath = createPath(root, KBId.of(kbID, "facts"));
+//            Path factsPath = createPath(root, IndexID.of(kbID, "facts"));
 //            Path hdtPath = factsPath.resolve("triples.hdt");
 //            Path ntFilePath = factsPath.resolve("triples.nt");
 //            copyResource("dataSets/obama/facts/triples.hdt", hdtPath);
@@ -95,7 +95,7 @@ public final class TestUtils {
         Path root;
         try {
             root = Files.createTempFile("stargraph-", "-dataDir");
-            Path factsPath = createPath(root, KBId.of(kbID, "facts"));
+            Path factsPath = createPath(root, IndexID.of(kbID, "facts"));
             Path ntFilePath = factsPath.resolve("triples.nt");
             copyResource(Paths.get(ntResourceLocation).toString(), ntFilePath);
             if (hdtResourceLocation != null) {
@@ -153,7 +153,7 @@ public final class TestUtils {
         return running;
     }
 
-    public static void ensureLuceneIndexExists(Stargraph stargraph, KBId entityIndex) {
+    public static void ensureLuceneIndexExists(Stargraph stargraph, IndexID entityIndex) {
         boolean indexExists = true;
         try {
             stargraph.getSearcher(entityIndex).countDocuments();
@@ -172,8 +172,8 @@ public final class TestUtils {
         }
     }
 
-    public static boolean doesLuceneIndexExist(Path path, KBId kbAndIndex) {
-        Path idxPath = path.resolve(kbAndIndex.getId()).resolve(kbAndIndex.getModel()).resolve("idx");
+    public static boolean doesLuceneIndexExist(Path path, IndexID kbAndIndex) {
+        Path idxPath = path.resolve(kbAndIndex.getKnowledgeBase()).resolve(kbAndIndex.getIndex()).resolve("idx");
         return Files.exists(idxPath);
 
     }

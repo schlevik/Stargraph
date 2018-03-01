@@ -27,18 +27,18 @@ package net.stargraph.core;
  */
 
 import net.stargraph.core.index.BaseIndexPopulator;
-import net.stargraph.core.search.BaseIndexSearcher;
-import net.stargraph.core.search.DocumentSearchBuilder;
-import net.stargraph.core.search.EntitySearchBuilder;
-import net.stargraph.model.KBId;
+import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.model.IndexID;
 
 public interface IndicesFactory {
 
-    BaseIndexPopulator createIndexer(KBId kbId, Stargraph stargraph);
+    BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph);
 
-    BaseIndexSearcher createSearcher(KBId kbId, Stargraph stargraph);
+    BaseIndexSearchExecutor createSearcher(IndexID indexID, Stargraph stargraph);
 
-    EntitySearchBuilder createEntitySearcher(KBCore core);
+    EntityIndexSearcher createEntitySearcher(KnowledgeBase core);
 
-    DocumentSearchBuilder createDocumentSearcher(KBCore core);
+    DocumentIndexSearcher createDocumentSearcher(KnowledgeBase core);
 }

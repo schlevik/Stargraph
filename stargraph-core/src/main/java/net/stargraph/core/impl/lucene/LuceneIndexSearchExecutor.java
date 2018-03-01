@@ -28,11 +28,11 @@ package net.stargraph.core.impl.lucene;
 
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.BaseIndexSearcher;
 import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
 import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
 import org.apache.lucene.document.Document;
@@ -53,21 +53,21 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class LuceneIndexSearcher extends BaseIndexSearcher<LuceneQueryHolder> {
-    private static Logger logger = LoggerFactory.getLogger(LuceneIndexSearcher.class);
+public final class LuceneIndexSearchExecutor extends BaseIndexSearchExecutor<Query> {
+    private static Logger logger = LoggerFactory.getLogger(LuceneIndexSearchExecutor.class);
     private static Marker marker = MarkerFactory.getMarker("lucene");
 
     private Directory directory;
     private IndexReader indexReader;
     private IndexSearcher indexSearcher;
 
-    public LuceneIndexSearcher(KBId kbId, Stargraph core, Directory directory) {
-        super(kbId, core);
+    public LuceneIndexSearchExecutor(IndexID indexID, Stargraph core, Directory directory) {
+        super(indexID, core);
         this.directory = Objects.requireNonNull(directory);
     }
 
     @Override
-    public Scores search(LuceneQueryHolder holder) {
+    public Scores search(SearchQueryHolder<Query> holder) {
         TopDocs results;
         Scores scores = new Scores();
         IndexSearcher searcher = getLuceneSearcher();
@@ -144,7 +144,7 @@ public final class LuceneIndexSearcher extends BaseIndexSearcher<LuceneQueryHold
         try {
             if (indexReader == null) {
                 if (!DirectoryReader.indexExists(directory)) {
-                    throw new StarGraphException("Index not found for " + kbId);
+                    throw new StarGraphException("Index not found for " + indexID);
                 }
                 indexReader = DirectoryReader.open(directory);
                 indexSearcher = new IndexSearcher(indexReader);

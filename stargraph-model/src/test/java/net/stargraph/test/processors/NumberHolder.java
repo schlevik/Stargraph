@@ -27,7 +27,7 @@ package net.stargraph.test.processors;
  */
 
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.io.Serializable;
 
@@ -57,7 +57,7 @@ public class NumberHolder implements Holder<Number>, Serializable {
     }
 
     @Override
-    public KBId getKBId() {
-        return KBId.of("any", "thing");
+    public IndexID getKBId() {
+        return IndexID.of("any", "thing");
     }
 }

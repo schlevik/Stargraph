@@ -29,17 +29,13 @@ package net.stargraph.core;
 import com.google.common.collect.Iterators;
 import net.stargraph.ModelUtils;
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
-import org.apache.jena.base.Sys;
+import net.stargraph.model.IndexID;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.util.NodeUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
-import org.semanticweb.yars.nx.namespace.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -53,16 +49,16 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
     private Model model;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
-    private KBId kbId;
-    private KBCore core;
+    private IndexID indexID;
+    private KnowledgeBase core;
     private Namespace namespace;
     private Iterator<Tuple> iterator;
     private Tuple currentTuple;
 
-    public CanonicalEntityIterator(Stargraph stargraph, KBId kbId) {
-        this.kbId = Objects.requireNonNull(kbId);
-        this.core = stargraph.getKBCore(kbId.getId());
-        this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
+    public CanonicalEntityIterator(Stargraph stargraph, IndexID indexID) {
+        this.indexID = Objects.requireNonNull(indexID);
+        this.core = stargraph.getKBCore(indexID.getKnowledgeBase());
+        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
         this.model = core.getGraphModel();
         this.iterator = createIterator();
     }
@@ -99,7 +95,7 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
             return new Indexable(ModelUtils.createCanonicalEntity(
                     applyNS(currentTuple.resUri()),
                     applyNS(currentTuple.refUri())
-            ), kbId);
+            ), indexID);
 
         } finally {
             currentTuple = null;
