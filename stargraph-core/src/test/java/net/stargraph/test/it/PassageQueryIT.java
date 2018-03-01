@@ -76,16 +76,13 @@ public final class PassageQueryIT {
         stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
 
 
-        //TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsKBId));
+        TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsKBId));
 
         stargraph.setKBInitSet(id);
         stargraph.initialize();
 
-        //TestUtils.ensureLuceneIndexExists(stargraph, entitiesKBId);
-        TestUtils.populateEntityIndex(stargraph.getIndexer(entitiesKBId));
-        System.out.println(stargraph.getSearcher(entitiesKBId).countDocuments());
-        System.out.println("INDEX POPULATED!!!!");
-//        Assert.assertTrue(false);
+        TestUtils.ensureLuceneIndexExists(stargraph, entitiesKBId);
+
 
         queryEngine = new QueryEngine(id, stargraph);
 
@@ -110,8 +107,11 @@ public final class PassageQueryIT {
             Indexer indexer = stargraph.getIndexer(documentsKBId);
 
             indexer.deleteAll();
-
+            long then = System.currentTimeMillis();
             indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsKBId));
+            long now = System.currentTimeMillis();
+            System.out.println(">>>>>>>>>");
+            System.out.println((now - then) / 1_000.0);
             indexer.flush();
         }
     }
@@ -126,7 +126,7 @@ public final class PassageQueryIT {
     }
 
 
-    @Test(enabled = false)
+    @Test
     public void successfullyAnswerPassageQuery() {
         String passageQuery = "PASSAGE When did Barack Obama travel to India?";
         AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);

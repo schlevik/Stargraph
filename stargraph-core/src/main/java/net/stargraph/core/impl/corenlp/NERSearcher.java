@@ -12,10 +12,10 @@ package net.stargraph.core.impl.corenlp;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -169,8 +169,7 @@ public final class NERSearcher implements NER {
                 if (!reference.isPresent()) {
                     // no reference in previous NEs
                     tryLink(namedEntity);
-                }
-                else {
+                } else {
                     if (reference.get().getEntity() != null) {
                         namedEntity.link(reference.get().getEntity(), reference.get().getScore());
                     }
@@ -191,7 +190,7 @@ public final class NERSearcher implements NER {
             ModifiableSearchParams searchParams =
                     ModifiableSearchParams.create(this.entitySearcherDbId).term(namedEntity.getValue()).limit(50);
 
-            logger.info(marker, "Trying to link {}", namedEntity);
+            logger.trace(marker, "Trying to link {}", namedEntity);
 
             final Scores scores = entitySearcher.instanceSearch(searchParams, ParamsBuilder.levenshtein());
 
