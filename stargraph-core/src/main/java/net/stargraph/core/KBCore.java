@@ -99,6 +99,12 @@ public final class KBCore {
         this.running = true;
     }
 
+    public <T extends SearchBuilder> T getSearchBuilder(String forSearchable) {
+        // for index in index
+        return (T) createEntitySearcher();
+        // databases
+        // null
+    }
 
     public synchronized void terminate() {
         if (!running) {

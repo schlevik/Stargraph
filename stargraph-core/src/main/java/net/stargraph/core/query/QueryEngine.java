@@ -71,6 +71,8 @@ public final class QueryEngine {
     private Namespace namespace;
     private Language language;
 
+    private List<QueryResolver> queryResolvers;
+
     public QueryEngine(String dbId, Stargraph stargraph) {
         this.dbId = Objects.requireNonNull(dbId);
         this.core = Objects.requireNonNull(stargraph.getKBCore(dbId));

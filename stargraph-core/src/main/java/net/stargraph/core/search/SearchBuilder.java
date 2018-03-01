@@ -3,7 +3,7 @@ package net.stargraph.core.search;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.KBCore;
 
-public interface GenericSearchBuilder<T extends IndexSearcher> {
+public interface SearchBuilder<T extends IndexSearcher> {
     default T getBackendSearcher(KBCore core, String index) {
         T searcher;
         try {

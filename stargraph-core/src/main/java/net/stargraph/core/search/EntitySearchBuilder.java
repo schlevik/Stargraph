@@ -34,7 +34,7 @@ import net.stargraph.rank.Scores;
 
 import java.util.List;
 
-public interface EntitySearchBuilder<T extends IndexSearcher> extends GenericSearchBuilder<T> {
+public interface EntitySearchBuilder<T extends IndexSearcher> extends SearchBuilder<T> {
 
     LabeledEntity getEntity(String dbId, String id);
 

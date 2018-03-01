@@ -5,7 +5,7 @@ import net.stargraph.rank.ModifiableRankParams;
 import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Scores;
 
-public interface DocumentSearchBuilder<T extends IndexSearcher> extends GenericSearchBuilder<T> {
+public interface DocumentSearchBuilder<T extends IndexSearcher> extends SearchBuilder<T> {
     Scores pivotedFullTextPassageSearch(InstanceEntity pivot,
                                         ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
 
