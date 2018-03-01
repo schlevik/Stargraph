@@ -107,11 +107,8 @@ public final class PassageQueryIT {
             Indexer indexer = stargraph.getIndexer(documentsKBId);
 
             indexer.deleteAll();
-            long then = System.currentTimeMillis();
+
             indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsKBId));
-            long now = System.currentTimeMillis();
-            System.out.println(">>>>>>>>>");
-            System.out.println((now - then) / 1_000.0);
             indexer.flush();
         }
     }

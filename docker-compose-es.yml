@@ -18,8 +18,8 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    mem_limit: 1g
+    mem_limit: 3g
     cap_add:
       - IPC_LOCK
     environment:
-      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
