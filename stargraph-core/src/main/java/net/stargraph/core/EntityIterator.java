@@ -12,10 +12,10 @@ package net.stargraph.core;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,6 +27,8 @@ package net.stargraph.core;
  */
 
 import com.google.common.collect.Iterators;
+import net.stargraph.core.impl.jena.JenaGraphDatabase;
+import net.stargraph.core.search.database.DBType;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.IndexID;
 import org.apache.jena.graph.Graph;
@@ -52,23 +54,22 @@ public final class EntityIterator implements Iterator<Indexable> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
     private IndexID indexID;
-    private KnowledgeBase core;
     private Namespace namespace;
     private Iterator<Node> iterator;
     private Node currentNode;
 
     public EntityIterator(Stargraph stargraph, IndexID indexID) {
+        JenaGraphDatabase database = (JenaGraphDatabase) stargraph.getKBCore(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
         this.indexID = Objects.requireNonNull(indexID);
-        this.core = stargraph.getKBCore(indexID.getKnowledgeBase());
-        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
-        this.model = core.getGraphModel();
+        this.namespace = database.getNamespace();
+        this.model = database.getModel();
         this.iterator = createIterator();
     }
 
     public EntityIterator(Stargraph stargraph, IndexID indexID, List data) {
+        JenaGraphDatabase database = (JenaGraphDatabase) stargraph.getKBCore(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
         this.indexID = Objects.requireNonNull(indexID);
-        this.core = stargraph.getKBCore(indexID.getKnowledgeBase());
-        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
+        this.namespace = database.getNamespace();
         this.model = ModelFactory.createDefaultModel().add(data);
         this.iterator = createIterator();
 
@@ -85,12 +86,11 @@ public final class EntityIterator implements Iterator<Indexable> {
             currentNode = iterator.next();
             //skipping literals and blank nodes.
             if ((!currentNode.isBlank() && !currentNode.isLiteral())) {
-                 if (namespace.isFromMainNS(currentNode.getURI())) {
-                     return true;
-                 }
-                 else {
-                     logger.trace(marker, "Discarded. NOT from main NS: [{}]", currentNode.getURI());
-                 }
+                if (namespace.isFromMainNS(currentNode.getURI())) {
+                    return true;
+                } else {
+                    logger.trace(marker, "Discarded. NOT from main NS: [{}]", currentNode.getURI());
+                }
             }
         }
 

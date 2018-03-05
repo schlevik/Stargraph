@@ -14,7 +14,7 @@ public abstract class BaseQueryResolver implements QueryResolver {
     }
 
     protected final <T extends IndexSearcher> T getIndexSearcher(IndexID indexID) {
-        return (T) knowledgeBase.getIndex(indexID).getSearcher();
+        return (T) knowledgeBase.getIndex(indexID.getIndex()).getSearcher();
     }
 
 

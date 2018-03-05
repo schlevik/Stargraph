@@ -1,4 +1,4 @@
-package net.stargraph.core.index;
+package net.stargraph.core;
 
 /*-
  * ==========================License-Start=============================
@@ -26,34 +26,39 @@ package net.stargraph.core.index;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.IndicesFactory;
-import net.stargraph.core.KnowledgeBase;
-import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
-import net.stargraph.core.search.index.DocumentIndexSearcher;
-import net.stargraph.core.search.index.EntityIndexSearcher;
-import net.stargraph.model.IndexID;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import net.stargraph.core.impl.jena.JenaGraphDatabase;
+import net.stargraph.core.search.database.Database;
+import net.stargraph.core.search.database.DatabaseFactory;
+import org.apache.jena.rdf.model.Model;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
-public final class NullIndicesFactory implements IndicesFactory {
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
-    @Override
-    public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
-        return new NullIndexPopulator(indexID, stargraph);
+public abstract class JenaDatabaseFactory implements DatabaseFactory {
+    private Map<String, Model> models;
+
+    protected Logger logger = LoggerFactory.getLogger(getClass());
+    protected Marker marker = MarkerFactory.getMarker("core");
+    protected Stargraph stargraph;
+
+    public JenaDatabaseFactory(Stargraph stargraph) {
+        this.stargraph = Objects.requireNonNull(stargraph);
+        this.models = new ConcurrentHashMap<>();
     }
 
-    @Override
-    public BaseIndexSearchExecutor createSearcher(IndexID indexID, Stargraph stargraph) {
-        return null;
+    Model getModel(String dbId) {
+        return models.computeIfAbsent(dbId, (id) -> createModel(dbId));
     }
 
-    @Override
-    public EntityIndexSearcher createEntitySearcher(KnowledgeBase core) {
-        return null;
+    public Database getDatabase(KnowledgeBase knowledgeBase) {
+        return new JenaGraphDatabase(knowledgeBase, getModel(knowledgeBase.getKBName()));
     }
 
-    @Override
-    public DocumentIndexSearcher createDocumentSearcher(KnowledgeBase core) {
-        throw new NotImplementedException();
-    }
+    protected abstract Model createModel(String dbId);
+
 }

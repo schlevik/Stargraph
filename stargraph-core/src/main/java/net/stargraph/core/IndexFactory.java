@@ -1,4 +1,4 @@
-package net.stargraph.core.impl.elastic;
+package net.stargraph.core;
 
 /*-
  * ==========================License-Start=============================
@@ -26,43 +26,42 @@ package net.stargraph.core.impl.elastic;
  * ==========================License-End===============================
  */
 
-import net.stargraph.StargraphConfigurationException;
-import net.stargraph.core.IndexFactory;
-import net.stargraph.core.Stargraph;
+import net.stargraph.StarGraphException;
 import net.stargraph.core.index.BaseIndexPopulator;
-import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.core.search.index.IndexSearcher;
 import net.stargraph.model.IndexID;
 
-import org.reflections.Reflections;
 
-import java.util.Set;
+public interface IndexFactory {
 
+    BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph);
 
-public final class ElasticFactory implements IndexFactory {
-    private final Reflections reflections = new Reflections();
+    IndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph);
 
-    @Override
-    public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
-        return new ElasticIndexPopulator(indexID, stargraph);
-    }
-
-    @Override
-    public ElasticIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
-        return new ElasticIndexSearchExecutor(indexID, stargraph);
-    }
-
-    @Override
-    public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
-
-        Set<Class<? extends ElasticBaseIndexSearcher>> allSearcherClasses = reflections.getSubTypesOf(ElasticBaseIndexSearcher.class);
-        for (Class<? extends ElasticBaseIndexSearcher> searcherClass : allSearcherClasses) {
-            if (iFace.isAssignableFrom(searcherClass)) {
-                return searcherClass;
+    default IndexSearcher createIndexSearcher(Index index, Stargraph stargraph) {
+        // get index searcher type (e.g. its interface) or a concrete implementing class from config
+        Class<? extends IndexSearcher> cls = stargraph.getIndexSearcherType(index.getID());
+        // if interface, let concrete factory create the corresponding entry
+        if (cls.isInterface()) {
+            Class implCls = getImplementationFor(cls);
+            if (implCls.isInterface() || !cls.isAssignableFrom(implCls)) {
+                throw new StarGraphException(this.getClass() +
+                        " has an implementation error! getImplementationFor " +
+                        "should return a concrete class that implements the interface " + cls.getName() + "! " +
+                        "(What it returned: " + implCls.getName() + ").");
             }
+            cls = (Class<? extends IndexSearcher>) implCls;
+
         }
-        throw new StargraphConfigurationException("Something somewhere went terribly wrong!");
+        return stargraph.createIndexSearcher(cls, index);
     }
 
-
+    /**
+     * Classes implementing this method should return an implementation class for the given interface.
+     *
+     * @param iFace Interface of a concrete index searcher.
+     * @return Its implementation.
+     */
+    Class getImplementationFor(Class<? extends IndexSearcher> iFace);
 }

@@ -28,6 +28,9 @@ package net.stargraph.core;
 
 import com.google.common.collect.Iterators;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.impl.jena.JenaGraphDatabase;
+import net.stargraph.core.search.database.DBType;
+import net.stargraph.core.search.database.Database;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.IndexID;
 import org.apache.jena.graph.Graph;
@@ -50,16 +53,16 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
     private IndexID indexID;
-    private KnowledgeBase core;
     private Namespace namespace;
     private Iterator<Tuple> iterator;
     private Tuple currentTuple;
 
     public CanonicalEntityIterator(Stargraph stargraph, IndexID indexID) {
+        KnowledgeBase kb = stargraph.getKBCore(indexID.getKnowledgeBase());
+        JenaGraphDatabase database = (JenaGraphDatabase) kb.getDatabase(DBType.Graph);
         this.indexID = Objects.requireNonNull(indexID);
-        this.core = stargraph.getKBCore(indexID.getKnowledgeBase());
-        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
-        this.model = core.getGraphModel();
+        this.namespace = database.getNamespace();
+        this.model = database.getModel();
         this.iterator = createIterator();
     }
 
@@ -109,27 +112,10 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
         return uri;
     }
 
-    private final static String ENTITY_QUERY_WITH_REDIRECTS =
-            "SELECT DISTINCT ?resource ?redir WHERE { {" +
-                    " ?resource ?p ?o. " +
-                    "OPTIONAL { ?resource <http://dbpedia.org/ontology/wikiPageRedirects> ?redir }" +
-                    "} UNION {" +
-                    " ?s ?p ?resource." +
-                    "OPTIONAL { ?resource <http://dbpedia.org/ontology/wikiPageRedirects> ?redir }" +
-                    "} }";
 
-    private final static String ENTITY_QUERY_SUBJ_ONLY =
-            "SELECT ?resource ?redir WHERE {" +
-                    " ?resource ?p ?o . " +
-                    "OPTIONAL { ?resource <http://dbpedia.org/ontology/wikiPageRedirects> ?redir . }" +
-                    "}";
-
-
-    public Iterator<Tuple> createIterator() {
+    private Iterator<Tuple> createIterator() {
         logger.debug(marker, "Model has {} entries.", model.size());
-        //Query query = QueryFactory.create(ENTITY_QUERY_WITH_REDIRECTS);
         Graph g = model.getGraph();
-//        Triple(null, model.createProperty("<http://dbpedia.org/ontology/wikiPageRedirects>").asNode(), null
         ExtendedIterator<Triple> exIt = g.find(Node.ANY, NodeUtils.asNode("http://dbpedia.org/ontology/wikiPageRedirects"), null);
 
 
@@ -139,10 +125,6 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
         exIt = g.find(null, null, Node.ANY);
         ExtendedIterator<Tuple> objIt = exIt.mapWith(triple -> new Tuple(triple.getObject(), null));
 
-//        logger.debug(marker, "Performing following query on the model:\n{}", query.toString());
-//        QueryExecution execution = QueryExecutionFactory.create(query, model);
-//        ResultSet resultSet = execution.execSelect();
-//        return redirIt;
         return Iterators.concat(redirIt, subjIt, objIt);
     }
 
@@ -163,18 +145,14 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
 
         Tuple(Triple triple) {
             this(triple.getSubject(), triple.getObject());
-            //logger.debug(marker, "Creating new tuple from triple {}", triple);
         }
 
-//        Tuple(QuerySolution row) {
-//            this(row.get("resource"), row.get("redir"));
-//        }
 
-        public String resUri() {
+        String resUri() {
             return res.getURI();
         }
 
-        public String refUri() {
+        String refUri() {
             return hasRef ? ref.getURI() : null;
         }
     }

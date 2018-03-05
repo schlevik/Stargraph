@@ -26,7 +26,6 @@ package net.stargraph.core.search.index;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.rank.ModifiableRankParams;
@@ -35,19 +34,15 @@ import net.stargraph.rank.Scores;
 
 import java.util.List;
 
-public interface EntityIndexSearcher<T extends IndexSearchExecutor> extends IndexSearcher<T> {
+/**
+ *
+ */
+public interface EntityIndexSearcher extends IndexSearcher {
 
     LabeledEntity getEntity(String dbId, String id);
 
     List<LabeledEntity> getEntities(String dbId, List<String> ids);
 
-    Scores classSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores propertySearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
-    Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
-
+    Scores<InstanceEntity> instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams);
 
 }

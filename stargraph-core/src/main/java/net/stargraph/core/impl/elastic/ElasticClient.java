@@ -144,7 +144,7 @@ public final class ElasticClient {
     }
 
     private Config getModelCfg() {
-        return core.getModelConfig(indexID);
+        return core.getIndexConfig(indexID);
     }
 
     private TransportClient createClient() {

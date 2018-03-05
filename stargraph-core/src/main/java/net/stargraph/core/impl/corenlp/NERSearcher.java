@@ -12,10 +12,10 @@ package net.stargraph.core.impl.corenlp;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,6 +28,8 @@ package net.stargraph.core.impl.corenlp;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import net.stargraph.StarGraphException;
+import net.stargraph.core.Index;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.index.EntityIndexSearcher;
@@ -48,14 +50,15 @@ public final class NERSearcher implements NER {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Marker marker = MarkerFactory.getMarker("ner");
     private CoreNLPNERClassifier ner;
-    private EntityIndexSearcher entitySearchBuilder;
-    private String entitySearcherDbId;
+    private EntityIndexSearcher entityIndexSearcher;
     private boolean reverseNameOrder;
 
-    public NERSearcher(Language language, EntityIndexSearcher entitySearchBuilder, String entitySearcherDbId) {
-        this.ner = new CoreNLPNERClassifier(Objects.requireNonNull(language));
-        this.entitySearchBuilder = Objects.requireNonNull(entitySearchBuilder);
-        this.entitySearcherDbId = Objects.requireNonNull(entitySearcherDbId);
+    public NERSearcher(Index index) {
+        this.ner = new CoreNLPNERClassifier(Objects.requireNonNull(index.getKnowledgeBase().getLanguage()));
+        if (!index.getSearcher().getClass().equals(EntityIndexSearcher.class)) {
+            throw new StarGraphException("NERSearcher accepts only entity index!");
+        }
+        this.entityIndexSearcher = (EntityIndexSearcher) index.getSearcher();
         this.reverseNameOrder = false; //TODO: read from configuration, specific for each KB.
     }
 
@@ -69,8 +72,7 @@ public final class NERSearcher implements NER {
             logger.trace(marker, "NER output: {}", sentences);
             linked = postProcessFoundNamedEntities(sentences);
             return linked;
-        }
-        finally {
+        } finally {
             double elapsedInMillis = (System.nanoTime() - start) / 1000_000;
             logger.debug(marker, "Took {}ms, entities: {}, text: '{}'", elapsedInMillis, linked, text);
         }
@@ -80,9 +82,7 @@ public final class NERSearcher implements NER {
         final List<List<LinkedNamedEntity>> sentenceList = mergeConsecutiveNamedEntities(sentences);
 
         if (this.reverseNameOrder) {
-            sentenceList.forEach(sentence -> {
-                sentence.forEach(LinkedNamedEntity::reverseValue);
-            });
+            sentenceList.forEach(sentence -> sentence.forEach(LinkedNamedEntity::reverseValue));
         }
 
         if (sentenceList.isEmpty() || (sentenceList.size() == 1 && sentenceList.get(0).isEmpty())) {
@@ -96,7 +96,7 @@ public final class NERSearcher implements NER {
     /**
      * Receives a list of CoreLabel (from CoreNLP package) and merges two consecutive named entities with
      * the same label into a single one.
-     *
+     * <p>
      * Example: "Barack/PERSON Obama/PERSON" becomes "Barack Obama/PERSON"
      *
      * @param sentences List of lists of CoreLabels
@@ -113,8 +113,8 @@ public final class NERSearcher implements NER {
 
             /*
                 A named entity is composed of multiple words, most of the time.
-                Two consecutive words belong to entitiesone named entity if they have the same label.
-                This method does not differentiate two different named entities when they are not
+                Two consecutive words belong to the same named entity if they have the same label.
+                This method does not differentiate between two different named entities when they are not
                 divided by a different label.
                 CoreNLP labels words that are not a named entity with "O", so we remove these from the output.
              */
@@ -169,8 +169,7 @@ public final class NERSearcher implements NER {
                 if (!reference.isPresent()) {
                     // no reference in previous NEs
                     tryLink(namedEntity);
-                }
-                else {
+                } else {
                     if (reference.get().getEntity() != null) {
                         namedEntity.link(reference.get().getEntity(), reference.get().getScore());
                     }
@@ -189,15 +188,15 @@ public final class NERSearcher implements NER {
         if (!namedEntity.getCat().equalsIgnoreCase("DATE")) {
             //TODO: Limit reduce network latency but can hurt precision in some cases
             ModifiableSearchParams searchParams =
-                    ModifiableSearchParams.create(this.entitySearcherDbId).term(namedEntity.getValue()).limit(50);
+                    ModifiableSearchParams.create().term(namedEntity.getValue()).limit(50);
 
-            logger.info(marker, "Trying to link {}", namedEntity);
+            logger.debug(marker, "Trying to link {}", namedEntity);
 
-            final Scores scores = entitySearchBuilder.instanceSearch(searchParams, ParamsBuilder.levenshtein());
+            final Scores<InstanceEntity> scores = entityIndexSearcher.instanceSearch(searchParams, ParamsBuilder.levenshtein());
 
             // Currently, we only care about the highest scored entity.
             if (scores.size() > 0) {
-                InstanceEntity instance = (InstanceEntity) scores.get(0).getEntry();
+                InstanceEntity instance = scores.get(0).getEntry();
                 double score = scores.get(0).getValue();
                 namedEntity.link(instance, score);
             }

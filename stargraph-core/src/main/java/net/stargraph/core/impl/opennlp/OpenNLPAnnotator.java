@@ -90,7 +90,7 @@ public final class OpenNLPAnnotator extends Annotator {
     }
 
     private TokenizerModel readTokenizerModel(Language language) {
-        logger.debug(marker, "Reading tokenizer model for {}", language);
+        logger.debug(marker, "Reading tokenizer index for {}", language);
         File modelFile = new File(modelsDir, String.format("%s-token.bin", language.name().toLowerCase()));
         try (InputStream in = new FileInputStream(modelFile)) {
             return new TokenizerModel(in);
@@ -100,7 +100,7 @@ public final class OpenNLPAnnotator extends Annotator {
     }
 
     private POSModel readPOSModel(Language language) {
-        logger.debug(marker, "Reading POS model for {}", language);
+        logger.debug(marker, "Reading POS index for {}", language);
         File modelFile = new File(modelsDir, String.format("%s-pos-maxent.bin", language.name().toLowerCase()));
         try (InputStream in = new FileInputStream(modelFile)) {
             return new POSModel(in);

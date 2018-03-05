@@ -34,6 +34,7 @@ import net.stargraph.core.impl.lucene.LuceneEntityIndexSearcher;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.model.IndexID;
+import net.stargraph.model.InstanceEntity;
 import net.stargraph.rank.*;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -73,7 +74,7 @@ public final class LuceneTest {
 
     @Test
     public void searchTest() {
-        LuceneEntityIndexSearcher entitySearcher = new LuceneEntityIndexSearcher(this.stargraph.getKBCore(id));
+        LuceneEntityIndexSearcher entitySearcher = new LuceneEntityIndexSearcher(stargraph.getIndex(indexID));
         ModifiableSearchParams searchParams = ModifiableSearchParams
                 .create(id)
                 .term("Barack Obama")
@@ -81,7 +82,7 @@ public final class LuceneTest {
         ModifiableRankParams rankParams = new ModifiableRankParams().
                 rankingModel(RankingModel.LEVENSHTEIN).
                 threshold(Threshold.auto());
-        Scores result = entitySearcher.instanceSearch(searchParams, rankParams);
+        Scores<InstanceEntity> result = entitySearcher.instanceSearch(searchParams, rankParams);
         Assert.assertEquals(result.get(0).getEntry(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 

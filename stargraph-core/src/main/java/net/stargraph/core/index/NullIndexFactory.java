@@ -1,4 +1,4 @@
-package net.stargraph.core;
+package net.stargraph.core.index;
 
 /*-
  * ==========================License-Start=============================
@@ -26,19 +26,32 @@ package net.stargraph.core;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.index.BaseIndexPopulator;
+import net.stargraph.core.Index;
+import net.stargraph.core.IndexFactory;
+import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.Stargraph;
 import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
 import net.stargraph.core.search.index.DocumentIndexSearcher;
 import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.index.IndexSearcher;
 import net.stargraph.model.IndexID;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public interface IndicesFactory {
+public final class NullIndexFactory implements IndexFactory {
 
-    BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph);
+    @Override
+    public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
+        return new NullIndexPopulator(indexID, stargraph);
+    }
 
-    BaseIndexSearchExecutor createSearcher(IndexID indexID, Stargraph stargraph);
+    @Override
+    public BaseIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
+        return null;
+    }
 
-    EntityIndexSearcher createEntitySearcher(KnowledgeBase core);
+    @Override
+    public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
+        throw new NotImplementedException();
+    }
 
-    DocumentIndexSearcher createDocumentSearcher(KnowledgeBase core);
 }

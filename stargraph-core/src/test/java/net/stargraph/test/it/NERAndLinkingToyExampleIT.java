@@ -30,8 +30,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.features.NERFeature;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.IndexID;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
@@ -71,7 +73,7 @@ public final class NERAndLinkingToyExampleIT {
         stargraph.getIndexer(indexID).load(true, -1);
         stargraph.getIndexer(indexID).awaitLoader();
 
-        ner = stargraph.getKBCore(id).getNER();
+        ner = stargraph.getKBCore(id).getFeature(NERFeature.class);
         Assert.assertNotNull(ner);
     }
 

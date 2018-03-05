@@ -28,11 +28,11 @@ package net.stargraph.core.impl.lucene;
 
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.SearchQueryHolder;
 import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
 import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.IndexID;
+import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
 import org.apache.lucene.document.Document;
@@ -53,7 +53,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class LuceneIndexSearchExecutor extends BaseIndexSearchExecutor<Query> {
+public final class LuceneIndexSearchExecutor<R extends Serializable> extends BaseIndexSearchExecutor<R, Query> {
     private static Logger logger = LoggerFactory.getLogger(LuceneIndexSearchExecutor.class);
     private static Marker marker = MarkerFactory.getMarker("lucene");
 
@@ -67,15 +67,13 @@ public final class LuceneIndexSearchExecutor extends BaseIndexSearchExecutor<Que
     }
 
     @Override
-    public Scores search(SearchQueryHolder<Query> holder) {
+    public Scores<R> search(Query query, ModifiableSearchParams params) {
         TopDocs results;
-        Scores scores = new Scores();
+        Scores<R> scores = new Scores<>();
         IndexSearcher searcher = getLuceneSearcher();
-        // unpack query, cast it as you know that it's a lucene query (what else could it be?)
-        Query query = holder.getQuery();
         try {
             // perform query
-            int limit = holder.getSearchParams().getLimit();
+            int limit = params.getLimit();
             logger.debug(marker, "Performing query '{}' with limit {}", query, limit);
             results = searcher.search(query, limit <= 0 ? Integer.MAX_VALUE : limit);
         } catch (IOException e) {
@@ -85,12 +83,12 @@ public final class LuceneIndexSearchExecutor extends BaseIndexSearchExecutor<Que
         try {
             ScoreDoc[] hits = results.scoreDocs;
             logger.debug(marker, "Retrieved {} total hits from index", hits.length);
-            for (int i = 0; i < hits.length; ++i) {
-                int docId = hits[i].doc;
+            for (ScoreDoc hit : hits) {
+                int docId = hit.doc;
                 // deserialize documents and convert them to scores
-                Serializable deserialized = fromDocument(searcher.doc(docId));
+                R deserialized = fromDocument(searcher.doc(docId));
                 if (deserialized != null) {
-                    scores.add(new Score(deserialized, hits[i].score));
+                    scores.add(new Score<>(deserialized, hit.score));
                 }
             }
         } catch (IOException e) {
@@ -118,20 +116,21 @@ public final class LuceneIndexSearchExecutor extends BaseIndexSearchExecutor<Que
         }
     }
 
-
-    private static Serializable fromDocument(Document document) {
+    @SuppressWarnings("unchecked")
+    private R fromDocument(Document document) {
+        //TODO need one single serializer/deserialized for every backend enyways
         IndexableField id = document.getField("id");
         IndexableField value = document.getField("value");
         IndexableField reference = document.getField("reference");
         if (id != null && value != null) {
             if (reference != null) {
-                return new CanonicalInstanceEntity(
+                return (R) new CanonicalInstanceEntity(
                         id.stringValue(),
                         value.stringValue(),
                         reference.stringValue() // reference to canonical identifier
                 );
             }
-            return new InstanceEntity(
+            return (R) new InstanceEntity(
                     id.stringValue(), // id =
                     value.stringValue() // value =
             );

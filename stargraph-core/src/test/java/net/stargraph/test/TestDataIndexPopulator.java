@@ -26,13 +26,15 @@ package net.stargraph.test;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.IndicesFactory;
+import net.stargraph.core.Index;
+import net.stargraph.core.IndexFactory;
 import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexPopulator;
 import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
 import net.stargraph.core.search.index.DocumentIndexSearcher;
 import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.index.IndexSearcher;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.model.IndexID;
@@ -89,7 +91,7 @@ public final class TestDataIndexPopulator extends BaseIndexPopulator {
 
     }
 
-    static class Factory implements IndicesFactory {
+    static class Factory implements IndexFactory {
 
         @Override
         public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
@@ -97,18 +99,14 @@ public final class TestDataIndexPopulator extends BaseIndexPopulator {
         }
 
         @Override
-        public BaseIndexSearchExecutor createSearcher(IndexID indexID, Stargraph stargraph) {
+        public BaseIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
             return null;
         }
 
         @Override
-        public EntityIndexSearcher createEntitySearcher(KnowledgeBase core) {
-            return null;
-        }
-
-        @Override
-        public DocumentIndexSearcher createDocumentSearcher(KnowledgeBase core) {
+        public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
             throw new NotImplementedException();
         }
+
     }
 }

@@ -42,7 +42,7 @@ public final class TestDataProviderFactory implements DataProviderFactory {
 
     @Override
     public DataProvider<? extends Holder> create(IndexID indexID) {
-        String cfgPath = String.format("%s.provider.args.data", indexID.getModelPath());
+        String cfgPath = String.format("%s.provider.args.data", indexID.getIndexPath());
         List<? extends Config> configList = config.getConfigList(cfgPath);
         List<TestData> testData = configList.stream()
                 .map(cfg -> new TestData(cfg.getBoolean("failOnIndexer"), cfg.getBoolean("failOnProvider"), cfg.getString("text")))

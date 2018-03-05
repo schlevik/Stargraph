@@ -1,9 +1,13 @@
 package net.stargraph.core.impl.lucene;
 
+import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.Index;
 import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.impl.corenlp.NERSearcher;
+import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.index.EntityIndexSearcher;
-import net.stargraph.model.BuiltInModel;
+import net.stargraph.model.BuiltInIndex;
 import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
@@ -21,17 +25,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class LuceneCanonicalEntityIndexSearcher implements EntityIndexSearcher<LuceneIndexSearchExecutor> {
+public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<InstanceEntity>
+        implements EntityIndexSearcher {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("lucene");
 
-    private KnowledgeBase core;
 
-
-    public LuceneCanonicalEntityIndexSearcher(KnowledgeBase core) {
-        this.core = Objects.requireNonNull(core);
-        logger.info(marker, "I WAS CREATED!!!");
+    public LuceneCanonicalEntityIndexSearcher(Index index) {
+        super(index);
     }
+
 
     @Override
     public LabeledEntity getEntity(String dbId, String id) {
@@ -43,41 +46,36 @@ public class LuceneCanonicalEntityIndexSearcher implements EntityIndexSearcher<L
         throw new NotImplementedException();
     }
 
-    @Override
-    public Scores classSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        throw new NotImplementedException();
-    }
 
     @Override
-    public Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
+    public Scores<InstanceEntity> instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
         //That's what we're trying to do here.
 
         QueryBuilder queryBuilder = new QueryBuilder(new StandardAnalyzer());
         Query query = queryBuilder.createPhraseQuery("value", searchParams.getSearchTerm(), 0);
-        searchParams.model(BuiltInModel.ENTITY);
-        LuceneIndexSearchExecutor searcher = this.getSearchExecutor(core, searchParams.getKbId().getIndex());
+        searchParams.index(getIndex().getID());
 
-        Scores scores = searcher.search(new LuceneQueryHolder(query, searchParams));
+        Scores<InstanceEntity> scores = executeSearch(query, searchParams);
         scores = replaceCanonical(scores);
         return Rankers.apply(scores, rankParams, searchParams.getSearchTerm());
     }
 
-    private Score replaceWithRef(Score score) {
+
+    private Score<InstanceEntity> replaceWithRef(Score<InstanceEntity> score) {
         CanonicalInstanceEntity entity = (CanonicalInstanceEntity) score.getEntry();
         String reference = entity.getReference();
         if (!reference.equals("")) {
             logger.trace(marker, "Replacing {} with ref {}", score, reference);
-            return new Score(ModelUtils.createInstance(reference), score.getValue());
+            return new Score<>(ModelUtils.createInstance(reference), score.getValue());
         }
-        return new Score(ModelUtils.createInstance(entity.getId()), score.getValue());
+        return new Score<>(ModelUtils.createInstance(entity.getId()), score.getValue());
     }
 
 
-    private Scores replaceCanonical(Scores scores) {
-        return new Scores(scores.stream()
+    private Scores<InstanceEntity> replaceCanonical(Scores<InstanceEntity> scores) {
+        return scores.stream()
                 .map(this::replaceWithRef)
-                .distinct()
-                .collect(Collectors.toList()));
+                .distinct().collect(Collectors.toCollection(Scores::new));
         // this instead of distinct
         //.filter(score -> {
         //                    String id = ((LabeledEntity) score.getEntry()).getKnowledgeBase();
@@ -85,13 +83,5 @@ public class LuceneCanonicalEntityIndexSearcher implements EntityIndexSearcher<L
         //                }).
     }
 
-    @Override
-    public Scores propertySearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        throw new NotImplementedException();
-    }
 
-    @Override
-    public Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        throw new NotImplementedException();
-    }
 }

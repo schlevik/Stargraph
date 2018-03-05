@@ -29,12 +29,14 @@ package net.stargraph.test.it;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.features.NERFeature;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
 import net.stargraph.model.IndexID;
@@ -74,13 +76,13 @@ public final class PassageQueryIT {
         stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
 
 
-        //TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsIndexID));
+        //TestUtils.assertElasticRunning(stargraph.getIndexConfig(documentsIndexID));
 
         stargraph.setKBInitSet(id);
         stargraph.initialize();
 
         TestUtils.ensureLuceneIndexExists(stargraph, entitiesIndexID);
-//        TestUtils.populateEntityIndex(stargraph.getIndexPopulator(entitiesIndexID));
+//        TestUtils.populateEntityIndex(stargraph.getPopulator(entitiesIndexID));
 //        System.out.println(stargraph.getSearchExecutor(entitiesIndexID).countDocuments());
 //        System.out.println("INDEX POPULATED!!!!");
 //        Assert.assertTrue(false);
@@ -96,7 +98,7 @@ public final class PassageQueryIT {
         IndexSearchExecutor searcher = stargraph.getSearcher(documentsIndexID);
         if (searcher.countDocuments() != 1) {
 
-            String location = stargraph.getModelConfig(documentsIndexID).getConfigList("processors")
+            String location = stargraph.getIndexConfig(documentsIndexID).getConfigList("processors")
                     .stream()
                     .map(proc -> proc.getConfig("coref-processor"))
                     .findAny()
@@ -117,7 +119,7 @@ public final class PassageQueryIT {
 
     @Test
     public void nerLinkTest() {
-        NER ner = stargraph.getKBCore(id).getNER();
+        NER ner = stargraph.getKBCore(id).getFeature(NERFeature.class);
         List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Hussein Obama");
         System.out.println(entities);
         Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));

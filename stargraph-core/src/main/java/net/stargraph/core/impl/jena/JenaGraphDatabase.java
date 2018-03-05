@@ -2,7 +2,7 @@ package net.stargraph.core.impl.jena;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-core
+ * stargraph-knowledgeBase
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -30,8 +30,7 @@ import net.stargraph.ModelUtils;
 import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Namespace;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.SearchQueryHolder;
-import net.stargraph.core.search.database.GraphSearcher;
+import net.stargraph.core.search.database.RDFGraphDatabase;
 import net.stargraph.core.search.database.SparqlQuery;
 import net.stargraph.core.search.database.SparqlResult;
 import net.stargraph.core.search.index.EntityIndexSearcher;
@@ -41,6 +40,7 @@ import org.apache.jena.graph.impl.LiteralLabel;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.slf4j.Logger;
@@ -50,29 +50,21 @@ import org.slf4j.MarkerFactory;
 
 import java.util.*;
 
-public final class JenaGraphSearcher implements GraphSearcher {
+public final class JenaGraphDatabase implements RDFGraphDatabase {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("jena");
     private Namespace ns;
-    private KnowledgeBase core;
-    private String dbId;
+    private KnowledgeBase knowledgeBase;
+    private String kbName;
+    private Model model;
 
-    public JenaGraphSearcher(String dbId, Stargraph stargraph) {
-        this.dbId = Objects.requireNonNull(dbId);
-        this.core = stargraph.getKBCore(dbId);
-        this.ns = stargraph.getKBCore(dbId).getNamespace();
+    public JenaGraphDatabase(KnowledgeBase knowledgeBase, Model graphModel) {
+        this.knowledgeBase = Objects.requireNonNull(knowledgeBase);
+        this.kbName = Objects.requireNonNull(knowledgeBase.getKBName());
+        this.ns = knowledgeBase.getNamespace();
+        this.model = graphModel;
     }
 
-
-    @Override
-    public SparqlResult select(String sparqlQuery) {
-        return doSparqlQuery(sparqlQuery);
-    }
-
-    @Override
-    public boolean ask(String sparqlQuery) {
-        return false;
-    }
 
     private SparqlResult doSparqlQuery(String sparqlQuery) {
         logger.debug(marker, "Executing: {}", sparqlQuery);
@@ -80,9 +72,9 @@ public final class JenaGraphSearcher implements GraphSearcher {
         long startTime = System.currentTimeMillis();
 
         SparqlResult result = new SparqlResult();
-        EntityIndexSearcher entitySearchBuilder = core.createEntitySearcher();
+        EntityIndexSearcher entityIndexSearcher = knowledgeBase.getSearcher(EntityIndexSearcher.class);
 
-        try (QueryExecution qexec = QueryExecutionFactory.create(sparqlQuery, core.getGraphModel())) {
+        try (QueryExecution qexec = QueryExecutionFactory.create(sparqlQuery, model)) {
             ResultSet results = qexec.execSelect();
 
             while (results.hasNext()) {
@@ -94,7 +86,7 @@ public final class JenaGraphSearcher implements GraphSearcher {
                     if (!jBinding.get(jVar).isLiteral()) {
                         String id = jBinding.get(jVar).getURI();
                         List<LabeledEntity> entities = result.computeIfAbsent(jVar.getVarName(), (v) -> new ArrayList<>());
-                        LabeledEntity labeledEntity = ns.isFromMainNS(id) ? entitySearchBuilder.getEntity(dbId, id) : ModelUtils.createInstance(id);
+                        LabeledEntity labeledEntity = ns.isFromMainNS(id) ? entityIndexSearcher.getEntity(kbName, ns.shrinkURI(id)) : ModelUtils.createInstance(id);
                         entities.add(labeledEntity);
                     } else {
                         LiteralLabel lit = jBinding.get(jVar).getLiteral();
@@ -120,5 +112,13 @@ public final class JenaGraphSearcher implements GraphSearcher {
     @Override
     public SparqlResult query(SparqlQuery query) {
         return doSparqlQuery(query.getQuery());
+    }
+
+    public Model getModel() {
+        return model;
+    }
+
+    public Namespace getNamespace() {
+        return ns;
     }
 }

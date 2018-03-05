@@ -29,8 +29,10 @@ package net.stargraph.test.it;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.features.NERFeature;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.IndexID;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.test.TestUtils;
@@ -66,7 +68,7 @@ public final class NERAndLinkingIT {
         TestUtils.ensureLuceneIndexExists(stargraph, entityIndex);
 
 
-        ner = stargraph.getKBCore(kbName).getNER();
+        ner = stargraph.getKBCore(kbName).getFeature(NERFeature.class);
         Assert.assertNotNull(ner);
     }
 

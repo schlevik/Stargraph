@@ -36,7 +36,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class NTriplesModelFactory extends GraphModelFactory {
+public final class NTriplesModelFactory extends JenaDatabaseFactory {
 
     public NTriplesModelFactory(Stargraph core) {
         super(core);

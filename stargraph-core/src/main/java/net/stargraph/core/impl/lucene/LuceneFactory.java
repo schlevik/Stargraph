@@ -27,13 +27,15 @@ package net.stargraph.core.impl.lucene;
  */
 
 import net.stargraph.StarGraphException;
-import net.stargraph.core.IndicesFactory;
+import net.stargraph.core.Index;
+import net.stargraph.core.IndexFactory;
 import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexPopulator;
 import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
 import net.stargraph.core.search.index.DocumentIndexSearcher;
 import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.index.IndexSearcher;
 import net.stargraph.model.IndexID;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MMapDirectory;
@@ -45,7 +47,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class LuceneFactory implements IndicesFactory {
+public final class LuceneFactory implements IndexFactory {
     private Map<IndexID, Directory> luceneDirs = new ConcurrentHashMap<>();
 
     @Override
@@ -54,19 +56,19 @@ public final class LuceneFactory implements IndicesFactory {
     }
 
     @Override
-    public BaseIndexSearchExecutor createSearcher(IndexID indexID, Stargraph stargraph) {
+    public BaseIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
         return new LuceneIndexSearchExecutor(indexID, stargraph, getLuceneDir(stargraph, indexID));
     }
 
     @Override
-    public EntityIndexSearcher createEntitySearcher(KnowledgeBase core) {
-        return new LuceneCanonicalEntityIndexSearcher(core);
+    public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
+        if (iFace.equals(EntityIndexSearcher.class)) {
+            return LuceneCanonicalEntityIndexSearcher.class;
+        } else {
+            throw new NotImplementedException();
+        }
     }
 
-    @Override
-    public DocumentIndexSearcher createDocumentSearcher(KnowledgeBase core) {
-        throw new NotImplementedException();
-    }
 
     private Directory getLuceneDir(Stargraph stargraph, IndexID indexID) {
         return luceneDirs.computeIfAbsent(indexID,

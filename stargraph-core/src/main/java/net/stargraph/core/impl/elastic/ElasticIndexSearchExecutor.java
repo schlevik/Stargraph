@@ -28,11 +28,11 @@ package net.stargraph.core.impl.elastic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.SearchQueryHolder;
 import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
 import net.stargraph.core.serializer.ObjectSerializer;
-import net.stargraph.model.BuiltInModel;
+import net.stargraph.model.BuiltInIndex;
 import net.stargraph.model.IndexID;
+import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
@@ -44,7 +44,10 @@ import org.elasticsearch.search.SearchHit;
 import java.io.IOException;
 import java.io.Serializable;
 
-public final class ElasticIndexSearchExecutor extends BaseIndexSearchExecutor<QueryBuilder> {
+/**
+ * @param <R> Type of the result which the actual search query returns (after mapping it to an object).
+ */
+public final class ElasticIndexSearchExecutor<R extends Serializable> extends BaseIndexSearchExecutor<R, QueryBuilder> {
     private ObjectMapper mapper;
     private ElasticClient esClient;
 
@@ -81,18 +84,20 @@ public final class ElasticIndexSearchExecutor extends BaseIndexSearchExecutor<Qu
      * Plays around with {@link ElasticScroller}, scrolls through all the obtained results. If the result has inner hits
      * adds them to the Score array in the outer function, thus resulting in a closure.
      *
-     * @param holder The query to execute the inner search on. Given to the {@link ElasticScroller} to actually execute.
+     * @param query  The query to execute the inner search on. Given to the {@link ElasticScroller} to actually execute.
+     * @param params Given search params.
      * @return Returns {@link Scores}, which is a list of inner hits with their corresponding scores.
      */
-    public Scores innerSearch(ElasticQueryHolder holder) {
+    @SuppressWarnings("unchecked")
+    public Scores<R> innerSearch(QueryBuilder query, ModifiableSearchParams params) {
         long start = System.nanoTime();
         int size = 0;
 
         try {
-            String modelName = holder.getSearchParams().getKbId().getIndex();
-            Class<Serializable> modelClass = BuiltInModel.getModelClass(modelName);
-            Scores innerScores = new Scores();
-            ElasticScroller scroller = new ElasticScroller(esClient, holder) {
+            String indexName = params.getIndexID().getIndex();
+            Class<Serializable> modelClass = BuiltInIndex.getModelClass(indexName);
+            Scores<R> innerScores = new Scores<>();
+            ElasticScroller scroller = new ElasticScroller(esClient, query, params) {
                 /**
                  * Has side effects. Only call once.
                  *
@@ -110,25 +115,27 @@ public final class ElasticIndexSearchExecutor extends BaseIndexSearchExecutor<Qu
                                 (field, innerHits) -> innerHits.forEach(
                                         iHit -> {
                                             try {
-                                                Serializable deserialized = mapper.readValue(
+
+                                                R deserialized = (R) mapper.readValue(
                                                         iHit.getSourceRef().toBytesRef().bytes,
                                                         // get what object to deserialize to by the name of the field
                                                         // on which inner hits occur
-                                                        BuiltInModel.getModelClass(field));
-                                                innerScores.add(new Score(deserialized, iHit.getScore()));
+                                                        BuiltInIndex.getModelClass(field));
+
+                                                innerScores.add(new Score<>(deserialized, iHit.getScore()));
                                             } catch (IOException e) {
                                                 logger.error(marker,
-                                                        "Fail to deserialize {}", iHit.sourceAsString(), e);
+                                                        "Fail to deserialize {}", iHit.getSourceAsString(), e);
                                             }
                                         }));
 
                     }
 
                     try {
-                        Serializable entity = mapper.readValue(hit.source(), modelClass);
-                        return new Score(entity, hit.getScore());
+                        Serializable entity = mapper.readValue(hit.getSourceRef().toBytesRef().bytes, modelClass);
+                        return new Score<>(entity, hit.getScore());
                     } catch (Exception e) {
-                        logger.error(marker, "Fail to deserialize {}", hit.sourceAsString(), e);
+                        logger.error(marker, "Fail to deserialize {}", hit.getSourceAsString(), e);
                     }
                     return null;
                 }
@@ -139,27 +146,28 @@ public final class ElasticIndexSearchExecutor extends BaseIndexSearchExecutor<Qu
         } finally {
             double elapsedInMillis = (System.nanoTime() - start) / 1000_000;
             logger.debug(marker, "Took {}ms, {}, fetched {} entries.", elapsedInMillis,
-                    holder.getQuery(), size);
+                    query, size);
         }
     }
 
     @Override
-    public Scores search(SearchQueryHolder<QueryBuilder> holder) {
-        ElasticScroller scroller = null;
+    @SuppressWarnings("unchecked")
+    public Scores<R> search(QueryBuilder query, ModifiableSearchParams params) {
+        ElasticScroller<R> scroller = null;
         long start = System.nanoTime();
 
         try {
-            String modelName = holder.getSearchParams().getKbId().getIndex();
-            Class<Serializable> modelClass = BuiltInModel.getModelClass(modelName);
+            String indexName = params.getIndexID().getIndex();
+            Class<Serializable> modelClass = BuiltInIndex.getModelClass(indexName);
 
-            scroller = new ElasticScroller(esClient, holder) {
+            scroller = new ElasticScroller<R>(esClient, query, params) {
                 @Override
                 protected Score build(SearchHit hit) {
                     try {
-                        Serializable entity = mapper.readValue(hit.source(), modelClass);
-                        return new Score(entity, hit.getScore());
+                        R entity = (R) mapper.readValue(hit.getSourceRef().toBytesRef().bytes, modelClass);
+                        return new Score<>(entity, hit.getScore());
                     } catch (Exception e) {
-                        logger.error(marker, "Fail to deserialize {}", hit.sourceAsString(), e);
+                        logger.error(marker, "Fail to deserialize {}", hit.getSourceAsString(), e);
                     }
                     return null;
                 }
@@ -168,7 +176,7 @@ public final class ElasticIndexSearchExecutor extends BaseIndexSearchExecutor<Qu
         } finally {
             double elapsedInMillis = (System.nanoTime() - start) / 1000_000;
             logger.debug(marker, "Took {}ms, {}, fetched {} entries.", elapsedInMillis,
-                    holder.getQuery(), scroller != null ? scroller.getScores().size() : 0);
+                    query, scroller != null ? scroller.getScores().size() : 0);
         }
     }
 }

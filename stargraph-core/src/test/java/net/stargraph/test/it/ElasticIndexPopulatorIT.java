@@ -33,6 +33,8 @@ import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.index.FactIndexSearcher;
+import net.stargraph.core.search.index.PropertyIndexSearcher;
 import net.stargraph.model.*;
 import net.stargraph.rank.*;
 import net.stargraph.test.TestUtils;
@@ -68,9 +70,9 @@ public final class ElasticIndexPopulatorIT {
         Stargraph stargraph = new Stargraph(config, false);
 
         TestUtils.assertElasticRunning(
-                stargraph.getModelConfig(factsId),
-                stargraph.getModelConfig(propsId),
-                stargraph.getModelConfig(entitiesId)
+                stargraph.getIndexConfig(factsId),
+                stargraph.getIndexConfig(propsId),
+                stargraph.getIndexConfig(entitiesId)
         );
 
         Path root = Files.createTempFile("stargraph-", "-dataDir");
@@ -91,10 +93,10 @@ public final class ElasticIndexPopulatorIT {
     //TODO: need to investigate what fails here
     @Test
     public void classSearchTest() {
-        EntityIndexSearcher searcher = core.createEntitySearcher();
+        FactIndexSearcher searcher = core.getSearcher(FactIndexSearcher.class);
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("president");
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein();
-        Scores scores = searcher.classSearch(searchParams, rankParams);
+        Scores<LabeledEntity> scores = searcher.classSearch(searchParams, rankParams);
         ClassEntity expected = new ClassEntity(
                 "dbc:Presidents_of_the_United_States",
                 "Presidents of the United States",
@@ -105,11 +107,11 @@ public final class ElasticIndexPopulatorIT {
     //TODO: i feel thresholds are trolling a bit
     @Test
     public void instanceSearchTest() {
-        EntityIndexSearcher searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.getSearcher(EntityIndexSearcher.class);
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("baraCk Obuma");
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
-        Scores scores = searcher.instanceSearch(searchParams, rankParams);
+        Scores<InstanceEntity> scores = searcher.instanceSearch(searchParams, rankParams);
         System.out.println(scores);
         Assert.assertEquals(scores.size(), 1);
         InstanceEntity expected = new InstanceEntity("dbr:Barack_Obama", "Barack Obama");
@@ -119,11 +121,11 @@ public final class ElasticIndexPopulatorIT {
     //TODO: this test fails, it just returns something different for some reason.
     @Test(enabled = false)
     public void propertySearchTest() {
-        EntityIndexSearcher searcher = core.createEntitySearcher();
+        PropertyIndexSearcher searcher = core.getSearcher(PropertyIndexSearcher.class);
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("position");
         ModifiableRankParams rankParams = ParamsBuilder.word2vec().threshold(Threshold.auto());
-        Scores scores = searcher.propertySearch(searchParams, rankParams);
+        Scores<PropertyEntity> scores = searcher.propertySearch(searchParams, rankParams);
 
         PropertyEntity expected = new PropertyEntity("dbp:office", "office");
         Assert.assertEquals(scores.get(0).getEntry(), expected);
@@ -131,13 +133,13 @@ public final class ElasticIndexPopulatorIT {
 
     @Test
     public void pivotedSearchTest() {
-        EntityIndexSearcher searcher = core.createEntitySearcher();
+        FactIndexSearcher searcher = core.getSearcher(FactIndexSearcher.class);
 
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama").term("school");
         ModifiableRankParams rankParams = ParamsBuilder.word2vec().threshold(Threshold.auto());
 
         final InstanceEntity obama = new InstanceEntity("dbr:Barack_Obama", "Barack Obama");
-        Scores scores = searcher.pivotedSearch(obama, searchParams, rankParams);
+        Scores<PropertyEntity> scores = searcher.pivotedSearch(obama, searchParams, rankParams);
 
         PropertyEntity expected = new PropertyEntity("dbp:education", "education");
         Assert.assertEquals(expected, scores.get(0).getEntry());
@@ -145,7 +147,7 @@ public final class ElasticIndexPopulatorIT {
 
     @Test
     public void getEntitiesTest() {
-        EntityIndexSearcher searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = core.getSearcher(EntityIndexSearcher.class);
         LabeledEntity obama = searcher.getEntity("obama", "dbr:Barack_Obama");
         Assert.assertEquals(new InstanceEntity("dbr:Barack_Obama", "Barack Obama"), obama);
     }

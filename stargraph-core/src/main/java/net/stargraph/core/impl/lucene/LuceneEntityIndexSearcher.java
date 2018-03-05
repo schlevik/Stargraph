@@ -1,8 +1,9 @@
 package net.stargraph.core.impl.lucene;
 
-import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.Index;
+import net.stargraph.core.impl.corenlp.NERSearcher;
+import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.index.EntityIndexSearcher;
-import net.stargraph.model.BuiltInModel;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.rank.ModifiableRankParams;
@@ -19,18 +20,16 @@ import org.slf4j.MarkerFactory;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
-import java.util.Objects;
 
-public class LuceneEntityIndexSearcher implements EntityIndexSearcher<LuceneIndexSearchExecutor> {
+public class LuceneEntityIndexSearcher extends LuceneBaseIndexSearcher<InstanceEntity>
+        implements EntityIndexSearcher {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("lucene");
 
-    private KnowledgeBase core;
-
-
-    public LuceneEntityIndexSearcher(KnowledgeBase core) {
-        this.core = Objects.requireNonNull(core);
+    public LuceneEntityIndexSearcher(Index index) {
+        super(index);
     }
+
 
     @Override
     public LabeledEntity getEntity(String dbId, String id) {
@@ -43,29 +42,17 @@ public class LuceneEntityIndexSearcher implements EntityIndexSearcher<LuceneInde
     }
 
     @Override
-    public Scores classSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
+    public Scores<InstanceEntity> instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
         //That's what we're trying to do here.
-        QueryBuilder queryBuilder = new QueryBuilder(new StandardAnalyzer());
-        Query query = queryBuilder.createPhraseQuery("value", searchParams.getSearchTerm(), 0);
-        searchParams.model(BuiltInModel.ENTITY);
-        LuceneIndexSearchExecutor searcher = getSearchExecutor(core, searchParams.getKbId().getIndex());
-        Scores scores = searcher.search(new LuceneQueryHolder(query, searchParams));
+        searchParams.index(getIndex().getID());
+
+        Query query = new QueryBuilder(new StandardAnalyzer())
+                .createPhraseQuery("value", searchParams.getSearchTerm(), 0);
+
+        Scores<InstanceEntity> scores = executeSearch(query, searchParams);
+
         return Rankers.apply(scores, rankParams, searchParams.getSearchTerm());
     }
 
-    @Override
-    public Scores propertySearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public Scores pivotedSearch(InstanceEntity pivot, ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        throw new NotImplementedException();
-    }
 
 }

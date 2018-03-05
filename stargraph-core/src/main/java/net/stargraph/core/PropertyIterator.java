@@ -42,9 +42,9 @@ final class PropertyIterator extends TripleIterator<Indexable> {
         super(core, indexID);
     }
 
-    PropertyIterator(Stargraph core, IndexID indexID, List data) {
-        super(core, indexID, ModelFactory.createDefaultModel().add(data));
-    }
+//    PropertyIterator(Stargraph core, IndexID indexID, List data) {
+//        super(core, indexID, ModelFactory.createDefaultModel().add(data));
+//    }
 
     @Override
 

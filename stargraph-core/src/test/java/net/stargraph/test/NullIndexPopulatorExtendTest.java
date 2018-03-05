@@ -30,7 +30,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.IndexPopulator;
-import net.stargraph.core.index.NullIndicesFactory;
+import net.stargraph.core.index.NullIndexFactory;
 import net.stargraph.data.DataProviderFactory;
 import net.stargraph.model.IndexID;
 import org.testng.annotations.BeforeClass;
@@ -54,7 +54,7 @@ public final class NullIndexPopulatorExtendTest {
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
         this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
-        this.stargraph.setDefaultIndicesFactory(new NullIndicesFactory());
+        this.stargraph.setDefaultIndicesFactory(new NullIndexFactory());
         this.stargraph.initialize();
         this.indexer = stargraph.getIndexer(indexID);
         List<String> expected = Arrays.asList("data#1", "data#2", "data#3");

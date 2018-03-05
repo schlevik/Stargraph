@@ -34,7 +34,7 @@ import java.util.List;
 public interface NER {
 
     /**
-     * Recognizes and try to link with known entities.
+     * Recognizes named entities and tries to link against known given named entities.
      *
      * @param text The text to be analyzed.
      * @return List of Named Entities recognized and possibly linked/resolved.

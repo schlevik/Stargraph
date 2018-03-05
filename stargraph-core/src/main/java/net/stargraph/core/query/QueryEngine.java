@@ -2,7 +2,7 @@ package net.stargraph.core.query;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-core
+ * stargraph-knowledgeBase
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -30,16 +30,17 @@ import net.stargraph.StarGraphException;
 import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Namespace;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.database.GraphSearcher;
 import net.stargraph.core.query.nli.*;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.query.response.NoResponse;
 import net.stargraph.core.query.response.SPARQLSelectResponse;
-import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.database.SparqlQuery;
+import net.stargraph.core.search.database.SparqlResult;
 import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.index.FactIndexSearcher;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
-import net.stargraph.model.Passage;
+import net.stargraph.model.PropertyEntity;
 import net.stargraph.query.InteractionMode;
 import net.stargraph.query.Language;
 import net.stargraph.rank.*;
@@ -64,9 +65,9 @@ public final class QueryEngine {
     private Marker marker = MarkerFactory.getMarker("query");
 
     private String dbId;
-    private KnowledgeBase core;
+    private KnowledgeBase knowledgeBase;
     private Analyzers analyzers;
-    private GraphSearcher graphSearcher;
+    //private GraphSearcher graphSearcher;
     private InteractionModeSelector modeSelector;
     private Namespace namespace;
     private Language language;
@@ -75,11 +76,11 @@ public final class QueryEngine {
 
     public QueryEngine(String dbId, Stargraph stargraph) {
         this.dbId = Objects.requireNonNull(dbId);
-        this.core = Objects.requireNonNull(stargraph.getKBCore(dbId));
+        this.knowledgeBase = Objects.requireNonNull(stargraph.getKBCore(dbId));
         this.analyzers = new Analyzers(stargraph.getMainConfig());
-        this.graphSearcher = core.createGraphSearcher();
-        this.namespace = core.getNamespace();
-        this.language = core.getLanguage();
+        //this.graphSearcher = knowledgeBase.createGraphSearcher();
+        this.namespace = knowledgeBase.getNamespace();
+        this.language = knowledgeBase.getLanguage();
 
         this.modeSelector = new InteractionModeSelector(stargraph.getMainConfig(), language);
     }
@@ -122,7 +123,7 @@ public final class QueryEngine {
     }
 
     private QueryResponse sparqlQuery(String userQuery) {
-        Map<String, List<LabeledEntity>> vars = graphSearcher.select(userQuery);
+        SparqlResult vars = knowledgeBase.queryDatabase(new SparqlQuery(userQuery)).get(SparqlResult.class);
         if (!vars.isEmpty()) {
             return new SPARQLSelectResponse(SPARQL, userQuery, vars);
         }
@@ -130,28 +131,28 @@ public final class QueryEngine {
     }
 
     private QueryResponse passageQuery(String userQuery) {
-        String query = userQuery.replace("PASSAGE ", "");
-        PassageQuestionAnalyzer analyzer = this.analyzers.getPassageQuestionAnalyzer(language);
-        PassageQuestionAnalysis analysis = analyzer.analyse(query);
-
-        InstanceEntity pivot = resolvePivot(analysis.getInstance());
-        DocumentIndexSearcher searcher = core.createDocumentSearcher();
-
-        logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
-
-        // this is just a holder, we're not ranking anything atm
-        ModifiableRankParams rankParams = new ModifiableRankParams(Threshold.auto(), RankingModel.LEVENSHTEIN);
-
-        Scores scores = searcher.pivotedFullTextPassageSearch(pivot,
-                ModifiableSearchParams.create(dbId).term(analysis.getRest()), rankParams);
-
-        if (scores.size() > 0) {
-            AnswerSetResponse answerSet = new AnswerSetResponse(PASSAGE, userQuery);
-            answerSet.setTextAnswer(scores.stream()
-                    .map(score -> ((Passage) score.getEntry()).getText())
-                    .collect(Collectors.toList()));
-            return answerSet;
-        }
+//        String query = userQuery.replace("PASSAGE ", "");
+//        PassageQuestionAnalyzer analyzer = this.analyzers.getPassageQuestionAnalyzer(language);
+//        PassageQuestionAnalysis analysis = analyzer.analyse(query);
+//
+//        InstanceEntity pivot = resolvePivot(analysis.getInstance());
+//        DocumentIndexSearcher searcher = knowledgeBase.createDocumentSearcher();
+//
+//        logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
+//
+//        // this is just a holder, we're not ranking anything atm
+//        ModifiableRankParams rankParams = new ModifiableRankParams(Threshold.auto(), RankingModel.LEVENSHTEIN);
+//
+//        Scores scores = searcher.pivotedFullTextPassageSearch(pivot,
+//                ModifiableSearchParams.create(dbId).term(analysis.getRest()), rankParams);
+//
+//        if (scores.size() > 0) {
+//            AnswerSetResponse answerSet = new AnswerSetResponse(PASSAGE, userQuery);
+//            answerSet.setTextAnswer(scores.stream()
+//                    .map(score -> ((Passage) score.getEntry()).getText())
+//                    .collect(Collectors.toList()));
+//            return answerSet;
+//    }
 
         // detect instance & rest
         // pivot instance
@@ -186,7 +187,7 @@ public final class QueryEngine {
 
         String sparqlQueryStr = queryBuilder.build();
 
-        Map<String, List<LabeledEntity>> vars = graphSearcher.select(sparqlQueryStr);
+        SparqlResult vars = knowledgeBase.queryDatabase(new SparqlQuery(sparqlQueryStr)).get(SparqlResult.class);
 
         if (!vars.isEmpty()) {
             AnswerSetResponse answerSet = new AnswerSetResponse(NLI, userQuery, queryBuilder);
@@ -198,10 +199,9 @@ public final class QueryEngine {
             answerSet.setMappings(queryBuilder.getMappings());
             answerSet.setSPARQLQuery(sparqlQueryStr);
 
-            System.out.println("-----> " + answerSet.getMappings());
             //
             //if (triplePattern.getTypes().contains("VARIABLE TYPE CLASS")) {
-            //    entities = core.getEntitySearcher().searchByTypes(new HashSet<String>(Arrays.asList(triplePattern.objectLabel.split(" "))), true, 100);
+            //    entities = knowledgeBase.getEntitySearcher().searchByTypes(new HashSet<String>(Arrays.asList(triplePattern.objectLabel.split(" "))), true, 100);
             //}
 
             return answerSet;
@@ -242,7 +242,7 @@ public final class QueryEngine {
         Set<LabeledEntity> entities = new HashSet<>();
         Set<String> textAnswers = new HashSet<>();
         // \TODO Call document search
-        // Document document = core.getDocumentSearcher().getDocument(entities.entrySet().iterator().next().getKey().getKnowledgeBase());
+        // Document document = knowledgeBase.getDocumentSearcher().getDocument(entities.entrySet().iterator().next().getKey().getKnowledgeBase());
         // \TODO Equate document with normalized entity id
         // final Entity def = new Entity(document.getKnowledgeBase());
         // Definition is the summary of the document
@@ -269,7 +269,7 @@ public final class QueryEngine {
 //      String abstractLexicalAnswerType = clueAnalyzer.getAbstractType(lexicalAnswerType);
 
 //      Get documents containing the keywords
-//      Map<Document, Double> documents = core.getDocumentSearcher().searchDocuments(userQuery, 3);
+//      Map<Document, Double> documents = knowledgeBase.getDocumentSearcher().searchDocuments(userQuery, 3);
 
         Set<LabeledEntity> entities = new HashSet<>();
         if (!entities.isEmpty()) {
@@ -296,10 +296,10 @@ public final class QueryEngine {
 
     private void resolveClass(DataModelBinding binding, SPARQLQueryBuilder builder) {
         if (binding.getModelType() == DataModelType.CLASS) {
-            EntityIndexSearcher searcher = core.createEntitySearcher();
+            FactIndexSearcher searcher = knowledgeBase.getSearcher(FactIndexSearcher.class);
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.word2vec();
-            Scores scores = searcher.classSearch(searchParams, rankParams);
+            Scores<LabeledEntity> scores = searcher.classSearch(searchParams, rankParams);
             builder.add(binding, scores.stream().limit(3).collect(Collectors.toList()));
         }
     }
@@ -308,10 +308,10 @@ public final class QueryEngine {
         if ((binding.getModelType() == DataModelType.CLASS
                 || binding.getModelType() == DataModelType.PROPERTY) && !builder.isResolved(binding)) {
 
-            EntityIndexSearcher searcher = core.createEntitySearcher();
-            ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
+            FactIndexSearcher searcher = knowledgeBase.getSearcher(FactIndexSearcher.class);
+            ModifiableSearchParams searchParams = ModifiableSearchParams.create().term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.word2vec();
-            Scores scores = searcher.pivotedSearch(pivot, searchParams, rankParams);
+            Scores<PropertyEntity> scores = searcher.pivotedSearch(pivot, searchParams, rankParams);
             builder.add(binding, scores.stream().limit(6).collect(Collectors.toList()));
         }
     }
@@ -323,11 +323,12 @@ public final class QueryEngine {
         }
 
         if (binding.getModelType() == DataModelType.INSTANCE) {
-            EntityIndexSearcher searcher = core.createEntitySearcher();
-            ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
+            EntityIndexSearcher searcher = knowledgeBase.getSearcher(EntityIndexSearcher.class);
+            //information about the knowledge base is added later
+            ModifiableSearchParams searchParams = ModifiableSearchParams.create().term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
-            Scores scores = searcher.instanceSearch(searchParams, rankParams);
-            InstanceEntity instance = (InstanceEntity) scores.get(0).getEntry();
+            Scores<InstanceEntity> scores = searcher.instanceSearch(searchParams, rankParams);
+            InstanceEntity instance = scores.get(0).getEntry();
             builder.add(binding, Collections.singletonList(scores.get(0)));
             return instance;
         }
@@ -336,23 +337,22 @@ public final class QueryEngine {
 
     private InstanceEntity resolvePivot(DataModelBinding binding) {
         if (binding.getModelType() == DataModelType.INSTANCE) {
-            EntityIndexSearcher searcher = core.createEntitySearcher();
+            EntityIndexSearcher searcher = knowledgeBase.getSearcher(EntityIndexSearcher.class);
             ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(binding.getTerm());
             ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
-            Scores scores = searcher.instanceSearch(searchParams, rankParams);
-            InstanceEntity instance = (InstanceEntity) scores.get(0).getEntry();
+            Scores<InstanceEntity> scores = searcher.instanceSearch(searchParams, rankParams);
 
-            return instance;
+            return scores.get(0).getEntry();
         }
         return null;
     }
 
     private InstanceEntity resolveInstance(String instanceTerm) {
-        EntityIndexSearcher searcher = core.createEntitySearcher();
+        EntityIndexSearcher searcher = knowledgeBase.getSearcher(EntityIndexSearcher.class);
         ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).term(instanceTerm);
         ModifiableRankParams rankParams = ParamsBuilder.levenshtein(); // threshold defaults to auto
-        Scores scores = searcher.instanceSearch(searchParams, rankParams);
-        return (InstanceEntity) scores.get(0).getEntry();
+        Scores<InstanceEntity> scores = searcher.instanceSearch(searchParams, rankParams);
+        return scores.get(0).getEntry();
     }
 
     private Triple asTriple(TriplePattern pattern, List<DataModelBinding> bindings) {

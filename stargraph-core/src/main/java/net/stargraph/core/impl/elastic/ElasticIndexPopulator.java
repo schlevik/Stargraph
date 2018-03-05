@@ -197,9 +197,9 @@ public final class ElasticIndexPopulator extends BaseIndexPopulator {
     private BulkProcessor createBulkProcessor() {
         int processors = Runtime.getRuntime().availableProcessors();
         processors = processors > 1 ? processors - 1 : 1;
-        int concurrency = stargraph.getModelConfig(indexID).getInt("elastic.bulk.concurrency");
+        int concurrency = stargraph.getIndexConfig(indexID).getInt("elastic.bulk.concurrency");
         concurrency = concurrency > 0 ? concurrency : processors;
-        int bulkActions = stargraph.getModelConfig(indexID).getInt("elastic.bulk.actions");
+        int bulkActions = stargraph.getIndexConfig(indexID).getInt("elastic.bulk.actions");
 
         logger.info(marker, "Creating Bulk Processor. Concurrency = {}, actions = {}.", concurrency, bulkActions);
 

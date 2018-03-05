@@ -30,7 +30,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Test expected model. Encapsulates a String.
+ * Test expected index. Encapsulates a String.
  */
 public final class TestData implements Serializable {
 

@@ -12,10 +12,10 @@ package net.stargraph.core.impl.elastic;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,8 @@ package net.stargraph.core.impl.elastic;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.core.ConfigConstants;
+import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
 import org.elasticsearch.action.search.ClearScrollResponse;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -46,48 +48,46 @@ import java.util.concurrent.TimeUnit;
 /**
  * Wrapper around the ES Scrolling API.
  */
-public abstract class ElasticScroller implements Iterable<Score> {
-    private static String scrollTimeKey = "stargraph.elastic.scroll.time";
-    private static String scrollSizeKey = "stargraph.elastic.scroll.size";
+public abstract class ElasticScroller<T extends Serializable> implements Iterable<Score> {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("elastic");
 
     private ElasticClient elasticClient;
-    private SearchQueryHolder<QueryBuilder> holder;
     private int maxEntries;
     private int consumedEntries;
-    private InnerIterator innerIterator;
     private TimeValue scrollTime;
     private int maxScrollSize;
     private String[] fields;
+    private QueryBuilder query;
 
-    public ElasticScroller(ElasticClient client, SearchQueryHolder<QueryBuilder> holder) {
+    ElasticScroller(ElasticClient client, QueryBuilder query, ModifiableSearchParams params) {
         this.elasticClient = Objects.requireNonNull(client);
-        this.holder = Objects.requireNonNull(holder);
+        Objects.requireNonNull(params);
+        this.query = Objects.requireNonNull(query);
+
         this.fields = new String[]{"_source"};
-        this.maxEntries = holder.getSearchParams().getLimit();
-        this.scrollTime = new TimeValue(Integer.valueOf(System.getProperty(scrollTimeKey, "120")), TimeUnit.SECONDS);
-        this.maxScrollSize = Integer.valueOf(System.getProperty(scrollSizeKey, "8000"));
-        logger.trace(marker, "{}={}", scrollTimeKey, scrollTime);
-        logger.trace(marker, "{}={}", scrollSizeKey, maxScrollSize);
+        this.maxEntries = params.getLimit();
+        this.scrollTime = new TimeValue(Integer.valueOf(System.getProperty(ConfigConstants.elasticScrollTimeKey, "120")), TimeUnit.SECONDS);
+        this.maxScrollSize = Integer.valueOf(System.getProperty(ConfigConstants.elasticScrollSizeKey, "8000"));
+        logger.trace(marker, "{}={}", ConfigConstants.elasticScrollTimeKey, scrollTime);
+        logger.trace(marker, "{}={}", ConfigConstants.elasticScrollSizeKey, maxScrollSize);
     }
 
     @Override
     public Iterator<Score> iterator() {
-        logger.trace(marker, "Creating new scroller for {} with query: {}", elasticClient, holder.getQuery());
+        logger.trace(marker, "Creating new scroller for {} with query: {}", elasticClient, query);
         consumedEntries = 0;
-        innerIterator = new InnerIterator();
-        return innerIterator;
+        return new InnerIterator();
     }
 
-    public Scores getScores() {
-        Scores scores = new Scores();
+    public Scores<T> getScores() {
+        Scores<T> scores = new Scores<>();
         this.forEach(scores::add);
         return scores;
     }
 
-    protected abstract Score build(SearchHit hit);
+    protected abstract Score<T> build(SearchHit hit);
 
     private class InnerIterator implements Iterator<Score> {
         SearchResponse response;
@@ -102,7 +102,7 @@ public abstract class ElasticScroller implements Iterable<Score> {
                 if (innerIt == null) {
                     response = elasticClient.prepareSearch()
                             .setScroll(scrollTime)
-                            .setQuery(holder.getQuery())
+                            .setQuery(query)
                             .storedFields(fields)
                             .setSize(maxScrollSize).get();
 
@@ -113,7 +113,7 @@ public abstract class ElasticScroller implements Iterable<Score> {
 
                     if (hasNext) {
                         scrollId = response.getScrollId();
-                        logger.trace(marker, "Iterating over {}", response.getHits().totalHits());
+                        logger.trace(marker, "Iterating over {}", response.getHits().getTotalHits());
                     }
                 } else {
                     hasNext = innerIt.hasNext();

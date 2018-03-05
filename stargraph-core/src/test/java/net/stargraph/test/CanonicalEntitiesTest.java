@@ -29,6 +29,8 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.*;
+import net.stargraph.core.impl.jena.JenaGraphDatabase;
+import net.stargraph.core.search.database.DBType;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.IndexID;
@@ -50,7 +52,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class CanonicalEntitiesTest {
-    private Stargraph stargraph;
     private IndexID canonicalEntitiesIndex = IndexID.of("canonical-obama", "canonical-entities");
     private Path testEnv;
     private CanonicalEntityProviderFactory dataProviderFactory;
@@ -65,20 +66,20 @@ public class CanonicalEntitiesTest {
         );
         ConfigFactory.invalidateCaches();
         Config kbConfig = ConfigFactory.load().getConfig("stargraph.kb.canonical-obama");
-        stargraph = mock(Stargraph.class);
+        Stargraph stargraph = mock(Stargraph.class);
         KnowledgeBase core = mock(KnowledgeBase.class);
         Model model = ModelFactory.createDefaultModel();
         model.read(testEnv.resolve("canonical-obama/facts/triples.nt").toString());
-
-//        when(stargraph.createDataProvider(canonicalEntitiesIndex)).thenReturn(data);
+        JenaGraphDatabase db = mock(JenaGraphDatabase.class);
         when(stargraph.getKBCore(canonicalEntitiesIndex.getKnowledgeBase())).thenReturn(core);
-        when(core.getGraphModel()).thenReturn(model);
+        when(core.getDatabase(DBType.Graph)).thenReturn(db);
+        when(db.getModel()).thenReturn(model);
         when(stargraph.getDataRootDir()).thenReturn(testEnv.toString());
 
         Method method = Namespace.class.getDeclaredMethod("create", Config.class);
         method.setAccessible(true);
 
-        when(core.getNamespace()).thenReturn((Namespace) method.invoke(null, kbConfig));
+        when(db.getNamespace()).thenReturn((Namespace) method.invoke(null, kbConfig));
 
         dataProviderFactory = new CanonicalEntityProviderFactory(stargraph);
 //        data = dataProviderFactory.create(canonicalEntitiesIndex);
@@ -88,7 +89,7 @@ public class CanonicalEntitiesTest {
     @Test
     public void configWorksAsExpectedTest() {
         ConfigFactory.invalidateCaches();
-        Config elasticMapping = ConfigFactory.load().getConfig("stargraph.kb.canonical-obama.model.canonical-entities.elastic.mapping");
+        Config elasticMapping = ConfigFactory.load().getConfig("stargraph.kb.canonical-obama.model.entities.elastic.mapping");
         elasticMapping.getObject("entities");
         elasticMapping.getObject("canonical-entities");
         Assert.assertTrue(true); // i.e there is no exception
@@ -105,9 +106,8 @@ public class CanonicalEntitiesTest {
         Iterator<Indexable> iterator = dataProviderFactory.create(canonicalEntitiesIndex).iterator();
         List<Indexable> lst = new ArrayList<>();
         iterator.forEachRemaining(lst::add);
-        Assert.assertEquals(lst.size(), 887);
+        Assert.assertEquals(lst.size(), 2598);
     }
-
 
 
     @AfterClass

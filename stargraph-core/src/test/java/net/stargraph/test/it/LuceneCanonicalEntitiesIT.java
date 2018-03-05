@@ -30,12 +30,14 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.features.NERFeature;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.test.TestUtils;
@@ -91,15 +93,15 @@ public final class LuceneCanonicalEntitiesIT {
         indexer.load(true, -1);
         indexer.awaitLoader();
 
-        ner = stargraph.getKBCore(id).getNER();
+        ner = stargraph.getKBCore(id).getFeature(NERFeature.class);
         Assert.assertNotNull(ner);
     }
 
 
-    @Test
     /**
      * The actual loading was done in {@link #beforeClass()}.
      */
+    @Test
     public void bulkLoadTest() {
         IndexSearchExecutor searcher = stargraph.getSearcher(canonicalEntitiesIndex);
         Assert.assertEquals(searcher.countDocuments(), 887);
@@ -115,11 +117,11 @@ public final class LuceneCanonicalEntitiesIT {
 
     @Test(enabled = false)
     public void successfullyLinkObamaWikipediaArticle() throws IOException, InterruptedException, URISyntaxException {
-        TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsIndex));
+        TestUtils.assertElasticRunning(stargraph.getIndexConfig(documentsIndex));
         IndexSearchExecutor searcher = stargraph.getSearcher(documentsIndex);
         if (searcher.countDocuments() != 1) {
 
-            String location = stargraph.getModelConfig(documentsIndex).getConfigList("processors")
+            String location = stargraph.getIndexConfig(documentsIndex).getConfigList("processors")
                     .stream()
                     .map(proc -> proc.getConfig("coref-processor"))
                     .findAny()

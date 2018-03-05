@@ -1,13 +1,15 @@
 package net.stargraph.core.impl.elastic;
 
-import net.stargraph.core.KnowledgeBase;
+import net.stargraph.core.Index;
 import net.stargraph.core.search.index.DocumentIndexSearcher;
-import net.stargraph.model.BuiltInModel;
+import net.stargraph.model.BuiltInIndex;
+import net.stargraph.model.Document;
 import net.stargraph.model.InstanceEntity;
-import net.stargraph.rank.ModifiableIndraParams;
+import net.stargraph.model.Passage;
 import net.stargraph.rank.ModifiableRankParams;
 import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Scores;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.Operator;
@@ -23,22 +25,21 @@ import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 
-public class ElasticDocumentIndexSearcher implements DocumentIndexSearcher<ElasticIndexSearchExecutor> {
-    KnowledgeBase core;
+public class ElasticDocumentIndexSearcher extends ElasticBaseIndexSearcher<Passage>
+        implements DocumentIndexSearcher {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("elastic");
 
-    public ElasticDocumentIndexSearcher(KnowledgeBase core) {
-        this.core = Objects.requireNonNull(core);
+    public ElasticDocumentIndexSearcher(Index index) {
+        super(index);
     }
 
-    public Scores pivotedFullTextPassageSearch(InstanceEntity pivot,
-                                               ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        searchParams.model(BuiltInModel.DOCUMENT);
 
-        if (rankParams instanceof ModifiableIndraParams) {
-            core.configureDistributionalParams((ModifiableIndraParams) rankParams);
-        }
+    public Scores<Passage> pivotedFullTextPassageSearch(InstanceEntity pivot,
+                                                        ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
+        searchParams.index(BuiltInIndex.DOCUMENT);
+
+
         String term = searchParams.getSearchTerm();
         logger.debug(marker, "performing pivoted full text passage search with pivot={} and text={}", pivot, term);
         QueryBuilder queryBuilder = nestedQuery(
@@ -50,10 +51,8 @@ public class ElasticDocumentIndexSearcher implements DocumentIndexSearcher<Elast
                 ScoreMode.Max)
                 .innerHit(new InnerHitBuilder(), false);
 
-        ElasticIndexSearchExecutor searcher = getSearchExecutor(core, searchParams.getKbId().getIndex());
-        Scores scores = searcher.innerSearch(new ElasticQueryHolder(queryBuilder, searchParams));
-
-
-        return scores;
+        //not ranking atm
+        return this.executeSearch(queryBuilder, searchParams);
     }
+
 }

@@ -26,19 +26,22 @@ package net.stargraph.core.search.executor;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.search.SearchQueryHolder;
+import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Scores;
 
+import java.io.Serializable;
+
 /**
- * Definition of a Searcher.
+ * @param <R> Type of the result which is expected to be returned.
+ * @param <Q> Type of the query.
  */
-public interface IndexSearchExecutor<Q> {
+public interface IndexSearchExecutor<R extends Serializable, Q> {
 
     void start();
 
     void stop();
 
-    Scores search(SearchQueryHolder<Q> holder);
+    Scores<R> search(Q query, ModifiableSearchParams params);
 
     long countDocuments();
 
