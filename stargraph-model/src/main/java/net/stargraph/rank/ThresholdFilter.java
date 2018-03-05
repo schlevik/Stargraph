@@ -2,7 +2,7 @@ package net.stargraph.rank;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -43,13 +44,13 @@ public final class ThresholdFilter {
     private static Marker marker = MarkerFactory.getMarker("rank");
 
 
-    public static Scores filter(Scores inputScores, Threshold threshold) {
+    public static <T extends Serializable> Scores<T> filter(Scores<T> inputScores, Threshold threshold) {
         if (Objects.requireNonNull(inputScores).isEmpty()) {
             logger.warn(marker, "Nothing to filter.");
             return inputScores;
         }
 
-        Scores filtered = new Scores();
+        Scores<T> filtered = new Scores<>();
 
         switch (threshold.type) {
             case AUTO:
@@ -58,7 +59,7 @@ public final class ThresholdFilter {
                     return inputScores;
                 }
 
-                Iterator<Score> it = inputScores.iterator();
+                Iterator<Score<T>> it = inputScores.iterator();
                 Score previous = it.next();
                 double max = Double.MIN_VALUE;
 
@@ -92,7 +93,7 @@ public final class ThresholdFilter {
 
             case MIN:
             case MAX:
-                filtered = new Scores(inputScores.stream().
+                filtered = new Scores<>(inputScores.stream().
                         filter(s -> threshold.type == MIN ? s.getValue() > threshold.value : s.getValue() < threshold.value)
                         .collect(Collectors.toList()));
                 break;

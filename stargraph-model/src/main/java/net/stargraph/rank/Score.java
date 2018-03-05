@@ -2,7 +2,7 @@ package net.stargraph.rank;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -29,12 +29,12 @@ package net.stargraph.rank;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class Score implements Comparable<Score> {
+public class Score<T extends Serializable> implements Comparable<Score> {
 
-    private Serializable entry;
+    private T entry;
     private double score;
 
-    public Score(Serializable entry, double score) {
+    public Score(T entry, double score) {
         if (entry == null) {
             throw new IllegalArgumentException("Entry can't null.");
         }
@@ -42,7 +42,7 @@ public class Score implements Comparable<Score> {
         this.score = score;
     }
 
-    public Serializable getEntry() {
+    public T getEntry() {
         return entry;
     }
 

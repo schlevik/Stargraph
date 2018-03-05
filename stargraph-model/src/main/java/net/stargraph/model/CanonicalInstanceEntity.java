@@ -2,7 +2,7 @@ package net.stargraph.model;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -30,7 +30,7 @@ import net.stargraph.ModelUtils;
 
 import java.util.Collection;
 
-public final class CanonicalInstanceEntity extends LabeledEntity implements ContextId {
+public final class CanonicalInstanceEntity extends InstanceEntity implements ContextId {
 
     private String reference;
 

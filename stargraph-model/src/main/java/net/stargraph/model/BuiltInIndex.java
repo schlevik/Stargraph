@@ -2,7 +2,7 @@ package net.stargraph.model;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -33,7 +33,7 @@ import java.io.Serializable;
 /**
  * Naming conventions for the fact based KBs.
  */
-public enum BuiltInModel {
+public enum BuiltInIndex {
 
     FACT("facts", Fact.class),
     ENTITY("entities", InstanceEntity.class),
@@ -44,7 +44,7 @@ public enum BuiltInModel {
     public Class cls;
     public String modelId;
 
-    BuiltInModel(String modelId, Class cls) {
+    BuiltInIndex(String modelId, Class cls) {
         this.modelId = modelId;
         this.cls = cls;
     }
@@ -53,12 +53,12 @@ public enum BuiltInModel {
     public static Class<Serializable> getModelClass(String modelName) {
         // This should change to support user's models.
 
-        for (BuiltInModel entry : BuiltInModel.values()) {
+        for (BuiltInIndex entry : BuiltInIndex.values()) {
             if (entry.modelId.equals(modelName)) {
                 return entry.cls;
             }
         }
 
-        throw new StarGraphException("No Class registered for model: '" + modelName + "'");
+        throw new StarGraphException("No Class registered for index: '" + modelName + "'");
     }
 }

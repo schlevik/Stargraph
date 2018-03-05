@@ -48,8 +48,8 @@ public final class IndexID implements Serializable {
         return new IndexID(id, model);
     }
 
-    public String getModelPath() {
-        return String.format("kb.%s.index.%s", knowledgeBase, index);
+    public String getIndexPath() {
+        return String.format("kb.%s.model.%s", knowledgeBase, index);
     }
 
     public String getKBPath() {

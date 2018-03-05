@@ -2,7 +2,7 @@ package net.stargraph.rank;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -26,11 +26,12 @@ package net.stargraph.rank;
  * ==========================License-End===============================
  */
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-public final class Scores extends ArrayList<Score> {
+public final class Scores<T extends Serializable> extends ArrayList<Score<T>> {
 
     public Scores(int initialCapacity) {
         super(initialCapacity);
@@ -40,7 +41,7 @@ public final class Scores extends ArrayList<Score> {
         super();
     }
 
-    public Scores(Collection<? extends Score> c) {
+    public Scores(Collection<? extends Score<T>> c) {
         super(c);
     }
 
