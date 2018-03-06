@@ -36,10 +36,8 @@ import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.rank.*;
 import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.Operator;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -73,7 +71,6 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
 
     @Override
     public List<LabeledEntity> getEntities(String dbId, List<String> ids) {
-        logger.info(marker, "Fetching ids={}", ids);
         Namespace ns = core.getNamespace();
         List idList = ids.stream().map(ns::shrinkURI).collect(Collectors.toList());
         ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).model(BuiltInModel.ENTITY);
@@ -111,7 +108,7 @@ public final class ElasticEntitySearcher implements EntitySearcher<ElasticSearch
     @Override
     public Scores instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
         // Coupling point: the query tied with our backend ..
-        QueryBuilder queryBuilder = matchQuery("value", searchParams.getSearchTerm());
+        QueryBuilder queryBuilder = matchQuery("value", searchParams.getSearchTerm()).fuzziness(Fuzziness.AUTO);
         // .. and at this point we add the missing information specific for this kind of search
         searchParams.model(BuiltInModel.ENTITY);
         // Fetch the 'generic' searcher instance

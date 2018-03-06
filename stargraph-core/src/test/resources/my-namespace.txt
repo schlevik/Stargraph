@@ -1,0 +1,2 @@
+aidbr http://aidb.org/resources/
+aidbp http://aidb.org/properties/

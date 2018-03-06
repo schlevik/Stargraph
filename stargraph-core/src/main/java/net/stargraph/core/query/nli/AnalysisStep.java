@@ -12,10 +12,10 @@ package net.stargraph.core.query.nli;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -108,9 +108,12 @@ public final class AnalysisStep {
                 String subPosStr = findSubPosStr(replacement);
                 Replacement posTagReplacement = replace(subPosStr, posTagStr, placeHolder);
                 newPosTagStr = posTagReplacement.value;
-            }
-            else {
+            } else {
                 String placeHolder = createPlaceholder(posTagStr, modelType);
+                logger.debug(marker, placeHolder);
+                if (placeHolder.equals("INSTANCE_2")) {
+                    System.out.println("heh");
+                }
                 Replacement posTagReplacement = replace(rulePattern, posTagStr, placeHolder);
                 newPosTagStr = posTagReplacement.value;
 
@@ -133,10 +136,12 @@ public final class AnalysisStep {
 
     private String findSubStr(Replacement replacement) {
         String[] capture = Objects.requireNonNull(replacement).capture.split("\\s");
+        String[] qWords = posTagStr.split("\\s");
+        logger.debug(marker, "qwords: {}, capture: {}", qWords, capture);
         int startIdx = 0;
         String subStr = null;
         for (Word w : annotated) {
-            if (w.getPosTag().getTag().equals(capture[0])) {
+            if (qWords[startIdx].equals(capture[0])) {
                 subStr = annotated.stream()
                         .skip(startIdx)
                         .limit(capture.length)
@@ -181,6 +186,7 @@ public final class AnalysisStep {
         try {
             String str = target.trim();
             Matcher matcher = pattern.matcher(str);
+            logger.debug("Replacing {} with {}", pattern, replacementStr);
             if (matcher.matches()) {
                 logger.debug(marker, "{} on '{}' with '{}'", pattern, str, replacementStr);
                 // As we expect just one capture capture per pattern this will replaceWithModelType the capture by the desired replacement.
@@ -193,8 +199,7 @@ public final class AnalysisStep {
                 logger.warn(marker, "Nothing changed: {} on '{}' with '{}'", pattern, str, replacementStr);
             }
             return new Replacement(target, null);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new StarGraphException("Fail to apply pattern '" + pattern + "'");
         }
     }
