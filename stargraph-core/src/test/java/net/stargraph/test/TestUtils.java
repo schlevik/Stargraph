@@ -72,8 +72,6 @@ public final class TestUtils {
     }
 
 
-
-
     public static Path prepareObamaTestEnv(String kbID) {
         return prepareGenericTestEnv(kbID,
                 "dataSets/obama/facts/triples.nt",
@@ -148,12 +146,17 @@ public final class TestUtils {
                 client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(host), port));
             }
         } catch (Exception e) {
+            client.close();
             return false;
         }
 
         boolean running = !client.connectedNodes().isEmpty();
+
         client.close();
+
+
         return running;
+
     }
 
     public static void ensureLuceneIndexExists(Stargraph stargraph, KBId entityIndex) {
@@ -161,12 +164,12 @@ public final class TestUtils {
         try {
             stargraph.getSearcher(entityIndex).countDocuments();
         } catch (StarGraphException e) {
-            if(e.getMessage().contains("Index not found")) {
+            if (e.getMessage().contains("Index not found")) {
                 indexExists = false;
             }
         }
-        if(!indexExists) {
-        //if (!doesLuceneIndexExist(Paths.get(stargraph.getDataRootDir()), entityIndex)) {
+        if (!indexExists) {
+            //if (!doesLuceneIndexExist(Paths.get(stargraph.getDataRootDir()), entityIndex)) {
             try {
                 populateEntityIndex(stargraph.getIndexer(entityIndex));
             } catch (InterruptedException | TimeoutException | ExecutionException e) {

@@ -142,6 +142,7 @@ public final class QueryEngine {
             answerSet.setTextAnswer(scores.stream()
                     .map(score -> ((Passage) score.getEntry()).getText())
                     .collect(Collectors.toList()));
+
             return answerSet;
         }
 

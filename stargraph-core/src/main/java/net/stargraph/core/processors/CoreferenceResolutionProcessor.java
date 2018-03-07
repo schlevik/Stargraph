@@ -34,6 +34,10 @@ import net.stargraph.data.processor.ProcessorException;
 import net.stargraph.model.Document;
 import org.lambda3.graphene.core.Graphene;
 import org.lambda3.graphene.core.coreference.model.CoreferenceContent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import java.io.Serializable;
 import java.net.UnknownHostException;
@@ -43,6 +47,8 @@ import java.net.UnknownHostException;
  */
 public final class CoreferenceResolutionProcessor extends BaseProcessor {
     public static String name = "coref-processor";
+    public Logger logger = LoggerFactory.getLogger(this.getClass());
+    public Marker marker = MarkerFactory.getMarker(name);
 
     private Graphene graphene;
 
@@ -56,20 +62,22 @@ public final class CoreferenceResolutionProcessor extends BaseProcessor {
         Serializable entry = holder.get();
 
         if (entry instanceof Document) {
+            logger.debug(marker, "Got document....");
             try {
                 Document document = (Document) entry;
-
+                logger.debug("Trying coreference...");
+                logger.debug("with config {}", getConfig());
                 CoreferenceContent cc = graphene.doCoreference(document.getText());
                 String resolved = cc.getSubstitutedText();
-
+                logger.debug("..coreference successfully resolved");
                 holder.set(new Document(
                         document.getId(),
                         document.getTitle(),
                         document.getSummary(),
                         resolved
                 ));
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
+                logger.error(marker, "Error!", e);
                 if (e.getCause() instanceof UnknownHostException) {
                     throw new FatalProcessorException(e);
                 }

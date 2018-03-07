@@ -87,13 +87,13 @@ public final class PassageQueryIT {
         queryEngine = new QueryEngine(id, stargraph);
 
 
-        URI u = getClass().getClassLoader().getResource("obama.txt").toURI();
+        URI u = getClass().getClassLoader().getResource("apple.txt").toURI();
         Assert.assertNotNull(u);
         String text = new String(Files.readAllBytes(Paths.get(u)));
 
         // if index doesn't exist, create it
         Searcher searcher = stargraph.getSearcher(documentsKBId);
-        if (searcher.countDocuments() != 1) {
+        if (searcher.countDocuments() != 2) {
 
             String location = stargraph.getModelConfig(documentsKBId).getConfigList("processors")
                     .stream()
@@ -108,7 +108,7 @@ public final class PassageQueryIT {
 
             indexer.deleteAll();
 
-            indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsKBId));
+            indexer.index(new Indexable(new Document("apple.txt", "Apple", text), documentsKBId));
             indexer.flush();
         }
     }
@@ -117,19 +117,17 @@ public final class PassageQueryIT {
     @Test
     public void nerLinkTest() {
         NER ner = stargraph.getKBCore(id).getNER();
-        List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Hussein Obama");
+        List<LinkedNamedEntity> entities = ner.searchAndLink("Apple Inc");
         System.out.println(entities);
-        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
+        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Apple_Inc."));
     }
 
 
     @Test
     public void successfullyAnswerPassageQuery() {
-        String passageQuery = "PASSAGE When did Barack Obama travel to India?";
+        String passageQuery = "PASSAGE What does Apple Inc.'s future performance depend on?";
         AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);
-        String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
-                "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
-                "and visited the families of college friends in Pakistan and India for three weeks .";
+        String expected = "Apple Inc. 's future performance depends in part on support from third-party software developers .";
         Assert.assertEquals(response.getTextAnswer().get(0), expected);
 
 
