@@ -48,6 +48,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -110,6 +111,7 @@ final class KBResourceImpl implements KBResource {
         // index
         try {
             if (type.equals("documents")) {
+                logger.info(marker, "Successfully uploaded file '{}' with first 5 lines of content being:\n{}", fileName, Arrays.stream(content.split(".")).limit(5).collect(Collectors.joining("\n")));
                 String docId = fileName; //TODO get from other source?
                 String docTitle = FilenameUtils.removeExtension(fileName); //TODO get from other source?
                 indexer.index(new Indexable(new Document(docId, docTitle, null, content), kbId));
@@ -118,7 +120,7 @@ final class KBResourceImpl implements KBResource {
                 logger.error(marker, "Type not supported yet: " + type);
                 return Response.status(Response.Status.NOT_IMPLEMENTED).build();
             }
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             logger.error(marker, "Indexing failed.");
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }

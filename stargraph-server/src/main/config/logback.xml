@@ -28,7 +28,7 @@
         <appender-ref ref="FILE"/>
     </root>
 
-    <logger name="net.stargraph" level="TRACE" additivity="true">
+    <logger name="net.stargraph" level="INFO" additivity="true">
         <appender-ref ref="STDOUT"/>
     </logger>
 
