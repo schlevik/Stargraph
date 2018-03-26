@@ -12,10 +12,10 @@ package net.stargraph.core.impl.elastic;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -144,7 +144,7 @@ public final class ElasticClient {
     }
 
     private Config getModelCfg() {
-        return core.getIndexConfig(indexID);
+        return core.getConfig().getIndexConfig(indexID);
     }
 
     private TransportClient createClient() {
@@ -172,7 +172,7 @@ public final class ElasticClient {
     private String createIndexName() {
         String cfgPath = "elastic.index.prefix-name";
         String codeName = Version.getCodeName().replace(" ", "-").toLowerCase();
-        String prefix = core.getMainConfig().getIsNull(cfgPath) ? codeName : core.getMainConfig().getString(cfgPath);
+        String prefix = core.getConfig().getMainConfig().getIsNull(cfgPath) ? codeName : core.getConfig().getMainConfig().getString(cfgPath);
         return String.format("%s.%s.%s", prefix, indexID.getKnowledgeBase(), indexID.getIndex());
     }
 }

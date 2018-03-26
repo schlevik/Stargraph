@@ -36,7 +36,6 @@ import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
-import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
 import net.stargraph.model.IndexID;
@@ -98,7 +97,7 @@ public final class PassageQueryIT {
         IndexSearchExecutor searcher = stargraph.getSearcher(documentsIndexID);
         if (searcher.countDocuments() != 1) {
 
-            String location = stargraph.getIndexConfig(documentsIndexID).getConfigList("processors")
+            String location = stargraph.getConfig().getIndexConfig(documentsIndexID).getConfigList("processors")
                     .stream()
                     .map(proc -> proc.getConfig("coref-processor"))
                     .findAny()
@@ -119,7 +118,7 @@ public final class PassageQueryIT {
 
     @Test
     public void nerLinkTest() {
-        NER ner = stargraph.getKBCore(id).getFeature(NERFeature.class);
+        NER ner = stargraph.getKnowledgeBase(id).getFeature(NERFeature.class);
         List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Hussein Obama");
         System.out.println(entities);
         Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));

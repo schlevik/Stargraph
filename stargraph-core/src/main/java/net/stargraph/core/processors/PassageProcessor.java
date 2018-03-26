@@ -31,7 +31,6 @@ import net.stargraph.core.Stargraph;
 import net.stargraph.core.features.NERFeature;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
-import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.data.processor.BaseProcessor;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.data.processor.ProcessorException;
@@ -40,7 +39,6 @@ import net.stargraph.model.LabeledEntity;
 import net.stargraph.model.Passage;
 import org.lambda3.text.simplification.discourse.utils.sentences.SentencesUtils;
 
-import javax.swing.text.html.parser.Entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -78,7 +76,7 @@ public final class PassageProcessor extends BaseProcessor {
             List<Passage> passages = new ArrayList<>();
 
             if (doLinking) {
-                NER ner = stargraph.getKBCore(holder.getKBId().getKnowledgeBase()).getFeature(NERFeature.class);
+                NER ner = stargraph.getKnowledgeBase(holder.getKBId().getKnowledgeBase()).getFeature(NERFeature.class);
                 for (String sentence : SentencesUtils.splitIntoSentences(document.getText())) {
 
                     List<LinkedNamedEntity> linkedNamedEntities = ner.searchAndLink(sentence);

@@ -71,7 +71,7 @@ public class CanonicalEntitiesTest {
         Model model = ModelFactory.createDefaultModel();
         model.read(testEnv.resolve("canonical-obama/facts/triples.nt").toString());
         JenaGraphDatabase db = mock(JenaGraphDatabase.class);
-        when(stargraph.getKBCore(canonicalEntitiesIndex.getKnowledgeBase())).thenReturn(core);
+        when(stargraph.getKnowledgeBase(canonicalEntitiesIndex.getKnowledgeBase())).thenReturn(core);
         when(core.getDatabase(DBType.Graph)).thenReturn(db);
         when(db.getModel()).thenReturn(model);
         when(stargraph.getDataRootDir()).thenReturn(testEnv.toString());

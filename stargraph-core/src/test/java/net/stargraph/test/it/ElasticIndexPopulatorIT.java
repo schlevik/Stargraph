@@ -70,9 +70,9 @@ public final class ElasticIndexPopulatorIT {
         Stargraph stargraph = new Stargraph(config, false);
 
         TestUtils.assertElasticRunning(
-                stargraph.getIndexConfig(factsId),
-                stargraph.getIndexConfig(propsId),
-                stargraph.getIndexConfig(entitiesId)
+                stargraph.getConfig().getIndexConfig(factsId),
+                stargraph.getConfig().getIndexConfig(propsId),
+                stargraph.getConfig().getIndexConfig(entitiesId)
         );
 
         Path root = Files.createTempFile("stargraph-", "-dataDir");
@@ -83,7 +83,7 @@ public final class ElasticIndexPopulatorIT {
         stargraph.setKBInitSet(kbName);
         stargraph.initialize();
 
-        core = stargraph.getKBCore("elastic-obama");
+        core = stargraph.getKnowledgeBase("elastic-obama");
         //TODO: replace with KBLoader#loadAll()
         loadProperties();
         loadEntities();

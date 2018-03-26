@@ -72,7 +72,7 @@ public final class KBLoader {
                 String msg = String.format("This KB (%s) is not empty. " +
                         "This operation WILL OVERWRITE EVERYTHING. " +
                         "Repeat this request to confirm your action adding the query param 'resetKey=%s' to the URL.",
-                        core.getKBName(), lastResetKey);
+                        core.getName(), lastResetKey);
                 throw new StarGraphException(msg);
             }
             else {
@@ -80,7 +80,7 @@ public final class KBLoader {
                     logger.warn(marker, "Wrong reset key='{}'", resetKey);
                     String msg = String.format("Wrong RESET KEY for KB (%s). " +
                             "Repeat this request to confirm your action adding the query param 'resetKey=%s' to the URL.",
-                            core.getKBName(), lastResetKey);
+                            core.getName(), lastResetKey);
                     throw new StarGraphException(msg);
                 }
 
@@ -91,7 +91,7 @@ public final class KBLoader {
         executor.submit(() -> {
             loading = true;
             try {
-                doLoadAll(core.getKBName());
+                doLoadAll(core.getName());
             } catch (InterruptedException e) {
                 logger.error(marker, "Interrupted.", e);
             }

@@ -37,7 +37,6 @@ import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
-import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.test.TestUtils;
@@ -93,7 +92,7 @@ public final class LuceneCanonicalEntitiesIT {
         indexer.load(true, -1);
         indexer.awaitLoader();
 
-        ner = stargraph.getKBCore(id).getFeature(NERFeature.class);
+        ner = stargraph.getKnowledgeBase(id).getFeature(NERFeature.class);
         Assert.assertNotNull(ner);
     }
 
@@ -117,11 +116,11 @@ public final class LuceneCanonicalEntitiesIT {
 
     @Test(enabled = false)
     public void successfullyLinkObamaWikipediaArticle() throws IOException, InterruptedException, URISyntaxException {
-        TestUtils.assertElasticRunning(stargraph.getIndexConfig(documentsIndex));
+        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(documentsIndex));
         IndexSearchExecutor searcher = stargraph.getSearcher(documentsIndex);
         if (searcher.countDocuments() != 1) {
 
-            String location = stargraph.getIndexConfig(documentsIndex).getConfigList("processors")
+            String location = stargraph.getConfig().getIndexConfig(documentsIndex).getConfigList("processors")
                     .stream()
                     .map(proc -> proc.getConfig("coref-processor"))
                     .findAny()

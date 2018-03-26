@@ -29,6 +29,7 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.lucene.LuceneEntityIndexSearcher;
 import net.stargraph.core.index.IndexPopulator;
@@ -59,6 +60,7 @@ public final class LuceneTest {
         this.stargraph = new Stargraph(config, false);
         this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
         this.stargraph.setDataRootDir(dataRootDir);
+        //this.stargraph.setDefaultDatabaseFactory(new NTriplesModelFactory(stargraph));
         this.stargraph.initialize();
     }
 

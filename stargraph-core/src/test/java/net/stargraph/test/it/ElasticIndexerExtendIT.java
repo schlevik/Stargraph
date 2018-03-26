@@ -60,7 +60,7 @@ public final class ElasticIndexerExtendIT {
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
         this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
-        this.stargraph.setDefaultIndicesFactory(new ElasticFactory());
+        this.stargraph.setDefaultIndexFactory(new ElasticFactory());
         this.stargraph.initialize();
         this.indexer = stargraph.getIndexer(indexID);
         List<String> expected = Arrays.asList("Four", "Five", "Six", "Seven");

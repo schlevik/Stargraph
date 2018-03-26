@@ -61,7 +61,7 @@ public final class Server {
 
     void start() {
         try {
-            Config config = stargraph.getMainConfig();
+            Config config = stargraph.getConfig().getMainConfig();
             String urlStr = config.getString("networking.rest-url");
             ResourceConfig rc = new ResourceConfig();
             rc.register(LoggingFilter.class);

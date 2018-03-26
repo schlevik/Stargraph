@@ -107,6 +107,5 @@ public final class TestDataIndexPopulator extends BaseIndexPopulator {
         public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
             throw new NotImplementedException();
         }
-
     }
 }

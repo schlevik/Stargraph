@@ -61,10 +61,10 @@ public final class DocumentIndexIT {
         this.stargraph = new Stargraph(config, false);
 
         // assure ElasticSearch is running
-        TestUtils.assertElasticRunning(stargraph.getIndexConfig(indexID));
+        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(indexID));
 
         this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
-        this.stargraph.setDefaultIndicesFactory(new ElasticFactory());
+        this.stargraph.setDefaultIndexFactory(new ElasticFactory());
         this.stargraph.initialize();
         this.indexer = stargraph.getIndexer(indexID);
 
@@ -83,7 +83,7 @@ public final class DocumentIndexIT {
 
     @Test
     public void queryDocumentIndexTest() {
-        DocumentIndexSearcher documentSearcher = this.stargraph.getKBCore("obama").getSearcher(DocumentIndexSearcher.class);
+        DocumentIndexSearcher documentSearcher = this.stargraph.getKnowledgeBase("obama").getSearcher(DocumentIndexSearcher.class);
         InstanceEntity obama = new InstanceEntity("dbr:Barack_Obama", "Barack Obama");
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama");
         searchParams.term("like to eat");

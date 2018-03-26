@@ -74,7 +74,7 @@ final class KBResourceImpl implements KBResource {
 
     @Override
     public Response load(String id, String type, boolean reset, int limit) {
-        KnowledgeBase core = stargraph.getKBCore(id);
+        KnowledgeBase core = stargraph.getKnowledgeBase(id);
         IndexPopulator indexPopulator = core.getIndexPopulator(type);
         indexPopulator.load(reset, limit);
         return ResourceUtils.createAckResponse(true);
@@ -82,14 +82,14 @@ final class KBResourceImpl implements KBResource {
 
     @Override
     public Response loadAll(String id, String resetKey) {
-        KnowledgeBase core = stargraph.getKBCore(id);
+        KnowledgeBase core = stargraph.getKnowledgeBase(id);
         core.getLoader().loadAll(resetKey);
         return ResourceUtils.createAckResponse(true);
     }
 
     @Override
     public Response upload(String id, String type, FormDataMultiPart form) {
-        KnowledgeBase core = stargraph.getKBCore(id);
+        KnowledgeBase core = stargraph.getKnowledgeBase(id);
         final IndexID indexID = IndexID.of(id, type);
         IndexPopulator indexPopulator = core.getIndexPopulator(type);
 

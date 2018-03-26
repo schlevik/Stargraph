@@ -29,7 +29,6 @@ package net.stargraph.core.impl.jena;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Namespace;
-import net.stargraph.core.Stargraph;
 import net.stargraph.core.search.database.RDFGraphDatabase;
 import net.stargraph.core.search.database.SparqlQuery;
 import net.stargraph.core.search.database.SparqlResult;
@@ -60,7 +59,7 @@ public final class JenaGraphDatabase implements RDFGraphDatabase {
 
     public JenaGraphDatabase(KnowledgeBase knowledgeBase, Model graphModel) {
         this.knowledgeBase = Objects.requireNonNull(knowledgeBase);
-        this.kbName = Objects.requireNonNull(knowledgeBase.getKBName());
+        this.kbName = Objects.requireNonNull(knowledgeBase.getName());
         this.ns = knowledgeBase.getNamespace();
         this.model = graphModel;
     }

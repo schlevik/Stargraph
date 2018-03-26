@@ -13,7 +13,7 @@ public class RefactoringTest {
         Stargraph stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
         stargraph.setKBInitSet(kbName);
         stargraph.initialize();
-        System.out.println(stargraph.getKBCore(kbName).toString());
-        stargraph.getKBCore(kbName).getIndexIDs().stream().map(stargraph::getIndex).forEach(System.out::println);
+        System.out.println(stargraph.getKnowledgeBase(kbName).toString());
+        stargraph.getKnowledgeBase(kbName).getIndexIDs().stream().map(stargraph::getIndex).forEach(System.out::println);
     }
 }

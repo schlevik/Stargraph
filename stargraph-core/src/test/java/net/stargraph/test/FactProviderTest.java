@@ -55,6 +55,7 @@ public class FactProviderTest {
     @Test
     public void factIterateTest() {
         Stargraph core = new Stargraph(config, false);
+        core.setKBInitSet("obama");
         core.setDataRootDir(root.toFile());
         core.initialize();
         IndexID indexID = IndexID.of("obama", "facts");
@@ -66,8 +67,9 @@ public class FactProviderTest {
     @Test
     public void factFromNTriplesTest() throws IOException {
         Stargraph core = new Stargraph(config, false);
+        core.setKBInitSet("obama");
         core.setDataRootDir(root.toFile());
-        core.setDefaultGraphModelFactory(new NTriplesModelFactory(core));
+        core.setDefaultDatabaseFactory(new NTriplesModelFactory(core));
         core.initialize();
 
         IndexID indexID = IndexID.of("obama", "facts");

@@ -56,7 +56,7 @@ public abstract class JenaDatabaseFactory implements DatabaseFactory {
     }
 
     public Database getDatabase(KnowledgeBase knowledgeBase) {
-        return new JenaGraphDatabase(knowledgeBase, getModel(knowledgeBase.getKBName()));
+        return new JenaGraphDatabase(knowledgeBase, getModel(knowledgeBase.getName()));
     }
 
     protected abstract Model createModel(String dbId);

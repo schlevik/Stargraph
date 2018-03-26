@@ -30,7 +30,6 @@ import com.google.common.collect.Iterators;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.impl.jena.JenaGraphDatabase;
 import net.stargraph.core.search.database.DBType;
-import net.stargraph.core.search.database.Database;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.IndexID;
 import org.apache.jena.graph.Graph;
@@ -58,7 +57,7 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
     private Tuple currentTuple;
 
     public CanonicalEntityIterator(Stargraph stargraph, IndexID indexID) {
-        KnowledgeBase kb = stargraph.getKBCore(indexID.getKnowledgeBase());
+        KnowledgeBase kb = stargraph.getKnowledgeBase(indexID.getKnowledgeBase());
         JenaGraphDatabase database = (JenaGraphDatabase) kb.getDatabase(DBType.Graph);
         this.indexID = Objects.requireNonNull(indexID);
         this.namespace = database.getNamespace();

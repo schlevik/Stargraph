@@ -35,7 +35,6 @@ import net.stargraph.core.index.NullIndexFactory;
 import net.stargraph.model.IndexID;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -65,11 +64,11 @@ public final class KBCoreExtendTest {
 
         this.stargraph = new Stargraph(config, false);
         this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
-        this.stargraph.setDefaultIndicesFactory(new NullIndexFactory());
-        stargraph.setDefaultGraphModelFactory(new NTriplesModelFactory(stargraph));
+        this.stargraph.setDefaultIndexFactory(new NullIndexFactory());
+        stargraph.setDefaultDatabaseFactory(new NTriplesModelFactory(stargraph));
         this.stargraph.setDataRootDir(root.toFile());
         this.stargraph.initialize();
-        this.core = stargraph.getKBCore(indexID.getKnowledgeBase());
+        this.core = stargraph.getKnowledgeBase(indexID.getKnowledgeBase());
         this.expected = Arrays.asList(
                 ResourceFactory.createStatement(
                         ResourceFactory.createResource("http://lambda33.org/s"),

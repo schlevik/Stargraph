@@ -40,7 +40,7 @@ public final class Index {
     void initialize() {
         logger.info(marker, "Initializing '{}'", indexID);
 
-        IndexFactory indexFactory = stargraph.getIndicesFactory(indexID);
+        IndexFactory indexFactory = stargraph.createIndexFactoryForID(indexID);
 
         indexPopulator = indexFactory.createIndexer(indexID, stargraph);
 
@@ -76,12 +76,8 @@ public final class Index {
         return this.indexSearchExecutor;
     }
 
-    public Config getConfig() {
-        return this.stargraph.getIndexConfig(this.indexID);
-    }
-
     public KnowledgeBase getKnowledgeBase() {
-        return stargraph.getKBCore(indexID.getKnowledgeBase());
+        return stargraph.getKnowledgeBase(indexID.getKnowledgeBase());
     }
 
     @Override

@@ -1,4 +1,4 @@
-package net.stargraph.core.index;
+package net.stargraph.core.search.database;
 
 /*-
  * ==========================License-Start=============================
@@ -26,28 +26,29 @@ package net.stargraph.core.index;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.IndexFactory;
+import net.stargraph.StarGraphException;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
-import net.stargraph.core.search.index.IndexSearcher;
-import net.stargraph.model.IndexID;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import net.stargraph.core.search.database.Database;
+import net.stargraph.core.search.database.DatabaseFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 
-public final class NullIndexFactory implements IndexFactory {
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-    @Override
-    public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
-        return new NullIndexPopulator(indexID, stargraph);
+public final class EmptyModelFactory implements DatabaseFactory {
+
+    public EmptyModelFactory(Stargraph core) {
+    }
+    public EmptyModelFactory() {
     }
 
     @Override
-    public BaseIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
+    public Database getDatabase(KnowledgeBase knowledgeBase) {
         return null;
     }
-
-    @Override
-    public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
-        throw new NotImplementedException();
-    }
-
 }

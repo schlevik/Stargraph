@@ -76,13 +76,13 @@ public final class QueryEngine {
 
     public QueryEngine(String dbId, Stargraph stargraph) {
         this.dbId = Objects.requireNonNull(dbId);
-        this.knowledgeBase = Objects.requireNonNull(stargraph.getKBCore(dbId));
-        this.analyzers = new Analyzers(stargraph.getMainConfig());
+        this.knowledgeBase = Objects.requireNonNull(stargraph.getKnowledgeBase(dbId));
+        this.analyzers = new Analyzers(stargraph.getConfig().getMainConfig());
         //this.graphSearcher = knowledgeBase.createGraphSearcher();
         this.namespace = knowledgeBase.getNamespace();
         this.language = knowledgeBase.getLanguage();
 
-        this.modeSelector = new InteractionModeSelector(stargraph.getMainConfig(), language);
+        this.modeSelector = new InteractionModeSelector(stargraph.getConfig().getMainConfig(), language);
     }
 
     public QueryResponse query(String query) {

@@ -26,7 +26,7 @@ package net.stargraph.core.impl.elastic;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.ConfigConstants;
+import net.stargraph.core.ConfigHandler;
 import net.stargraph.rank.ModifiableSearchParams;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
@@ -68,10 +68,10 @@ public abstract class ElasticScroller<T extends Serializable> implements Iterabl
 
         this.fields = new String[]{"_source"};
         this.maxEntries = params.getLimit();
-        this.scrollTime = new TimeValue(Integer.valueOf(System.getProperty(ConfigConstants.elasticScrollTimeKey, "120")), TimeUnit.SECONDS);
-        this.maxScrollSize = Integer.valueOf(System.getProperty(ConfigConstants.elasticScrollSizeKey, "8000"));
-        logger.trace(marker, "{}={}", ConfigConstants.elasticScrollTimeKey, scrollTime);
-        logger.trace(marker, "{}={}", ConfigConstants.elasticScrollSizeKey, maxScrollSize);
+        this.scrollTime = new TimeValue(Integer.valueOf(System.getProperty(ConfigHandler.elasticScrollTimeKey, "120")), TimeUnit.SECONDS);
+        this.maxScrollSize = Integer.valueOf(System.getProperty(ConfigHandler.elasticScrollSizeKey, "8000"));
+        logger.trace(marker, "{}={}", ConfigHandler.elasticScrollTimeKey, scrollTime);
+        logger.trace(marker, "{}={}", ConfigHandler.elasticScrollSizeKey, maxScrollSize);
     }
 
     @Override

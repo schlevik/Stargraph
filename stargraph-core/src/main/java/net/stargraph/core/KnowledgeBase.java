@@ -10,14 +10,9 @@ import net.stargraph.core.search.database.*;
 import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.core.search.index.IndexSearcher;
-import net.stargraph.data.DataProvider;
-import net.stargraph.data.DataProviderFactory;
-import net.stargraph.data.processor.Holder;
 import net.stargraph.model.IndexID;
 import net.stargraph.query.Language;
 import net.stargraph.rank.ModifiableIndraParams;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -40,7 +35,6 @@ public final class KnowledgeBase {
     private Marker marker;
 
     private String name;
-    private Config kbConfig;
     private Language language;
     private KBLoader kbLoader;
     private Namespace namespace;
@@ -57,10 +51,14 @@ public final class KnowledgeBase {
     public KnowledgeBase(String name, Stargraph stargraph, boolean start) {
         this.name = Objects.requireNonNull(name);
         this.stargraph = Objects.requireNonNull(stargraph);
-        this.kbConfig = stargraph.getMainConfig().getConfig(String.format("kb.%s", name));
+
         this.marker = MarkerFactory.getMarker(name);
-        this.language = Language.valueOf(kbConfig.getString("language").toUpperCase());
-        this.namespace = Namespace.create(kbConfig);
+
+
+        this.language = Language.valueOf(stargraph.getConfig().language(name).toUpperCase());
+        this.namespace = Namespace.create(stargraph.getConfig().getKBConfig(name));
+
+        // TODO: this should be red from config at some point
         this.features = Collections.singleton(new NERFeature());
 
         //
@@ -87,8 +85,9 @@ public final class KnowledgeBase {
         // initialize DB
         // -------------
         // something among the lines of
-        DatabaseFactory factory = stargraph.getDatabaseFactory(this.name);
+        DatabaseFactory factory = stargraph.createDatabaseFactoryForKB(this.name);
         this.database = factory.getDatabase(this);
+
         // and in stargraph:
         // if (kbConfig.hasPath(db.class)):
         // factory = getDBFactoryForName(kbConfig(db.class))
@@ -183,15 +182,8 @@ public final class KnowledgeBase {
         this.running = false;
     }
 
-    public Config getConfig() {
-        return kbConfig;
-    }
 
-    public Config getConfig(String path) {
-        return kbConfig.getConfig(path);
-    }
-
-    public String getKBName() {
+    public String getName() {
         return name;
     }
 
@@ -200,14 +192,11 @@ public final class KnowledgeBase {
     }
 
     public List<IndexID> getIndexIDs() {
-        ConfigObject typeObj = this.kbConfig.getObject("model");
-        return typeObj.keySet().stream().map(modelName -> IndexID.of(name, modelName)).collect(Collectors.toList());
+        return stargraph.getConfig().indices(name).stream()
+                .map(index -> IndexID.of(name, index))
+                .collect(Collectors.toList());
     }
 
-//    public Model getGraphModel() {
-//        checkRunning();
-//        return stargraph.getGraphModelFactory(name).getModel(name);
-//    }
 
     public IndexPopulator getIndexPopulator(String indexName) {
         checkRunning();
@@ -238,8 +227,8 @@ public final class KnowledgeBase {
 
 
     public void configureDistributionalParams(ModifiableIndraParams params) {
-        String indraUrl = stargraph.getMainConfig().getString("distributional-service.rest-url");
-        String indraCorpus = stargraph.getMainConfig().getString("distributional-service.corpus");
+        String indraUrl = stargraph.getConfig().distServiceUrl();
+        String indraCorpus = stargraph.getConfig().distServiceCorpus();
         params.url(indraUrl).corpus(indraCorpus).language(language.code);
     }
 

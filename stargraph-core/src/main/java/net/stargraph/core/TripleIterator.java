@@ -52,11 +52,11 @@ abstract class TripleIterator<T> implements Iterator<T> {
     private Namespace namespace;
 
     //    TripleIterator(Stargraph stargraph, IndexID indexID) {
-//        this(stargraph, indexID, ((JenaGraphDatabase) stargraph.getKBCore(indexID.getKnowledgeBase()).getDatabase(DBType.Graph)).getModel());
+//        this(stargraph, indexID, ((JenaGraphDatabase) stargraph.getKnowledgeBase(indexID.getKnowledgeBase()).getDatabase(DBType.Graph)).getModel());
 //    }
     TripleIterator(Stargraph stargraph, IndexID indexID) {
         JenaGraphDatabase db = (JenaGraphDatabase) Objects.requireNonNull(stargraph).
-                getKBCore(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
+                getKnowledgeBase(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
         this.model = db.getModel();
         this.namespace = db.getNamespace();
         this.indexID = Objects.requireNonNull(indexID);
@@ -64,7 +64,7 @@ abstract class TripleIterator<T> implements Iterator<T> {
     }
 //    TripleIterator(Stargraph stargraph, IndexID indexID, Model model) {
 //        this.model = model;
-//        this.namespace = stargraph.getKBCore(indexID.getKnowledgeBase()).getNamespace();
+//        this.namespace = stargraph.getKnowledgeBase(indexID.getKnowledgeBase()).getNamespace();
 //        this.indexID = Objects.requireNonNull(indexID);
 //        this.innerIt = Objects.requireNonNull(model).listStatements();
 //    }

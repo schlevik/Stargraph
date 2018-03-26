@@ -59,7 +59,7 @@ public final class EntityIterator implements Iterator<Indexable> {
     private Node currentNode;
 
     public EntityIterator(Stargraph stargraph, IndexID indexID) {
-        JenaGraphDatabase database = (JenaGraphDatabase) stargraph.getKBCore(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
+        JenaGraphDatabase database = (JenaGraphDatabase) stargraph.getKnowledgeBase(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
         this.indexID = Objects.requireNonNull(indexID);
         this.namespace = database.getNamespace();
         this.model = database.getModel();
@@ -67,7 +67,7 @@ public final class EntityIterator implements Iterator<Indexable> {
     }
 
     public EntityIterator(Stargraph stargraph, IndexID indexID, List data) {
-        JenaGraphDatabase database = (JenaGraphDatabase) stargraph.getKBCore(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
+        JenaGraphDatabase database = (JenaGraphDatabase) stargraph.getKnowledgeBase(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
         this.indexID = Objects.requireNonNull(indexID);
         this.namespace = database.getNamespace();
         this.model = ModelFactory.createDefaultModel().add(data);

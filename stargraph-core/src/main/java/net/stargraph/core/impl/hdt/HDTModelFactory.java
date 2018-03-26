@@ -12,10 +12,10 @@ package net.stargraph.core.impl.hdt;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,6 +28,7 @@ package net.stargraph.core.impl.hdt;
 
 import com.typesafe.config.Config;
 import net.stargraph.StarGraphException;
+import net.stargraph.core.ConfigHandler;
 import net.stargraph.core.JenaDatabaseFactory;
 import net.stargraph.core.Stargraph;
 import org.apache.jena.rdf.model.Model;
@@ -50,12 +51,12 @@ public final class HDTModelFactory extends JenaDatabaseFactory {
     }
 
     @Override
-    protected Model createModel(String dbId) {
+    protected Model createModel(String kbName) {
         Model model = null;
         try {
-            File hdtFile = getHDTPath(dbId).toFile();
+            File hdtFile = getHDTPath(kbName).toFile();
             if (hdtFile.exists()) {
-                boolean useIdx = useIndex(dbId);
+                boolean useIdx = stargraph.getConfig().useIndex(kbName);
                 String hdtFilePathStr = hdtFile.getAbsolutePath();
                 logger.info(marker, "Loading '{}', useIndex={}", hdtFilePathStr, useIdx);
                 HDT hdt = useIdx ? HDTManager.mapIndexedHDT(hdtFilePathStr, null) : HDTManager.loadHDT(hdtFilePathStr, null);
@@ -64,60 +65,47 @@ public final class HDTModelFactory extends JenaDatabaseFactory {
                 return model;
             }
 
-           throw new FileNotFoundException("HDT file not found: '" + hdtFile + "'");
+            throw new FileNotFoundException("HDT file not found: '" + hdtFile + "'");
 
         } catch (Exception e) {
             throw new StarGraphException(e);
-        }
-        finally {
+        } finally {
             if (model == null) {
-                logger.error(marker, "No Graph Model instantiated for {}", dbId);
+                logger.error(marker, "No Graph Model instantiated for {}", kbName);
             }
         }
     }
 
-    private boolean useIndex(String id) {
-        Config tripleStoreCfg = stargraph.getKBCore(id).getConfig("triple-store");
-        return tripleStoreCfg.hasPath("hdt.use-index") && tripleStoreCfg.getBoolean("hdt.use-index");
-    }
 
-    private Path getHDTPath(String dbId) throws IOException {
+    private Path getHDTPath(String kbName) throws IOException {
 
         String dataDir = stargraph.getDataRootDir();
-        Path defaultPath = Paths.get(dataDir, dbId, "facts", "triples.hdt");
+        Path defaultPath = Paths.get(dataDir, kbName, "facts", "triples.hdt");
 
-        final String cfgPath = "triple-store.hdt.file";
-        Config cfg = stargraph.getKBCore(dbId).getConfig();
 
-        if (cfg.hasPath(cfgPath)) {
-            String hdtFileName = cfg.getString(cfgPath);
+        String hdtFileName = stargraph.getConfig().hdtFile(kbName);
 
-            if (hdtFileName == null || hdtFileName.isEmpty()) {
-                throw new StarGraphException("Invalid configuration at '" + cfgPath + "'");
-            }
-
-            if (hdtFileName.startsWith("http://") && defaultPath.toFile().exists()) {
-                return defaultPath;
-            }
-
-            // It's an absolute path to file
-            if (Paths.get(hdtFileName).isAbsolute()) {
-                return Paths.get(hdtFileName);
-            }
-
-            // It's relative to the 'facts' dir
-            if (!hdtFileName.startsWith("http://")) {
-                return Paths.get(dataDir, dbId, "facts", hdtFileName);
-            }
-
-            // copy remote to default file location
-            download(hdtFileName, defaultPath.toFile());
+        if (hdtFileName == null || hdtFileName.isEmpty()) {
             return defaultPath;
         }
-        else {
-            // default attempt when not explicit configured
+
+        if (hdtFileName.startsWith("http://") && defaultPath.toFile().exists()) {
             return defaultPath;
         }
+
+        // It's an absolute path to file
+        if (Paths.get(hdtFileName).isAbsolute()) {
+            return Paths.get(hdtFileName);
+        }
+
+        // It's relative to the 'facts' dir
+        if (!hdtFileName.startsWith("http://")) {
+            return Paths.get(dataDir, kbName, "facts", hdtFileName);
+        }
+
+        // copy remote to default file location
+        download(hdtFileName, defaultPath.toFile());
+        return defaultPath;
     }
 
     private void download(String urlStr, File file) throws IOException {

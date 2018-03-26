@@ -59,7 +59,7 @@ public final class IndexUpdateIT {
         ConfigFactory.invalidateCaches();
         stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
 
-        TestUtils.assertElasticRunning(stargraph.getIndexConfig(indexID));
+        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(indexID));
 
         stargraph.setKBInitSet(indexID.getKnowledgeBase());
         stargraph.initialize();

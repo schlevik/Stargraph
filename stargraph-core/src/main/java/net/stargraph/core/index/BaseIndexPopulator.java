@@ -179,8 +179,7 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
 
     private void doBeforeLoad(boolean reset) {
         logger.debug(marker, "Before loading..");
-        boolean logStats = stargraph.getMainConfig().getBoolean("progress-watcher.log-stats");
-        this.loaderProgress = new ProgressWatcher(indexID, stargraph.getDataRootDir(), logStats);
+        this.loaderProgress = new ProgressWatcher(indexID, stargraph.getDataRootDir(), stargraph.getConfig().logStats());
         this.dataProvider = stargraph.createDataProvider(indexID);
         beforeLoad(reset);
     }

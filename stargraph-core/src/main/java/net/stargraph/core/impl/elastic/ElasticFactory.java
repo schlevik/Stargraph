@@ -26,26 +26,32 @@ package net.stargraph.core.impl.elastic;
  * ==========================License-End===============================
  */
 
-import net.stargraph.StargraphConfigurationException;
 import net.stargraph.core.IndexFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexPopulator;
-import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.core.search.index.IndexSearcher;
 import net.stargraph.model.IndexID;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import org.reflections.Reflections;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
-
 public final class ElasticFactory implements IndexFactory {
-    private final Reflections reflections = new Reflections();
+    //TODO: read from config
+    private Set<Class<? extends ElasticBaseIndexSearcher>> allSearcherClasses = new HashSet<>(Arrays.asList(
+            ElasticDocumentIndexSearcher.class,
+            ElasticEntityIndexSearcher.class,
+            ElasticFactIndexSearcher.class,
+            ElasticPropertyIndexSearcher.class
+    ));
 
     @Override
     public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
         return new ElasticIndexPopulator(indexID, stargraph);
     }
+
 
     @Override
     public ElasticIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
@@ -54,14 +60,12 @@ public final class ElasticFactory implements IndexFactory {
 
     @Override
     public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
-
-        Set<Class<? extends ElasticBaseIndexSearcher>> allSearcherClasses = reflections.getSubTypesOf(ElasticBaseIndexSearcher.class);
         for (Class<? extends ElasticBaseIndexSearcher> searcherClass : allSearcherClasses) {
             if (iFace.isAssignableFrom(searcherClass)) {
                 return searcherClass;
             }
         }
-        throw new StargraphConfigurationException("Something somewhere went terribly wrong!");
+        throw new NotImplementedException();
     }
 
 

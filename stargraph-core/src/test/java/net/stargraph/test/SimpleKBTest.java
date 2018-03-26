@@ -62,8 +62,8 @@ public final class SimpleKBTest {
         Config config = ConfigFactory.load().getConfig("stargraph");
         stargraph = new Stargraph(config, false);
         stargraph.setKBInitSet(kbName);
-        stargraph.setDefaultIndicesFactory(new NullIndexFactory());
-        stargraph.setDefaultGraphModelFactory(new NTriplesModelFactory(stargraph));
+        stargraph.setDefaultIndexFactory(new NullIndexFactory());
+        stargraph.setDefaultDatabaseFactory(new NTriplesModelFactory(stargraph));
         stargraph.setDataRootDir(root.toFile());
         stargraph.initialize();
     }
