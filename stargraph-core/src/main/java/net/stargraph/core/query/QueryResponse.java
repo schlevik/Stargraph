@@ -33,9 +33,9 @@ import java.util.Objects;
 public abstract class QueryResponse {
     private String userQuery;
     private InteractionMode interactionMode;
-    private QueryResolver source;
+    private AbstractQueryResolver source;
 
-    public QueryResponse(InteractionMode interactionMode, String userQuery, QueryResolver source) {
+    public QueryResponse(InteractionMode interactionMode, String userQuery, AbstractQueryResolver source) {
         this.interactionMode = Objects.requireNonNull(interactionMode);
         this.userQuery = Objects.requireNonNull(userQuery);
         this.source = source;
@@ -45,7 +45,7 @@ public abstract class QueryResponse {
         return interactionMode;
     }
 
-    public QueryResolver getSource() {
+    public AbstractQueryResolver getSource() {
         return source;
     }
 

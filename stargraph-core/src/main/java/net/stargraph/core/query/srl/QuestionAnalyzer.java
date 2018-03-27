@@ -1,4 +1,4 @@
-package net.stargraph.core.query.nli;
+package net.stargraph.core.query.srl;
 
 /*-
  * ==========================License-Start=============================
@@ -61,7 +61,7 @@ public final class QuestionAnalyzer {
         this.queryTypePatterns = rules.getQueryTypeRules(language);
     }
 
-    public QuestionAnalysis analyse(String question) {
+    public QuestionAnalysis analyse(String question) throws AnalysisException {
         QuestionAnalysis analysis = null;
         try {
             long startTime = System.currentTimeMillis();
@@ -76,7 +76,7 @@ public final class QuestionAnalyzer {
         }
         catch (Exception e) {
             logger.error(marker, "Analysis failure. Last step: {}", analysis);
-            throw new StarGraphException(e);
+            throw new AnalysisException(e);
         }
     }
 

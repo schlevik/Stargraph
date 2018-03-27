@@ -27,7 +27,7 @@ package net.stargraph.core.query;
  */
 
 import net.stargraph.StarGraphException;
-import net.stargraph.core.query.nli.DataModelBinding;
+import net.stargraph.core.query.srl.DataModelBinding;
 
 import java.util.ArrayList;
 import java.util.List;

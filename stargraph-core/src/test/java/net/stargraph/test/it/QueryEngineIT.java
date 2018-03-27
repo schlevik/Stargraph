@@ -63,23 +63,23 @@ public class QueryEngineIT {
 
     @Test
     public void whoIsTheWifeOfBarackObamaTest() {
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query("Who is the wife of Barack Obama?");
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query("Who is the wife of Barack Obama?").get(0);
         Assert.assertTrue(response.getEntityAnswer().contains(new InstanceEntity("http://dbpedia.org/resource/Michelle_Obama", "Michelle Obama")));
     }
 
     @Test
     public void sparqlSelectTest() {
         SPARQLSelectResponse response = (SPARQLSelectResponse) queryEngine.query("SELECT ?o WHERE " +
-                "{ <http://dbpedia.org/resource/Barack_Obama> <http://xmlns.com/foaf/0.1/depiction> ?o }");
+                "{ <http://dbpedia.org/resource/Barack_Obama> <http://xmlns.com/foaf/0.1/depiction> ?o }").get(0);
         Assert.assertEquals("http://commons.wikimedia.org/wiki/Special:FilePath/President_Barack_Obama.jpg",
                 response.getBindings().get("o").get(0).getId());
     }
 
     @Test(dataProvider = "nlQueries", dataProviderClass = QueryEngineIT.class)
     public void test(String q, List<String> answers) {
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(q);
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(q).get(0);
         List<String> answerIds = response.getEntityAnswer().stream().map(LabeledEntity::getId).collect(Collectors.toList());
-        if (!answers.stream().anyMatch(answerIds::contains)) {
+        if (answers.stream().noneMatch(answerIds::contains)) {
             Assert.fail("Test fail for query '" + q + "'. Accepted Answer Set: " + answers);
         }
     }

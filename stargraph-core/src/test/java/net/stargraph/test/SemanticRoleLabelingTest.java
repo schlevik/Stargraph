@@ -27,12 +27,13 @@ package net.stargraph.test;
  */
 
 import com.typesafe.config.ConfigFactory;
+import net.stargraph.core.query.srl.AnalysisException;
 import net.stargraph.query.Language;
 import net.stargraph.core.query.Analyzers;
-import net.stargraph.core.query.SPARQLQueryBuilder;
+import net.stargraph.core.query.nli.SPARQLQueryBuilder;
 import net.stargraph.core.query.QueryType;
-import net.stargraph.core.query.nli.QuestionAnalysis;
-import net.stargraph.core.query.nli.QuestionAnalyzer;
+import net.stargraph.core.query.srl.QuestionAnalysis;
+import net.stargraph.core.query.srl.QuestionAnalyzer;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -49,7 +50,7 @@ public final class  SemanticRoleLabelingTest {
     }
 
     @Test
-    public void q0() {
+    public void q0() throws AnalysisException {
         QuestionAnalysis analyzed = analyzer.analyse("Who is the wife of Barack Obama?");
         SPARQLQueryBuilder builder = analyzed.getSPARQLQueryBuilder();
         Assert.assertEquals(builder.getQueryType(), QueryType.SELECT);
@@ -59,7 +60,7 @@ public final class  SemanticRoleLabelingTest {
     }
 
     @Test(enabled = false) //todo: re-enable
-    public void q1() {
+    public void q1() throws AnalysisException {
         QuestionAnalysis analyzed = analyzer.analyse("Give me all movies directed by Francis Ford Coppola");
         SPARQLQueryBuilder builder = analyzed.getSPARQLQueryBuilder();
         Assert.assertEquals(builder.getQueryType(), QueryType.SELECT);

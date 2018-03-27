@@ -1,4 +1,4 @@
-package net.stargraph.core.query.nli;
+package net.stargraph.core.query.srl;
 
 /*-
  * ==========================License-Start=============================
@@ -28,49 +28,34 @@ package net.stargraph.core.query.nli;
 
 import java.util.Objects;
 
-public final class DataModelBinding {
-    private DataModelType modelType;
-    private String term;
-    private String placeHolder;
+public final class DataModelTypePattern {
 
-    public DataModelBinding(DataModelType modelType, String term, String placeHolder) {
-        this.modelType = Objects.requireNonNull(modelType);
-        this.term = Objects.requireNonNull(term);
-        this.placeHolder = Objects.requireNonNull(placeHolder);
-    }
+	private String pattern;
+	private DataModelType dataModelType;
 
-    public DataModelType getModelType() {
-        return modelType;
-    }
+	public DataModelTypePattern(String pattern, DataModelType dataModelType) {
+		this.pattern = Objects.requireNonNull(pattern);
+		this.dataModelType = Objects.requireNonNull(dataModelType);
+	}
 
-    public String getTerm() {
-        return term;
-    }
+	public String getPattern() {
+		return pattern;
+	}
 
-    public String getPlaceHolder() {
-        return placeHolder;
+	public DataModelType getDataModelType() {
+		return dataModelType;
+	}
+
+	public boolean isLexical() {
+        return dataModelType == DataModelType.TYPE
+                || dataModelType == DataModelType.OPERATION || dataModelType == DataModelType.STOP;
     }
 
     @Override
     public String toString() {
-        return "DataModelBinding{" +
-                "term='" + term + '\'' +
-                ", placeHolder='" + placeHolder + '\'' +
+        return "DataModelTypePattern{" +
+                "pattern='" + pattern + '\'' +
+                ", dataModelType=" + dataModelType +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DataModelBinding that = (DataModelBinding) o;
-        return modelType == that.modelType &&
-                Objects.equals(term, that.term) &&
-                Objects.equals(placeHolder, that.placeHolder);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(modelType, term, placeHolder);
     }
 }

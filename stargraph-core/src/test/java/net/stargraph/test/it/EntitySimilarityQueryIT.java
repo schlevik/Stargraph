@@ -51,7 +51,7 @@ public class EntitySimilarityQueryIT {
     @Test(enabled = false)
     public void simpleEntityQuery() {
 
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query("Entities similar to Barack Obama");
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query("Entities similar to Barack Obama").get(0);
         Assert.assertTrue(response.getEntityAnswer().contains(new InstanceEntity("http://dbpedia.org/resource/Joe_Biden", "Joe Biden")));
 
     }

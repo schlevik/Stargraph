@@ -140,7 +140,7 @@ public final class LuceneCanonicalEntitiesIT {
         indexer.flush();
 
         String passageQuery = "PASSAGE When did Barack Obama travel to India?";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery).get(0);
         String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
                 "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
                 "and visited the families of college friends in Pakistan and India for three weeks .";

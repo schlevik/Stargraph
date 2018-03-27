@@ -30,8 +30,8 @@ import com.typesafe.config.Config;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.query.annotator.Annotator;
 import net.stargraph.core.query.annotator.AnnotatorFactory;
-import net.stargraph.core.query.nli.PassageQuestionAnalyzer;
-import net.stargraph.core.query.nli.QuestionAnalyzer;
+import net.stargraph.core.query.srl.PassageQuestionAnalyzer;
+import net.stargraph.core.query.srl.QuestionAnalyzer;
 import net.stargraph.query.Language;
 
 import java.lang.reflect.Constructor;

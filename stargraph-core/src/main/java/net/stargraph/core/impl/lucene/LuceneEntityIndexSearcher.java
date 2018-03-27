@@ -32,12 +32,12 @@ public class LuceneEntityIndexSearcher extends LuceneBaseIndexSearcher<InstanceE
 
 
     @Override
-    public LabeledEntity getEntity(String dbId, String id) {
+    public LabeledEntity getEntity(String id) {
         throw new NotImplementedException();
     }
 
     @Override
-    public List<LabeledEntity> getEntities(String dbId, List<String> ids) {
+    public List<LabeledEntity> getEntities(List<String> ids) {
         throw new NotImplementedException();
     }
 

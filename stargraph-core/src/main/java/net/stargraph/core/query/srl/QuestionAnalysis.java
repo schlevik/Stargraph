@@ -1,4 +1,4 @@
-package net.stargraph.core.query.nli;
+package net.stargraph.core.query.srl;
 
 /*-
  * ==========================License-Start=============================
@@ -28,7 +28,7 @@ package net.stargraph.core.query.nli;
 
 import net.stargraph.StarGraphException;
 import net.stargraph.core.query.QueryType;
-import net.stargraph.core.query.SPARQLQueryBuilder;
+import net.stargraph.core.query.nli.SPARQLQueryBuilder;
 import net.stargraph.core.query.annotator.Word;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

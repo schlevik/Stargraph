@@ -148,7 +148,7 @@ public final class ElasticIndexPopulatorIT {
     @Test
     public void getEntitiesTest() {
         EntityIndexSearcher searcher = core.getSearcher(EntityIndexSearcher.class);
-        LabeledEntity obama = searcher.getEntity("obama", "dbr:Barack_Obama");
+        LabeledEntity obama = searcher.getEntity("dbr:Barack_Obama");
         Assert.assertEquals(new InstanceEntity("dbr:Barack_Obama", "Barack Obama"), obama);
     }
 

@@ -85,7 +85,7 @@ public final class JenaGraphDatabase implements RDFGraphDatabase {
                     if (!jBinding.get(jVar).isLiteral()) {
                         String id = jBinding.get(jVar).getURI();
                         List<LabeledEntity> entities = result.computeIfAbsent(jVar.getVarName(), (v) -> new ArrayList<>());
-                        LabeledEntity labeledEntity = ns.isFromMainNS(id) ? entityIndexSearcher.getEntity(kbName, ns.shrinkURI(id)) : ModelUtils.createInstance(id);
+                        LabeledEntity labeledEntity = ns.isFromMainNS(id) ? entityIndexSearcher.getEntity(ns.shrinkURI(id)) : ModelUtils.createInstance(id);
                         entities.add(labeledEntity);
                     } else {
                         LiteralLabel lit = jBinding.get(jVar).getLiteral();

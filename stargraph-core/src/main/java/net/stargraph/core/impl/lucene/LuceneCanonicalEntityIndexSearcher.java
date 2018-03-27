@@ -1,13 +1,8 @@
 package net.stargraph.core.impl.lucene;
 
-import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Index;
-import net.stargraph.core.KnowledgeBase;
-import net.stargraph.core.impl.corenlp.NERSearcher;
-import net.stargraph.core.ner.NER;
 import net.stargraph.core.search.index.EntityIndexSearcher;
-import net.stargraph.model.BuiltInIndex;
 import net.stargraph.model.CanonicalInstanceEntity;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
@@ -22,7 +17,6 @@ import org.slf4j.MarkerFactory;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<CanonicalInstanceEntity>
@@ -37,12 +31,12 @@ public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<
 
 
     @Override
-    public LabeledEntity getEntity(String dbId, String id) {
+    public LabeledEntity getEntity(String id) {
         throw new NotImplementedException();
     }
 
     @Override
-    public List<LabeledEntity> getEntities(String dbId, List<String> ids) {
+    public List<LabeledEntity> getEntities(List<String> ids) {
         throw new NotImplementedException();
     }
 
@@ -50,10 +44,10 @@ public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<
     @Override
     public Scores<InstanceEntity> instanceSearch(ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
         //That's what we're trying to do here.
+        searchParams.index(getIndex().getID());
 
         QueryBuilder queryBuilder = new QueryBuilder(new StandardAnalyzer());
         Query query = queryBuilder.createPhraseQuery("value", searchParams.getSearchTerm(), 0);
-        searchParams.index(getIndex().getID());
 
         Scores<CanonicalInstanceEntity> scores = executeSearch(query, searchParams);
         Scores<InstanceEntity> replacedScores = replaceCanonical(scores);

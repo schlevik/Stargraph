@@ -1,4 +1,4 @@
-package net.stargraph.core.query;
+package net.stargraph.core.query.nli;
 
 /*-
  * ==========================License-Start=============================
@@ -28,8 +28,9 @@ package net.stargraph.core.query;
 
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Namespace;
-import net.stargraph.core.query.nli.DataModelBinding;
-import net.stargraph.core.query.nli.QueryPlanPatterns;
+import net.stargraph.core.query.QueryType;
+import net.stargraph.core.query.srl.DataModelBinding;
+import net.stargraph.core.query.srl.QueryPlanPatterns;
 import net.stargraph.rank.Score;
 import net.stargraph.rank.Scores;
 

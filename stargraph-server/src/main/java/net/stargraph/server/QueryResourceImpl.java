@@ -12,10 +12,10 @@ package net.stargraph.server;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -60,59 +60,66 @@ public final class QueryResourceImpl implements QueryResource {
         try {
             if (core.hasKB(id)) {
                 QueryEngine engine = engines.computeIfAbsent(id, (k) -> new QueryEngine(k, core));
-                QueryResponse queryResponse = engine.query(q);
-                return Response.status(Response.Status.OK).entity(buildUserResponse(queryResponse)).build();
+                List<QueryResponse> result = engine.query(q);
+                return Response.status(Response.Status.OK).entity(buildUserResponse(result)).build();
             }
             return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error(marker, "Query execution failed: '{}' on '{}'", q, id, e);
         }
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    public UserResponse buildUserResponse(QueryResponse queryResponse) {
+    public List<UserResponse> buildUserResponse(List<QueryResponse> result) {
 
-        if (queryResponse instanceof NoResponse) {
-            return new NoUserResponse(queryResponse.getUserQuery(), queryResponse.getInteractionMode());
+        if (result.get(0) instanceof NoResponse) {
+            return Collections.singletonList(new NoUserResponse(result.get(0).getUserQuery(), null));
+
         }
-        else if (queryResponse instanceof AnswerSetResponse) {
-            AnswerSetResponse answerSet = (AnswerSetResponse) queryResponse;
-            SchemaAgnosticUserResponse response =
-                    new SchemaAgnosticUserResponse(answerSet.getUserQuery(), answerSet.getInteractionMode(), answerSet.getSparqlQuery());
+        List<UserResponse> responses = new ArrayList<>();
+        for (QueryResponse resultEntry : result) {
+            if (resultEntry instanceof AnswerSetResponse) {
+                AnswerSetResponse answerSet = (AnswerSetResponse) resultEntry;
+                SchemaAgnosticUserResponse response =
+                        new SchemaAgnosticUserResponse(answerSet.getUserQuery(), answerSet.getInteractionMode(), answerSet.getSparqlQuery());
 
-            List<UserResponse.EntityEntry> answers = answerSet.getEntityAnswer().stream()
-                    .map(a -> new UserResponse.EntityEntry(a.getId(), a.getValue())).collect(Collectors.toList());
+                List<UserResponse.EntityEntry> answers = answerSet.getEntityAnswer().stream()
+                        .map(a -> new UserResponse.EntityEntry(a.getId(), a.getValue())).collect(Collectors.toList());
 
-            response.setAnswers(answers);
+                response.setAnswers(answers);
 
-            final Map<String, List<UserResponse.EntityEntry>> mappings = new HashMap<>();
-            answerSet.getMappings().forEach((modelBinding, scoreList) -> {
-                List<UserResponse.EntityEntry> entries = scoreList.stream()
-                        .map(s -> new UserResponse.EntityEntry(s.getRankableView().getId(),
-                                s.getRankableView().getValue(), s.getValue()))
-                        .collect(Collectors.toList());
-                mappings.computeIfAbsent(modelBinding.getTerm(), (term) -> new ArrayList<>()).addAll(entries);
-            });
+                final Map<String, List<UserResponse.EntityEntry>> mappings = new HashMap<>();
+                answerSet.getMappings().forEach((modelBinding, scoreList) -> {
+                    List<UserResponse.EntityEntry> entries = scoreList.stream()
+                            .map(s -> new UserResponse.EntityEntry(s.getRankableView().getId(),
+                                    s.getRankableView().getValue(), s.getValue()))
+                            .collect(Collectors.toList());
+                    mappings.computeIfAbsent(modelBinding.getTerm(), (term) -> new ArrayList<>()).addAll(entries);
+                });
 
-            response.setMappings(mappings);
-            return response;
+                response.setMappings(mappings);
+                //return response;
+                responses.add(response);
+            } else if (resultEntry instanceof SPARQLSelectResponse) {
+                SPARQLSelectResponse selectResponse = (SPARQLSelectResponse) resultEntry;
+                final Map<String, List<String>> bindings = new LinkedHashMap<>();
+                selectResponse.getBindings().forEach((key, value) -> {
+                    List<String> entityEntryList = value.stream()
+                            .map(LabeledEntity::getId)
+                            .collect(Collectors.toList());
+                    bindings.put(key, entityEntryList);
+                });
+
+                SPARQLSelectUserResponse response =
+                        new SPARQLSelectUserResponse(selectResponse.getUserQuery(), selectResponse.getInteractionMode());
+
+                response.setBindings(bindings);
+//                return response;
+                responses.add(response);
+            }
+
+            throw new UnsupportedOperationException("Can't create REST response");
         }
-        else if (queryResponse instanceof SPARQLSelectResponse) {
-            SPARQLSelectResponse selectResponse = (SPARQLSelectResponse)queryResponse;
-            final Map<String, List<String>> bindings = new LinkedHashMap<>();
-            selectResponse.getBindings().entrySet().forEach(e -> {
-                List<String> entityEntryList = e.getValue().stream().map(LabeledEntity::getId).collect(Collectors.toList());
-                bindings.put(e.getKey(), entityEntryList);
-            });
-
-            SPARQLSelectUserResponse response =
-                    new SPARQLSelectUserResponse(selectResponse.getUserQuery(), selectResponse.getInteractionMode());
-
-            response.setBindings(bindings);
-            return response;
-        }
-
-        throw new UnsupportedOperationException("Can't create REST response");
+        return responses;
     }
 }

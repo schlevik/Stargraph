@@ -49,7 +49,7 @@ public class ClueQueryTest {
     public void simpleEntityQuery() {
 
         String clue = "This association of British insurance underwriters began in 1688.";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(clue);
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(clue).get(0);
         Assert.assertTrue(response.getEntityAnswer().contains(new InstanceEntity("http://dbpedia.org/resource/Lloyd%27s_of_London", "Lloyd's of London")));
 
     }

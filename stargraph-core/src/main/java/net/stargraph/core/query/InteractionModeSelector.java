@@ -27,7 +27,7 @@ package net.stargraph.core.query;
  */
 
 import com.typesafe.config.Config;
-import net.stargraph.core.query.nli.ClueAnalyzer;
+import net.stargraph.core.query.srl.ClueAnalyzer;
 import net.stargraph.query.InteractionMode;
 import net.stargraph.query.Language;
 

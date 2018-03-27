@@ -28,8 +28,8 @@ package net.stargraph.core.query.response;
 
 import net.stargraph.core.query.QueryResponse;
 import net.stargraph.core.query.QueryType;
-import net.stargraph.core.query.SPARQLQueryBuilder;
-import net.stargraph.core.query.nli.DataModelBinding;
+import net.stargraph.core.query.nli.SPARQLQueryBuilder;
+import net.stargraph.core.query.srl.DataModelBinding;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.query.InteractionMode;
 import net.stargraph.rank.Score;

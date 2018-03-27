@@ -54,8 +54,8 @@ public final class ElasticEntityIndexSearcher extends ElasticBaseIndexSearcher<I
 
 
     @Override
-    public LabeledEntity getEntity(String dbId, String id) {
-        List<LabeledEntity> res = getEntities(dbId, Collections.singletonList(id));
+    public LabeledEntity getEntity(String id) {
+        List<LabeledEntity> res = getEntities(Collections.singletonList(id));
         if (res != null && !res.isEmpty()) {
             return res.get(0);
         }
@@ -63,9 +63,9 @@ public final class ElasticEntityIndexSearcher extends ElasticBaseIndexSearcher<I
     }
 
     @Override
-    public List<LabeledEntity> getEntities(String dbId, List<String> ids) {
+    public List<LabeledEntity> getEntities(List<String> ids) {
         logger.info(marker, "Fetching ids={}", ids);
-        ModifiableSearchParams searchParams = ModifiableSearchParams.create(dbId).index(BuiltInIndex.ENTITY);
+        ModifiableSearchParams searchParams = ModifiableSearchParams.create().index(getIndex().getID());
         QueryBuilder queryBuilder = termsQuery("id", ids);
         Scores<InstanceEntity> scores = executeSearch(queryBuilder, searchParams);
         return scores.stream().map(s -> (LabeledEntity) s.getEntry()).collect(Collectors.toList());

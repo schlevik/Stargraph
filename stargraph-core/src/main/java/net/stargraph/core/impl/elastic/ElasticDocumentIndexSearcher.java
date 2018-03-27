@@ -37,8 +37,7 @@ public class ElasticDocumentIndexSearcher extends ElasticBaseIndexSearcher<Passa
 
     public Scores<Passage> pivotedFullTextPassageSearch(InstanceEntity pivot,
                                                         ModifiableSearchParams searchParams, ModifiableRankParams rankParams) {
-        searchParams.index(BuiltInIndex.DOCUMENT);
-
+        searchParams.index(getIndex().getID());
 
         String term = searchParams.getSearchTerm();
         logger.debug(marker, "performing pivoted full text passage search with pivot={} and text={}", pivot, term);
