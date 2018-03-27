@@ -9,7 +9,6 @@ import net.stargraph.model.IndexID;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class ConfigHandler {
     //defaults
@@ -23,6 +22,7 @@ public final class ConfigHandler {
     public static final String elasticBulkConcurrency = "elastic.bulk.concurrency";
     public static final String elasticBulkActions = "elastic.bulk.actions";
     public static final String indexFactoryClass = "index-store.factory.class";
+    public static final String dataProviderClass = "provider.class";
 
 
     //kb
@@ -55,13 +55,6 @@ public final class ConfigHandler {
         return kb + "." + kbName;
     }
 
-    public static String dataProvider(IndexID indexID) {
-        return String.format("%s.provider", indexID.getIndexPath());
-    }
-
-    public static String dataProviderClass(IndexID indexID) {
-        return dataProvider(indexID) + ".class";
-    }
 
     public static String defaultDBClass(String clsName) {
         return String.format("db.%s.class", clsName);
@@ -143,7 +136,7 @@ public final class ConfigHandler {
     }
 
     public String dataProviderClassName(IndexID indexID) {
-        return mainConfig.getString(dataProviderClass(indexID));
+        return getIndexConfig(indexID).getString(dataProviderClass);
     }
 
     public String indexFactoryClass(IndexID indexID) {

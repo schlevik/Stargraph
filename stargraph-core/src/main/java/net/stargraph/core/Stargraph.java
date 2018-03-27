@@ -76,6 +76,8 @@ public final class Stargraph {
      */
     private boolean robust = true;
 
+    /* Init and terminate. */
+
     /**
      * Constructs a new Stargraph core API entry-point.
      */
@@ -102,7 +104,7 @@ public final class Stargraph {
         // Configurable defaults
         setDataRootDir(cfg.dataRootDir()); // absolute path is expected
 
-        setDefaultIndexFactory(createDefaultIndicesFactory());
+        setDefaultIndexFactory(createDefaultIndexFactory());
 
         setDefaultDatabaseFactory(createDatabaseFactory(DBType.Graph));
 
@@ -165,21 +167,38 @@ public final class Stargraph {
         }
     }
 
-
+    /**
+     * Sets the initial set of Knowledge Bases to be initialized. Must be called before {@link Stargraph#initialize()}.
+     *
+     * @param kbNames Names of the knowledge bases to initialize.
+     */
     public void setKBInitSet(String... kbNames) {
         this.kbInitSet.addAll(Arrays.asList(kbNames));
     }
 
+    /**
+     * Terminates all the initialized knowledge bases.
+     */
+    public synchronized final void terminate() {
+        if (!initialized) {
+            throw new IllegalStateException("Not initialized");
+        }
+
+        knowledgeBases.values().forEach(KnowledgeBase::terminate);
+        initialized = false;
+    }
+
+
+    /* Default getter functions */
+    public String getDataRootDir() {
+        return dataRootDir;
+    }
 
     public KnowledgeBase getKnowledgeBase(String dbId) {
         if (knowledgeBases.containsKey(dbId)) {
             return knowledgeBases.get(dbId);
         }
         throw new StarGraphException("KB not found: '" + dbId + "'");
-    }
-
-    public Index getIndex(IndexID id) {
-        return getKnowledgeBase(id.getKnowledgeBase()).getIndex(id.getIndex());
     }
 
     public Collection<KnowledgeBase> getKBs() {
@@ -190,8 +209,8 @@ public final class Stargraph {
         return getKBs().stream().anyMatch(core -> core.getName().equals(kbName));
     }
 
-    public String getDataRootDir() {
-        return dataRootDir;
+    public Index getIndex(IndexID id) {
+        return getKnowledgeBase(id.getKnowledgeBase()).getIndex(id.getIndex());
     }
 
     public IndexPopulator getIndexer(IndexID indexID) {
@@ -222,6 +241,7 @@ public final class Stargraph {
     public ConfigHandler getConfig() {
         return this.cfg;
     }
+    /* abstract factories */
 
     /**
      * Creates a processor chain for an index.
@@ -269,8 +289,8 @@ public final class Stargraph {
     /**
      * Creates a data provider factory from the config file for a given index.
      *
-     * @param indexID
-     * @return
+     * @param indexID Id to create the data provider factory for.
+     * @return Data provider factory as defined in config.
      */
     private DataProviderFactory createDataProviderFactory(IndexID indexID) {
         DataProviderFactory factory;
@@ -297,15 +317,6 @@ public final class Stargraph {
     }
 
 
-    public synchronized final void terminate() {
-        if (!initialized) {
-            throw new IllegalStateException("Not initialized");
-        }
-
-        knowledgeBases.values().forEach(KnowledgeBase::terminate);
-        initialized = false;
-    }
-
     IndexFactory createIndexFactoryForID(IndexID indexID) {
         if (indexID != null) {
             //from index configuration
@@ -313,7 +324,7 @@ public final class Stargraph {
             String className = cfg.indexFactoryClass(indexID);
             if (className != null) {
                 logger.info(marker, "Using '{}'.", className);
-                return createIndicesFactory(className);
+                return createIndexFactory(className);
             }
         }
 
@@ -321,7 +332,7 @@ public final class Stargraph {
             logger.info("No default index factory set, reading from main config...");
             // from main configuration if not already set
 
-            indexFactory = createIndicesFactory(cfg.defaultIndicesFactoryClass());
+            indexFactory = createIndexFactory(cfg.defaultIndicesFactoryClass());
         }
 
         return indexFactory;
@@ -374,11 +385,11 @@ public final class Stargraph {
         }
     }
 
-    private IndexFactory createDefaultIndicesFactory() {
+    private IndexFactory createDefaultIndexFactory() {
         return createIndexFactoryForID(null);
     }
 
-    private IndexFactory createIndicesFactory(String className) {
+    private IndexFactory createIndexFactory(String className) {
         try {
             Class<?> providerClazz = Class.forName(className);
             Constructor<?> constructor = providerClazz.getConstructors()[0];
@@ -399,8 +410,8 @@ public final class Stargraph {
      * </ul>
      * If neither is specified, defaults to the database factory of type defined in the defaults section.
      *
-     * @param kbName
-     * @return
+     * @param kbName Name of KB
+     * @return Database Factory for a given KB.
      */
     DatabaseFactory createDatabaseFactoryForKB(String kbName) {
 
