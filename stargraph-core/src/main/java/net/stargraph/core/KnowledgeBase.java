@@ -54,8 +54,12 @@ public final class KnowledgeBase {
 
         this.marker = MarkerFactory.getMarker(name);
 
+        String lang = stargraph.getConfig().language(name);
+        if (lang == null) {
+            lang = stargraph.getConfig().defaultLanguage();
+        }
+        this.language = Language.valueOf(lang.toUpperCase());
 
-        this.language = Language.valueOf(stargraph.getConfig().language(name).toUpperCase());
         this.namespace = Namespace.create(stargraph.getConfig().getKBConfig(name));
 
         // TODO: this should be red from config at some point
@@ -82,23 +86,19 @@ public final class KnowledgeBase {
         });
 
 
-        // initialize DB
-        // -------------
-        // something among the lines of
         DatabaseFactory factory = stargraph.createDatabaseFactoryForKB(this.name);
         this.database = factory.getDatabase(this);
 
-        // and in stargraph:
-        // if (kbConfig.hasPath(db.class)):
-        // factory = getDBFactoryForName(kbConfig(db.class))
-        // else
-        // type = parseTypeFromConfig(KBConfig)
-        // factory = getDefaultFactoryForType(type)
-        // return factory
-        // -------------
         // determine if kb is composed
         // if so, set appropriately
-
+        String composedName = stargraph.getConfig().composedOf(this.name);
+        if (composedName != null) {
+            if (!stargraph.hasKB(composedName)) {
+                throw new StargraphConfigurationException("KB '{}' is composed on top of '{}', which is undefined/not initialized/disabled!");
+            }
+            this.isComposed = true;
+            this.composedOf = stargraph.getKnowledgeBase(composedName);
+        }
 
         this.kbLoader = new KBLoader(this);
         this.running = true;

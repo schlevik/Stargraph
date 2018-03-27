@@ -32,6 +32,7 @@ public final class ConfigHandler {
     public static final String index = "model";
     public static final String hdtUseIndex = "triple-store.hdt.use-index";
     public static final String hdtFile = "triple-store.hdt.file";
+    private static final String composedOf = "composed";
 
     // elastic config
     public static String elasticScrollTimeKey = "stargraph.elastic.scroll.time";
@@ -44,6 +45,7 @@ public final class ConfigHandler {
     public static final String dataRootDir = "data.root-dir";
     public static final String robust = "robust";
     public static final String defaults = "default";
+
 
     private Config mainConfig;
 
@@ -189,7 +191,10 @@ public final class ConfigHandler {
     }
 
     public String language(String kbName) {
-        return getKBConfig(kbName).getString(language);
+        return getKBConfig(kbName).hasPath(language) ? getKBConfig(kbName).getString(language) : null;
+    }
+    public String defaultLanguage() {
+        return getDefaultsConfig().getString(language);
     }
 
     public Set<String> indices(String kbName) {
@@ -203,6 +208,10 @@ public final class ConfigHandler {
 
     public String hdtFile(String kbName) {
         return getKBConfig(kbName).hasPath(hdtFile) ? getKBConfig(kbName).getString(hdtFile) : null;
+    }
+
+    public String composedOf(String kbName) {
+        return getKBConfig(kbName).hasPath(composedOf) ? getKBConfig(kbName).getString(composedOf) : null;
     }
 
 }

@@ -28,44 +28,42 @@ package net.stargraph.test;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import net.stargraph.core.search.database.EmptyModelFactory;
+import net.stargraph.ModelUtils;
+import net.stargraph.core.Index;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.impl.lucene.LuceneEntityIndexSearcher;
 import net.stargraph.core.index.IndexPopulator;
-import net.stargraph.core.index.NullIndexFactory;
-import net.stargraph.data.DataProviderFactory;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.model.IndexID;
+import net.stargraph.model.InstanceEntity;
+import net.stargraph.rank.*;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.File;
 
-public final class NullIndexPopulatorExtendTest {
-
-    private IndexID indexID = IndexID.of("mytest", "mytype");
-    private List<TestData> expected;
+@Test
+public final class ComposedTest {
     private Stargraph stargraph;
-    private IndexPopulator indexer;
-    private final DataProviderFactory dataProviderFactory = new TestDataProviderFactory();
+
 
     @BeforeClass
-    public void before() {
+    public void beforeClass() {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
-        this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
-        this.stargraph.setDefaultIndexFactory(new NullIndexFactory());
-        this.stargraph.setDefaultDatabaseFactory(new EmptyModelFactory(stargraph));
+        this.stargraph.setKBInitSet("compose", "onTop");
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(indexID);
-        List<String> expected = Arrays.asList("data#1", "data#2", "data#3");
-        this.expected = expected.stream().map(TestData::new).collect(Collectors.toList());
     }
 
     @Test
-    public void successWhenExtendIndexTest() {
-        this.indexer.extend(this.dataProviderFactory.create(this.indexID, this.expected));
+    public void test() {
+        Index index = stargraph.getIndex(IndexID.of("onTop", "entities"));
+        System.out.println(index);
+        index = stargraph.getIndex(IndexID.of("onTop", "passages"));
+        System.out.println(index);
     }
 
 

@@ -27,6 +27,7 @@ package net.stargraph.core.impl.elastic;
  */
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.typesafe.config.Config;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.index.BaseIndexPopulator;
@@ -48,6 +49,9 @@ import org.elasticsearch.index.IndexNotFoundException;
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import static net.stargraph.core.ConfigHandler.elasticBulkActions;
+import static net.stargraph.core.ConfigHandler.elasticBulkConcurrency;
 
 /**
  * IndexPopulator backed by Elastic Search engine.
@@ -197,9 +201,15 @@ public final class ElasticIndexPopulator extends BaseIndexPopulator {
     private BulkProcessor createBulkProcessor() {
         int processors = Runtime.getRuntime().availableProcessors();
         processors = processors > 1 ? processors - 1 : 1;
-        int concurrency = stargraph.getConfig().elasticBulkConcurrency(indexID);
+        //get specific config for index
+        Config config = stargraph.getConfig().getIndexConfig(indexID);
+        if (!config.hasPath("elastic")) {
+            //fall back to default if none is provided
+            config = stargraph.getConfig().getMainConfig();
+        }
+        int concurrency = config.getInt(elasticBulkConcurrency);
         concurrency = concurrency > 0 ? concurrency : processors;
-        int bulkActions = stargraph.getConfig().elasticBulkActions(indexID);
+        int bulkActions = config.getInt(elasticBulkActions);
 
         logger.info(marker, "Creating Bulk Processor. Concurrency = {}, actions = {}.", concurrency, bulkActions);
 

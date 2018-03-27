@@ -148,8 +148,11 @@ public final class ElasticClient {
     }
 
     private TransportClient createClient() {
-        //TODO: default to main config
         Config cfg = getModelCfg();
+        if (!cfg.hasPath("elastic")) {
+            // default to main config where elastic IS defined
+            cfg = core.getConfig().getMainConfig();
+        }
         Settings settings = Settings.builder().put("cluster.name", cfg.getString("elastic.cluster-name")).build();
         TransportClient client = new PreBuiltTransportClient(settings);
 

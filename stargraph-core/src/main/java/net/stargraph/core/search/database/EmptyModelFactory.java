@@ -44,8 +44,6 @@ public final class EmptyModelFactory implements DatabaseFactory {
 
     public EmptyModelFactory(Stargraph core) {
     }
-    public EmptyModelFactory() {
-    }
 
     @Override
     public Database getDatabase(KnowledgeBase knowledgeBase) {
