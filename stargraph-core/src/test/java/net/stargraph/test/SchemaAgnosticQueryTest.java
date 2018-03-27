@@ -57,7 +57,7 @@ public class SchemaAgnosticQueryTest {
                         "        ?uri :playedBy :Cat_Stevens .\n" +
                         "}";
 
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(sparqlString).get(0);
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(sparqlString).getAny();
         Assert.assertTrue(response.getEntityAnswer().contains(new InstanceEntity("http://dbpedia.org/resource/Mandolin", "Mandolin")));
 
     }

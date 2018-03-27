@@ -15,6 +15,7 @@
 
     <properties>
         <server.mainClass>net.stargraph.server.Server</server.mainClass>
+        <skipDocker>true</skipDocker>
     </properties>
 
     <profiles>

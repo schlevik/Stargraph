@@ -128,7 +128,7 @@ public final class PassageQueryIT {
     @Test(enabled = false)
     public void successfullyAnswerPassageQuery() {
         String passageQuery = "PASSAGE When did Barack Obama travel to India?";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery).get(0);
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery).getAny();
         String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
                 "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
                 "and visited the families of college friends in Pakistan and India for three weeks .";

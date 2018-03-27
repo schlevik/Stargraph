@@ -14,8 +14,12 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 public class SparqlQueryResolver extends AbstractQueryResolver {
-    private Logger logger = LoggerFactory.getLogger(getClass());
-    private Marker marker = MarkerFactory.getMarker("sparql-query");
+    private final String name = "sparql";
+
+    @Override
+    public String getName() {
+        return name;
+    }
 
     public SparqlQueryResolver(KnowledgeBase knowledgeBase, Analyzers analyzers) {
         super(knowledgeBase, analyzers);
@@ -27,7 +31,7 @@ public class SparqlQueryResolver extends AbstractQueryResolver {
         if (eligible(input)) {
             try {
                 SparqlResult result = getKnowledgeBase().queryDatabase(new SparqlQuery(input)).get(SparqlResult.class);
-                query.appendResponse(new SPARQLSelectResponse(InteractionMode.SPARQL, input, result));
+                query.appendResponse(new SPARQLSelectResponse(this, input, result));
             } catch (Exception e) {
                 logger.info("Got exception when perfoming SPARQL query on '{}' malformed: '{}': {}",
                         getKnowledgeBase().getName(), input, e);

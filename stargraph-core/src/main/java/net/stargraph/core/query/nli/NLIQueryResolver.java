@@ -8,7 +8,6 @@ import net.stargraph.core.query.Analyzers;
 import net.stargraph.core.query.Query;
 import net.stargraph.core.query.TriplePattern;
 import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.query.response.NoResponse;
 import net.stargraph.core.query.srl.*;
 import net.stargraph.core.search.database.SparqlQuery;
 import net.stargraph.core.search.database.SparqlResult;
@@ -18,7 +17,6 @@ import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.model.PropertyEntity;
 import net.stargraph.rank.*;
-import org.apache.jena.sparql.function.library.namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -33,8 +31,13 @@ import java.util.stream.Collectors;
 import static net.stargraph.query.InteractionMode.NLI;
 
 public class NLIQueryResolver extends AbstractQueryResolver {
-    private Logger logger = LoggerFactory.getLogger(getClass());
-    private Marker marker = MarkerFactory.getMarker("nli-query");
+    private final String name = "nli";
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
     private QuestionAnalyzer analyzer;
 
     public NLIQueryResolver(KnowledgeBase knowledgeBase, Analyzers analyzers) {
@@ -72,7 +75,7 @@ public class NLIQueryResolver extends AbstractQueryResolver {
             SparqlResult vars = getKnowledgeBase().queryDatabase(new SparqlQuery(sparqlQueryStr)).get(SparqlResult.class);
 
             if (!vars.isEmpty()) {
-                AnswerSetResponse answerSet = new AnswerSetResponse(NLI, userQuery, queryBuilder);
+                AnswerSetResponse answerSet = new AnswerSetResponse(this, userQuery, queryBuilder);
 
                 Set<LabeledEntity> expanded = vars.get("VAR_1").stream()
                         .map(namespace::expand).collect(Collectors.toSet());

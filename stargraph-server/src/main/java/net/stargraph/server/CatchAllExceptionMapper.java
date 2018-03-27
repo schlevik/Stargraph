@@ -46,13 +46,13 @@ public final class CatchAllExceptionMapper implements ExceptionMapper<Exception>
 
     @Override
     public Response toResponse(Exception exception) {
-        if (exception instanceof StarGraphException) {
-            return ResourceUtils.createAckResponse((StarGraphException) exception);
-        }
+//        if (exception instanceof StarGraphException) {
+//            return ResourceUtils.createAckResponse((StarGraphException) exception);
+//        }
 
-        if (exception instanceof WebApplicationException) {
-            return ((WebApplicationException) exception).getResponse();
-        }
+//        if (exception instanceof WebApplicationException) {
+//            return ((WebApplicationException) exception).getResponse();
+//        }
 
         logger.error(marker, "Oops!", exception);
         return Response.status(500).build();

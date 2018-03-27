@@ -1,4 +1,4 @@
-package net.stargraph.test;
+package net.stargraph.core.query.response;
 
 /*-
  * ==========================License-Start=============================
@@ -26,32 +26,27 @@ package net.stargraph.test;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.Stargraph;
-import net.stargraph.core.query.QueryEngine;
-import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.model.InstanceEntity;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import net.stargraph.core.query.AbstractQueryResolver;
+import net.stargraph.query.InteractionMode;
 
-@Test(enabled=false)
-public class ClueQueryTest {
+import java.util.Objects;
 
-    private static String dbId = "passage-wiki-2017";
-    private QueryEngine queryEngine;
+public abstract class QueryResponse {
+    private String userQuery;
+    private AbstractQueryResolver source;
 
-    @BeforeClass
-    public void beforeClass() {
-        queryEngine = new QueryEngine(dbId, new Stargraph());
+    public QueryResponse(String userQuery, AbstractQueryResolver source) {
+        this.userQuery = Objects.requireNonNull(userQuery);
+        this.source = Objects.requireNonNull(source);
     }
 
-    @Test(enabled = false)
-    public void simpleEntityQuery() {
 
-        String clue = "This association of British insurance underwriters began in 1688.";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(clue).getAny();
-        Assert.assertTrue(response.getEntityAnswer().contains(new InstanceEntity("http://dbpedia.org/resource/Lloyd%27s_of_London", "Lloyd's of London")));
+    public AbstractQueryResolver getSource() {
+        return source;
+    }
 
+    public String getUserQuery() {
+        return userQuery;
     }
 
 }

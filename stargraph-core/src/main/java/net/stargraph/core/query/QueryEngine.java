@@ -31,13 +31,6 @@ import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.query.nli.NLIQueryResolver;
 import net.stargraph.core.query.passage.PassageQueryResolver;
-import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.query.response.NoResponse;
-import net.stargraph.core.query.response.SPARQLSelectResponse;
-import net.stargraph.core.search.database.SparqlQuery;
-import net.stargraph.core.search.database.SparqlResult;
-import net.stargraph.model.LabeledEntity;
-import net.stargraph.query.InteractionMode;
 import net.stargraph.query.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +38,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.*;
-
-import static net.stargraph.query.InteractionMode.*;
 
 /**
  * This class holds and ties together all existing {@link AbstractQueryResolver}s.
@@ -59,7 +50,7 @@ public final class QueryEngine {
     private Marker marker = MarkerFactory.getMarker("query");
 
     private KnowledgeBase knowledgeBase;
-    private InteractionModeSelector modeSelector;
+//    private InteractionModeSelector modeSelector;
 
     private List<AbstractQueryResolver> queryResolvers;
 
@@ -68,12 +59,14 @@ public final class QueryEngine {
         Analyzers analyzers = new Analyzers(stargraph.getConfig().getMainConfig());
         Language language = knowledgeBase.getLanguage();
         queryResolvers = new LinkedList<>();
+
+        // TODO: from config obviously
         queryResolvers.add(new PassageQueryResolver(knowledgeBase, analyzers));
         queryResolvers.add(new NLIQueryResolver(knowledgeBase, analyzers));
-        this.modeSelector = new InteractionModeSelector(stargraph.getConfig().getMainConfig(), language);
+//        this.modeSelector = new InteractionModeSelector(stargraph.getConfig().getMainConfig(), language);
     }
 
-    public List<QueryResponse> query(String input) {
+    public Query query(String input) {
         //final InteractionMode mode = modeSelector.detect(input);
         Query query = new Query(input);
 
@@ -81,10 +74,8 @@ public final class QueryEngine {
         long startTime = System.currentTimeMillis();
         try {
             queryResolvers.forEach(qr -> qr.resolveQuery(query));
-            if (query.getResponses().isEmpty()) {
-                query.appendResponse(new NoResponse(NLI, input));
-            }
-            return query.getResponses();
+
+            return query;
 
         } catch (Exception e) {
             logger.error(marker, "Query Error '{}'", input, e);
@@ -93,14 +84,6 @@ public final class QueryEngine {
             long millis = System.currentTimeMillis() - startTime;
             logger.info(marker, "Query Engine took {}s Response: {}", millis / 1000.0, query.getResponses());
         }
-    }
-
-    private QueryResponse sparqlQuery(String userQuery) {
-        SparqlResult vars = knowledgeBase.queryDatabase(new SparqlQuery(userQuery)).get(SparqlResult.class);
-        if (!vars.isEmpty()) {
-            return new SPARQLSelectResponse(SPARQL, userQuery, vars);
-        }
-        return new NoResponse(SPARQL, userQuery);
     }
 
 
@@ -112,76 +95,76 @@ public final class QueryEngine {
 //        return scores.get(0).getEntry();
 //    }
 
-    private QueryResponse entitySimilarityQuery(String userQuery, Language language) {
-
-//        EntityQueryBuilder queryBuilder = new EntityQueryBuilder();
-//        EntityQuery query = queryBuilder.parse(userQuery, ENTITY_SIMILARITY);
-//        InstanceEntity instance = resolveInstance(query.getCoreEntity());
+//    private QueryResponse entitySimilarityQuery(String userQuery, Language language) {
 //
-//        Set<LabeledEntity> entities = new HashSet<>();
-//        // \TODO Call mltSearch here
-//        // mltSearch()
-//        // mltSearch will return Set<LabeledEntity>
+////        EntityQueryBuilder queryBuilder = new EntityQueryBuilder();
+////        EntityQuery query = queryBuilder.parse(userQuery, ENTITY_SIMILARITY);
+////        InstanceEntity instance = resolveInstance(query.getCoreEntity());
+////
+////        Set<LabeledEntity> entities = new HashSet<>();
+////        // \TODO Call mltSearch here
+////        // mltSearch()
+////        // mltSearch will return Set<LabeledEntity>
+////
+////        if (!entities.isEmpty()) {
+////            AnswerSetResponse answerSet = new AnswerSetResponse(ENTITY_SIMILARITY, userQuery);
+////            // \TODO define mappings for name entity
+////            // answerSet.setMappings();
+////            // answerSet.setMappings(); ->
+////            answerSet.setEntityAnswer(new ArrayList<>(entities));
+////            return answerSet;
+////        }
 //
-//        if (!entities.isEmpty()) {
-//            AnswerSetResponse answerSet = new AnswerSetResponse(ENTITY_SIMILARITY, userQuery);
-//            // \TODO define mappings for name entity
-//            // answerSet.setMappings();
-//            // answerSet.setMappings(); ->
-//            answerSet.setEntityAnswer(new ArrayList<>(entities));
-//            return answerSet;
-//        }
-
-        return new NoResponse(NLI, userQuery);
-    }
-
-    public QueryResponse definitionQuery(String userQuery, Language language) {
-
-//        EntityQueryBuilder queryBuilder = new EntityQueryBuilder();
-//        EntityQuery query = queryBuilder.parse(userQuery, DEFINITION);
-//        InstanceEntity instance = resolveInstance(query.getCoreEntity());
+//        return new NoResponse(NLI, userQuery);
+//    }
 //
-//        Set<LabeledEntity> entities = new HashSet<>();
-//        Set<String> textAnswers = new HashSet<>();
-//        // \TODO Call document search
-//        // Document document = knowledgeBase.getDocumentSearcher().getDocument(entities.entrySet().iterator().next().getKey().getKnowledgeBase());
-//        // \TODO Equate document with normalized entity id
-//        // final Entity def = new Entity(document.getKnowledgeBase());
-//        // Definition is the summary of the document
-//        // document.getSummary()
+//    public QueryResponse definitionQuery(String userQuery, Language language) {
 //
-//        if (!textAnswers.isEmpty()) {
-//            AnswerSetResponse answerSet = new AnswerSetResponse(DEFINITION, userQuery);
-//            // \TODO define mappings for name entity
-//            // answerSet.setMappings(); ->
-//            answerSet.setTextAnswer(new ArrayList<>(textAnswers));
-//            return answerSet;
-//        }
-
-        return new NoResponse(NLI, userQuery);
-
-    }
-
-    public QueryResponse clueQuery(String userQuery, Language language) {
-
-//      These filters will be used very soon
-//      ClueAnalyzer clueAnalyzer = new ClueAnalyzer();
-//      String pronominalAnswerType = clueAnalyzer.getPronominalAnswerType(userQuery);
-//      String lexicalAnswerType = clueAnalyzer.getLexicalAnswerType(userQuery);
-//      String abstractLexicalAnswerType = clueAnalyzer.getAbstractType(lexicalAnswerType);
-
-//      Get documents containing the keywords
-//      Map<Document, Double> documents = knowledgeBase.getDocumentSearcher().searchDocuments(userQuery, 3);
+////        EntityQueryBuilder queryBuilder = new EntityQueryBuilder();
+////        EntityQuery query = queryBuilder.parse(userQuery, DEFINITION);
+////        InstanceEntity instance = resolveInstance(query.getCoreEntity());
+////
+////        Set<LabeledEntity> entities = new HashSet<>();
+////        Set<String> textAnswers = new HashSet<>();
+////        // \TODO Call document search
+////        // Document document = knowledgeBase.getDocumentSearcher().getDocument(entities.entrySet().iterator().next().getKey().getKnowledgeBase());
+////        // \TODO Equate document with normalized entity id
+////        // final Entity def = new Entity(document.getKnowledgeBase());
+////        // Definition is the summary of the document
+////        // document.getSummary()
+////
+////        if (!textAnswers.isEmpty()) {
+////            AnswerSetResponse answerSet = new AnswerSetResponse(DEFINITION, userQuery);
+////            // \TODO define mappings for name entity
+////            // answerSet.setMappings(); ->
+////            answerSet.setTextAnswer(new ArrayList<>(textAnswers));
+////            return answerSet;
+////        }
 //
-//        Set<LabeledEntity> entities = new HashSet<>();
-//        if (!entities.isEmpty()) {
-//            AnswerSetResponse answerSet = new AnswerSetResponse(DEFINITION, userQuery);
-//            answerSet.setEntityAnswer(new ArrayList<>(entities));
-//            return answerSet;
-//        }
-
-        return new NoResponse(NLI, userQuery);
-    }
-
+//        return new NoResponse(NLI, userQuery);
+//
+//    }
+//
+//    public QueryResponse clueQuery(String userQuery, Language language) {
+//
+////      These filters will be used very soon
+////      ClueAnalyzer clueAnalyzer = new ClueAnalyzer();
+////      String pronominalAnswerType = clueAnalyzer.getPronominalAnswerType(userQuery);
+////      String lexicalAnswerType = clueAnalyzer.getLexicalAnswerType(userQuery);
+////      String abstractLexicalAnswerType = clueAnalyzer.getAbstractType(lexicalAnswerType);
+//
+////      Get documents containing the keywords
+////      Map<Document, Double> documents = knowledgeBase.getDocumentSearcher().searchDocuments(userQuery, 3);
+////
+////        Set<LabeledEntity> entities = new HashSet<>();
+////        if (!entities.isEmpty()) {
+////            AnswerSetResponse answerSet = new AnswerSetResponse(DEFINITION, userQuery);
+////            answerSet.setEntityAnswer(new ArrayList<>(entities));
+////            return answerSet;
+////        }
+//
+//        return new NoResponse(NLI, userQuery);
+//    }
+//
 
 }

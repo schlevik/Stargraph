@@ -26,7 +26,7 @@ package net.stargraph.core.query.response;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.query.QueryResponse;
+import net.stargraph.core.query.AbstractQueryResolver;
 import net.stargraph.core.query.QueryType;
 import net.stargraph.core.query.nli.SPARQLQueryBuilder;
 import net.stargraph.core.query.srl.DataModelBinding;
@@ -45,12 +45,9 @@ public final class AnswerSetResponse extends QueryResponse {
     private QueryType queryType;
     private Map<DataModelBinding, List<Score>> mappings;
 
-    public AnswerSetResponse(InteractionMode mode, String userQuery) {
-        super(mode, userQuery, null);
-    }
 
-    public AnswerSetResponse(InteractionMode mode, String userQuery, SPARQLQueryBuilder sparqlQueryBuilder) {
-        super(mode, userQuery, null);
+    public AnswerSetResponse(AbstractQueryResolver source, String userQuery, SPARQLQueryBuilder sparqlQueryBuilder) {
+        super(userQuery, source);
         this.queryType = Objects.requireNonNull(sparqlQueryBuilder).getQueryType();
     }
 

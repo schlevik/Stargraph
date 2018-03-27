@@ -74,7 +74,7 @@ public final class DocumentIndexIT {
         //indexer.deleteAll();
 
         String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
-                "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread.";
+                "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread. Donald Trump is the wife of Barack Obama.";
 
         indexer.index(new Indexable(new Document("test.txt", "Test", text), indexID));
         indexer.flush();

@@ -1,4 +1,4 @@
-package net.stargraph.core.query;
+package net.stargraph.core.query.response;
 
 /*-
  * ==========================License-Start=============================
@@ -26,30 +26,50 @@ package net.stargraph.core.query;
  * ==========================License-End===============================
  */
 
+import net.stargraph.core.query.AbstractQueryResolver;
+import net.stargraph.core.query.QueryType;
+import net.stargraph.core.query.nli.SPARQLQueryBuilder;
+import net.stargraph.core.query.srl.DataModelBinding;
+import net.stargraph.model.LabeledEntity;
 import net.stargraph.query.InteractionMode;
+import net.stargraph.rank.Score;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
-public abstract class QueryResponse {
-    private String userQuery;
-    private InteractionMode interactionMode;
-    private AbstractQueryResolver source;
+public final class TextResponse extends QueryResponse {
+    private List<LabeledEntity> entityAnswer;
+    private List<String> textAnswer;
+    private String sparqlQuery;
+    private QueryType queryType;
 
-    public QueryResponse(InteractionMode interactionMode, String userQuery, AbstractQueryResolver source) {
-        this.interactionMode = Objects.requireNonNull(interactionMode);
-        this.userQuery = Objects.requireNonNull(userQuery);
-        this.source = source;
+    public TextResponse(AbstractQueryResolver source, String userQuery) {
+        super(userQuery, source);
     }
 
-    public InteractionMode getInteractionMode() {
-        return interactionMode;
+    public void setEntityAnswer(List<LabeledEntity> entityAnswer) {
+        this.entityAnswer = Objects.requireNonNull(entityAnswer);
     }
 
-    public AbstractQueryResolver getSource() {
-        return source;
+    public void setTextAnswer(List<String> textAnswer) {
+        this.textAnswer = textAnswer;
     }
 
-    public String getUserQuery() {
-        return userQuery;
+    public List<LabeledEntity> getEntityAnswer() {
+        return entityAnswer;
+    }
+
+    public List<String> getTextAnswer() {
+        return textAnswer;
+    }
+
+
+    @Override
+    public String toString() {
+        return "AnswerSet{" +
+                "entityAnswer=" + entityAnswer +
+                ", userQuery='" + getUserQuery() + '\'' +
+                '}';
     }
 }

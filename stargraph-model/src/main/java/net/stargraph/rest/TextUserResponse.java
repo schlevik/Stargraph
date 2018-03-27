@@ -1,8 +1,8 @@
-package net.stargraph.core.query.response;
+package net.stargraph.rest;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-core
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -26,16 +26,25 @@ package net.stargraph.core.query.response;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.query.QueryResponse;
 import net.stargraph.query.InteractionMode;
 
-public final class NoResponse extends QueryResponse {
-    public NoResponse(InteractionMode interactionMode, String userQuery) {
-        super(interactionMode, userQuery, null);
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public final class TextUserResponse extends PartialResponse {
+    private List<String> answers;
+
+    public TextUserResponse(String source) {
+        super(source);
     }
 
-    @Override
-    public String toString() {
-        return String.format("NoResponse{'%s', mode='%s'}", getUserQuery(), getInteractionMode());
+    public void setAnswers(List<String> answers) {
+        this.answers = Objects.requireNonNull(answers);
     }
+
+    public List<String> getAnswers() {
+        return answers;
+    }
+
 }

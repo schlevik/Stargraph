@@ -4,6 +4,7 @@ import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.query.AbstractQueryResolver;
 import net.stargraph.core.query.Analyzers;
 import net.stargraph.core.query.Query;
+import net.stargraph.core.query.response.TextResponse;
 import net.stargraph.core.query.srl.DataModelBinding;
 import net.stargraph.core.query.srl.DataModelType;
 import net.stargraph.core.query.srl.PassageQuestionAnalysis;
@@ -19,13 +20,13 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.awt.*;
 import java.util.stream.Collectors;
 
 import static net.stargraph.query.InteractionMode.PASSAGE;
 
 public class PassageQueryResolver extends AbstractQueryResolver {
-    private Logger logger = LoggerFactory.getLogger(getClass());
-    private Marker marker = MarkerFactory.getMarker("passage-query");
+    private final String name = "passage";
     private PassageQuestionAnalyzer analyzer;
 
     public PassageQueryResolver(KnowledgeBase knowledgeBase, Analyzers analyzers) {
@@ -51,7 +52,7 @@ public class PassageQueryResolver extends AbstractQueryResolver {
                 ModifiableSearchParams.create().term(analysis.getRest()), rankParams);
 
         if (scores.size() > 0) {
-            AnswerSetResponse answerSet = new AnswerSetResponse(PASSAGE, input);
+            TextResponse answerSet = new TextResponse(this, input);
             answerSet.setTextAnswer(scores.stream()
                     .map(score -> (score.getEntry()).getText())
                     .collect(Collectors.toList()));
@@ -72,6 +73,11 @@ public class PassageQueryResolver extends AbstractQueryResolver {
         // ---- how to do this?
         // > well implement it in in the KnowledgeBase i guess
         // return sorted relevant passages
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     private InstanceEntity resolvePivot(DataModelBinding binding) {
