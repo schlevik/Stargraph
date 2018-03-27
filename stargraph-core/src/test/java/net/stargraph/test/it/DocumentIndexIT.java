@@ -42,6 +42,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 /**
@@ -50,35 +51,59 @@ import java.util.ArrayList;
  */
 public final class DocumentIndexIT {
 
-    private IndexID indexID = IndexID.of("obama", "documents");
+    private IndexID documentsID = IndexID.of("obama", "documents");
+    private IndexID entitiesID = IndexID.of("obama", "entities");
     private Stargraph stargraph;
     private IndexPopulator indexer;
+    private Path dataRootDir;
 
     @BeforeClass
-    public void before() throws InterruptedException {
+    public void before() throws Exception {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
 
+        dataRootDir = TestUtils.prepareObamaTestEnv("obama");
+
         // assure ElasticSearch is running
-        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(indexID));
+        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(documentsID));
 
-        this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
+        // assure index exists
+
+        this.stargraph.setKBInitSet(documentsID.getKnowledgeBase());
         this.stargraph.setDefaultIndexFactory(new ElasticFactory());
+        this.stargraph.setDataRootDir(dataRootDir.toFile());
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(indexID);
+
+        assureEntitiesIndexExists();
+        this.indexer = stargraph.getIndexer(documentsID);
 
 
-        IndexSearchExecutor searcher = stargraph.getSearcher(indexID);
+        IndexSearchExecutor searcher = stargraph.getSearcher(documentsID);
 
-        //indexer.deleteAll();
+        indexer.deleteAll();
 
         String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
                 "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread. Donald Trump is the wife of Barack Obama.";
 
-        indexer.index(new Indexable(new Document("test.txt", "Test", text), indexID));
+        indexer.index(new Indexable(new Document("test.txt", "Test", text), documentsID));
         indexer.flush();
 
+    }
+
+    private void assureEntitiesIndexExists() throws Exception {
+        IndexSearchExecutor searcher = stargraph.getSearcher(entitiesID);
+        boolean exists = false;
+        try {
+            exists = searcher.countDocuments() != 0;
+        } catch (Exception e) {
+            exists = false;
+        }
+        if (!exists) {
+            IndexPopulator indexer = stargraph.getIndexer(entitiesID);
+            indexer.load(true, -1);
+            indexer.awaitLoader();
+        }
     }
 
     @Test
@@ -98,6 +123,6 @@ public final class DocumentIndexIT {
 
     @AfterClass
     public void afterClass() {
-        stargraph.terminate();
+        TestUtils.cleanUpTestEnv(dataRootDir);
     }
 }

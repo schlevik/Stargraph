@@ -37,6 +37,7 @@ import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
+import net.stargraph.core.query.response.TextResponse;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
@@ -140,7 +141,7 @@ public final class LuceneCanonicalEntitiesIT {
         indexer.flush();
 
         String passageQuery = "PASSAGE When did Barack Obama travel to India?";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery).getAny();
+        TextResponse response = (TextResponse) queryEngine.query(passageQuery).getAny();
         String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
                 "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
                 "and visited the families of college friends in Pakistan and India for three weeks .";
