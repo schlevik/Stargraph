@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
 // disabled since it's basically the same as ElasticIndexPopulatorIT.
 // to enable, consult pom.xml
 @Test(enabled = false)
@@ -64,7 +65,7 @@ public final class ElasticIndexerExtendIT {
         this.stargraph.initialize();
         this.indexer = stargraph.getIndexer(indexID);
         List<String> expected = Arrays.asList("Four", "Five", "Six", "Seven");
-        this.expected = expected.stream().map(s -> new TestData(s)).collect(Collectors.toList());
+        this.expected = expected.stream().map(TestData::new).collect(Collectors.toList());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }

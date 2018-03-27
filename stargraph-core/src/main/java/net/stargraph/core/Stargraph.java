@@ -36,6 +36,7 @@ import net.stargraph.core.processors.Processors;
 import net.stargraph.core.search.database.DBType;
 import net.stargraph.core.search.database.DatabaseFactory;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
+import net.stargraph.core.search.index.BaseIndexSearcher;
 import net.stargraph.core.search.index.IndexSearcher;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.DataProviderFactory;
@@ -106,7 +107,7 @@ public final class Stargraph {
 
         setDefaultIndexFactory(createDefaultIndexFactory());
 
-        setDefaultDatabaseFactory(createDatabaseFactory(DBType.Graph));
+        setDefaultDatabaseFactory(createDefaultDatabaseFactory());
 
         if (initKBs) {
             initialize();
@@ -341,7 +342,7 @@ public final class Stargraph {
 
     public IndexSearcher createIndexSearcher(Class<? extends IndexSearcher> cls, Index index) {
         logger.debug(marker, "Creating index searcher '{}' for {}", cls.getName(), index.getID());
-        if (!(cls.getConstructors().length > 0)) {
+        if (!BaseIndexSearcher.class.isAssignableFrom(cls) || !(cls.getConstructors().length > 0)) {
             throw new StarGraphException("Implementation error in " + cls + "! First constructor should be public!");
         }
         Constructor<?> constructor = cls.getConstructors()[0];
@@ -380,7 +381,7 @@ public final class Stargraph {
                     "Neither the index nor the default section defined a searcher for the index " + indexID.getIndex() +
                             "!");
         } catch (ClassCastException e) {
-            throw new StargraphConfigurationException("Index searcher for " + indexID.getIndex() +
+            throw new StargraphConfigurationException("Index searcher for the index " + indexID.getIndex() +
                     " must inherit from IndexSearcher!");
         }
     }
@@ -471,5 +472,9 @@ public final class Stargraph {
         String clsName = cfg.defaultDBClass(dbType);
         logger.info(marker, "Creating Database factory {}", clsName);
         return createDatabaseFactory(clsName);
+    }
+
+    private DatabaseFactory createDefaultDatabaseFactory() {
+        return createDatabaseFactory(DBType.Graph);
     }
 }

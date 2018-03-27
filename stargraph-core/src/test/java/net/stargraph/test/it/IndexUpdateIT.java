@@ -28,6 +28,7 @@ package net.stargraph.test.it;
 
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticIndexPopulator;
 import net.stargraph.core.impl.elastic.ElasticIndexSearchExecutor;
@@ -58,7 +59,7 @@ public final class IndexUpdateIT {
     public void before() {
         ConfigFactory.invalidateCaches();
         stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
-
+        stargraph.setDefaultDatabaseFactory(new NTriplesModelFactory(stargraph));
         TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(indexID));
 
         stargraph.setKBInitSet(indexID.getKnowledgeBase());

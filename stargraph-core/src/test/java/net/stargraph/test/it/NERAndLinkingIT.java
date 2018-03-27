@@ -51,10 +51,10 @@ import java.util.List;
  * this might take some time and kill your ram though.
  */
 public final class NERAndLinkingIT {
-    NER ner;
-    String kbName = "lucene-dbpedia";
-    Stargraph stargraph;
-    IndexID entityIndex = IndexID.of(kbName, "entities");
+    private NER ner;
+    private String kbName = "lucene-dbpedia";
+    private Stargraph stargraph;
+    private IndexID entityIndex = IndexID.of(kbName, "entities");
 
     @BeforeClass
     public void beforeClass() {

@@ -118,7 +118,7 @@ public final class LuceneIndexSearchExecutor<R extends Serializable> extends Bas
 
     @SuppressWarnings("unchecked")
     private R fromDocument(Document document) {
-        //TODO need one single serializer/deserialized for every backend enyways
+        //TODO need one single serializer/deserialized for every backend anyways
         IndexableField id = document.getField("id");
         IndexableField value = document.getField("value");
         IndexableField reference = document.getField("reference");

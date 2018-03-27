@@ -36,10 +36,12 @@ import net.stargraph.core.query.response.NoResponse;
 import net.stargraph.core.query.response.SPARQLSelectResponse;
 import net.stargraph.core.search.database.SparqlQuery;
 import net.stargraph.core.search.database.SparqlResult;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
 import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.core.search.index.FactIndexSearcher;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.model.LabeledEntity;
+import net.stargraph.model.Passage;
 import net.stargraph.model.PropertyEntity;
 import net.stargraph.query.InteractionMode;
 import net.stargraph.query.Language;
@@ -131,28 +133,28 @@ public final class QueryEngine {
     }
 
     private QueryResponse passageQuery(String userQuery) {
-//        String query = userQuery.replace("PASSAGE ", "");
-//        PassageQuestionAnalyzer analyzer = this.analyzers.getPassageQuestionAnalyzer(language);
-//        PassageQuestionAnalysis analysis = analyzer.analyse(query);
-//
-//        InstanceEntity pivot = resolvePivot(analysis.getInstance());
-//        DocumentIndexSearcher searcher = knowledgeBase.createDocumentSearcher();
-//
-//        logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
-//
-//        // this is just a holder, we're not ranking anything atm
-//        ModifiableRankParams rankParams = new ModifiableRankParams(Threshold.auto(), RankingModel.LEVENSHTEIN);
-//
-//        Scores scores = searcher.pivotedFullTextPassageSearch(pivot,
-//                ModifiableSearchParams.create(dbId).term(analysis.getRest()), rankParams);
-//
-//        if (scores.size() > 0) {
-//            AnswerSetResponse answerSet = new AnswerSetResponse(PASSAGE, userQuery);
-//            answerSet.setTextAnswer(scores.stream()
-//                    .map(score -> ((Passage) score.getEntry()).getText())
-//                    .collect(Collectors.toList()));
-//            return answerSet;
-//    }
+        String query = userQuery.replace("PASSAGE ", "");
+        PassageQuestionAnalyzer analyzer = this.analyzers.getPassageQuestionAnalyzer(language);
+        PassageQuestionAnalysis analysis = analyzer.analyse(query);
+
+        InstanceEntity pivot = resolvePivot(analysis.getInstance());
+        DocumentIndexSearcher searcher = knowledgeBase.getSearcher(DocumentIndexSearcher.class);
+
+        logger.debug(marker, "Analyzed: pivot={}, rest={}", pivot, analysis.getRest());
+
+        // this is just a holder, we're not ranking anything atm
+        ModifiableRankParams rankParams = new ModifiableRankParams(Threshold.auto(), RankingModel.LEVENSHTEIN);
+
+        Scores<Passage> scores = searcher.pivotedFullTextPassageSearch(pivot,
+                ModifiableSearchParams.create(dbId).term(analysis.getRest()), rankParams);
+
+        if (scores.size() > 0) {
+            AnswerSetResponse answerSet = new AnswerSetResponse(PASSAGE, userQuery);
+            answerSet.setTextAnswer(scores.stream()
+                    .map(score -> (score.getEntry()).getText())
+                    .collect(Collectors.toList()));
+            return answerSet;
+        }
 
         // detect instance & rest
         // pivot instance

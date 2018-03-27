@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<InstanceEntity>
+public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<CanonicalInstanceEntity>
         implements EntityIndexSearcher {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("lucene");
@@ -55,14 +55,14 @@ public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<
         Query query = queryBuilder.createPhraseQuery("value", searchParams.getSearchTerm(), 0);
         searchParams.index(getIndex().getID());
 
-        Scores<InstanceEntity> scores = executeSearch(query, searchParams);
-        scores = replaceCanonical(scores);
-        return Rankers.apply(scores, rankParams, searchParams.getSearchTerm());
+        Scores<CanonicalInstanceEntity> scores = executeSearch(query, searchParams);
+        Scores<InstanceEntity> replacedScores = replaceCanonical(scores);
+        return Rankers.apply(replacedScores, rankParams, searchParams.getSearchTerm());
     }
 
 
-    private Score<InstanceEntity> replaceWithRef(Score<InstanceEntity> score) {
-        CanonicalInstanceEntity entity = (CanonicalInstanceEntity) score.getEntry();
+    private Score<InstanceEntity> replaceWithRef(Score<CanonicalInstanceEntity> score) {
+        CanonicalInstanceEntity entity = score.getEntry();
         String reference = entity.getReference();
         if (!reference.equals("")) {
             logger.trace(marker, "Replacing {} with ref {}", score, reference);
@@ -72,7 +72,7 @@ public class LuceneCanonicalEntityIndexSearcher extends LuceneBaseIndexSearcher<
     }
 
 
-    private Scores<InstanceEntity> replaceCanonical(Scores<InstanceEntity> scores) {
+    private Scores<InstanceEntity> replaceCanonical(Scores<CanonicalInstanceEntity> scores) {
         return scores.stream()
                 .map(this::replaceWithRef)
                 .distinct().collect(Collectors.toCollection(Scores::new));

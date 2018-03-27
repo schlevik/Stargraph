@@ -51,8 +51,10 @@ public class ElasticDocumentIndexSearcher extends ElasticBaseIndexSearcher<Passa
                 ScoreMode.Max)
                 .innerHit(new InnerHitBuilder(), false);
 
-        //not ranking atm
-        return this.executeSearch(queryBuilder, searchParams);
+        // not ranking atm
+        // TODO: when the passage index will actually contain passages instead of documents, this will turn back to
+        // this.executeSearch
+        return this.searchExecutor.innerSearch(queryBuilder, searchParams);
     }
 
 }

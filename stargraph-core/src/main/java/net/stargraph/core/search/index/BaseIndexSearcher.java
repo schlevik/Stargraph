@@ -24,7 +24,7 @@ import java.util.Objects;
  */
 public abstract class BaseIndexSearcher<E extends IndexSearchExecutor<R, Q>, R extends Serializable, Q> {
     private Index index;
-    private E searchExecutor;
+    protected E searchExecutor;
 
     @SuppressWarnings("unchecked")
     protected BaseIndexSearcher(Index index) {

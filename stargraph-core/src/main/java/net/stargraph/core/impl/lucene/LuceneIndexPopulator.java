@@ -130,19 +130,20 @@ public final class LuceneIndexPopulator extends BaseIndexPopulator {
 
     private static Document createDocument(Serializable data) {
         final Document doc = new Document();
-
-        if (data instanceof InstanceEntity) {
-            InstanceEntity entity = (InstanceEntity) data;
-            doc.add(new TextField("id", entity.getId(), Field.Store.YES));
-            doc.add(new TextField("value", entity.getValue(), Field.Store.YES));
-            return doc;
-        } else if (data instanceof CanonicalInstanceEntity) {
+        if (data instanceof CanonicalInstanceEntity) {
             CanonicalInstanceEntity canonicalEntity = (CanonicalInstanceEntity) data;
             doc.add(new TextField("id", canonicalEntity.getId(), Field.Store.YES));
             doc.add(new TextField("value", canonicalEntity.getValue(), Field.Store.YES));
             doc.add(new TextField("reference", canonicalEntity.getReference(), Field.Store.YES));
             return doc;
         }
+        if (data instanceof InstanceEntity) {
+            InstanceEntity entity = (InstanceEntity) data;
+            doc.add(new TextField("id", entity.getId(), Field.Store.YES));
+            doc.add(new TextField("value", entity.getValue(), Field.Store.YES));
+            return doc;
+        }
+
 
         throw new UnsupportedOperationException("Can't index: " + data.getClass());
     }

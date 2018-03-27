@@ -55,7 +55,9 @@ public final class NERSearcher implements NER {
 
     public NERSearcher(Index index) {
         this.ner = new CoreNLPNERClassifier(Objects.requireNonNull(index.getKnowledgeBase().getLanguage()));
-        if (!index.getSearcher().getClass().equals(EntityIndexSearcher.class)) {
+        if (!EntityIndexSearcher.class.isAssignableFrom(index.getSearcher().getClass())) {
+            logger.debug(marker, "'{}' assinable from Entity index searcher?: {}", index.getSearcher().getClass(),
+                    index.getSearcher().getClass().isAssignableFrom(EntityIndexSearcher.class));
             throw new StarGraphException("NERSearcher accepts only entity index!");
         }
         this.entityIndexSearcher = (EntityIndexSearcher) index.getSearcher();

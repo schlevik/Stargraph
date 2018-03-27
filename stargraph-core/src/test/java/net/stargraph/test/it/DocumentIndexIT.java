@@ -70,15 +70,15 @@ public final class DocumentIndexIT {
 
 
         IndexSearchExecutor searcher = stargraph.getSearcher(indexID);
-        if (searcher.countDocuments() != 1) {
-            indexer.deleteAll();
 
-            String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
-                    "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread.";
+        indexer.deleteAll();
 
-            indexer.index(new Indexable(new Document("test.txt", "Test", text), indexID));
-            indexer.flush();
-        }
+        String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
+                "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread.";
+
+        indexer.index(new Indexable(new Document("test.txt", "Test", text), indexID));
+        indexer.flush();
+
     }
 
     @Test
