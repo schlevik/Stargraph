@@ -19,8 +19,6 @@ public final class ConfigHandler {
 
     //index
     public static final String indexSearcher = "searcher.class";
-    public static final String elasticBulkConcurrency = "elastic.bulk.concurrency";
-    public static final String elasticBulkActions = "elastic.bulk.actions";
     public static final String indexFactoryClass = "index-store.factory.class";
     public static final String dataProviderClass = "provider.class";
 
@@ -37,6 +35,8 @@ public final class ConfigHandler {
     // elastic config
     public static String elasticScrollTimeKey = "stargraph.elastic.scroll.time";
     public static String elasticScrollSizeKey = "stargraph.elastic.scroll.size";
+    public static final String elasticBulkConcurrency = "elastic.bulk.concurrency";
+    public static final String elasticBulkActions = "elastic.bulk.actions";
 
     //main
     private static final String distServiceCorpus = "distributional-service.corpus";
@@ -182,17 +182,10 @@ public final class ConfigHandler {
         return getMainConfig().getBoolean("progress-watcher.log-stats");
     }
 
-    public int elasticBulkConcurrency(IndexID indexID) {
-        return getIndexConfig(indexID).getInt(elasticBulkConcurrency);
-    }
-
-    public int elasticBulkActions(IndexID indexID) {
-        return getIndexConfig(indexID).getInt(elasticBulkActions);
-    }
-
     public String language(String kbName) {
         return getKBConfig(kbName).hasPath(language) ? getKBConfig(kbName).getString(language) : null;
     }
+
     public String defaultLanguage() {
         return getDefaultsConfig().getString(language);
     }
