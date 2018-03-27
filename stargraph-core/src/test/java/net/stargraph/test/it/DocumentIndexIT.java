@@ -71,7 +71,7 @@ public final class DocumentIndexIT {
 
         IndexSearchExecutor searcher = stargraph.getSearcher(indexID);
 
-        indexer.deleteAll();
+        //indexer.deleteAll();
 
         String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
                 "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread.";

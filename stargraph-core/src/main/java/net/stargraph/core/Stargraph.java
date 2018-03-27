@@ -330,7 +330,7 @@ public final class Stargraph {
         }
 
         if (indexFactory == null) {
-            logger.info("No default index factory set, reading from main config...");
+            logger.info(marker, "No default index factory set, reading from main config...");
             // from main configuration if not already set
 
             indexFactory = createIndexFactory(cfg.defaultIndicesFactoryClass());
