@@ -29,7 +29,7 @@ package net.stargraph.core.index;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.serializer.ObjectSerializer;
+import net.stargraph.core.serializer.StandardObjectSerializer;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.FatalProcessorException;
@@ -69,7 +69,7 @@ public abstract class BaseIndexPopulator implements IndexPopulator {
         this.stargraph = Objects.requireNonNull(stargraph);
         this.indexID = Objects.requireNonNull(indexID);
         this.loading = false;
-        this.mapper = ObjectSerializer.createMapper(indexID);
+        this.mapper = stargraph.getObjectSerializer(indexID).createMapper(indexID);
         this.processorChain = stargraph.createProcessorChain(indexID);
     }
 

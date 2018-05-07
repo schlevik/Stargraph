@@ -1,8 +1,8 @@
-package net.stargraph.model;
+package net.stargraph.core.serializer;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-index
+ * stargraph-core
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -12,10 +12,10 @@ package net.stargraph.model;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,44 +26,29 @@ package net.stargraph.model;
  * ==========================License-End===============================
  */
 
-import net.stargraph.StarGraphException;
-
-import java.io.Serializable;
-import java.util.Arrays;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import net.stargraph.model.*;
 
 /**
- * Naming conventions for the fact based KBs.
+ * The standard Serializer
  */
-public enum BuiltInIndex {
+public final class StandardObjectSerializer implements ObjectSerializer{
 
-    FACT("facts", Fact.class),
-    ENTITY("entities", InstanceEntity.class),
-    PROPERTY("relations", PropertyEntity.class),
-    DOCUMENT("documents", Document.class),
-    PASSAGE("passages", Passage.class);
-
-    public Class cls;
-    public String modelId;
-
-    BuiltInIndex(String modelId, Class cls) {
-        this.modelId = modelId;
-        this.cls = cls;
-    }
-
-    public static boolean hasModelClass(String modelName) {
-        return Arrays.stream(BuiltInIndex.values()).anyMatch(val -> val.modelId.equals(modelName));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Class<Serializable> getModelClass(String modelName) {
-        // This should change to support user's models.
-
-        for (BuiltInIndex entry : BuiltInIndex.values()) {
-            if (entry.modelId.equals(modelName)) {
-                return entry.cls;
-            }
-        }
-
-        throw new StarGraphException("No Class registered for index: '" + modelName + "'");
+    public ObjectMapper createMapper(IndexID indexID) {
+        ObjectMapper mapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Fact.class, new FactSerializer(indexID));
+        module.addDeserializer(Fact.class, new FactDeSerializer(indexID));
+        module.addSerializer(PropertyEntity.class, new PropertySerializer(indexID));
+        module.addDeserializer(PropertyEntity.class, new PropertyDeserializer(indexID));
+        module.addSerializer(InstanceEntity.class, new InstanceSerializer(indexID));
+        module.addDeserializer(InstanceEntity.class, new InstanceDeserializer(indexID));
+        module.addSerializer(ClassEntity.class, new ClassSerializer(indexID));
+        module.addSerializer(Document.class, new DocumentSerializer(indexID));
+        module.addDeserializer(Document.class, new DocumentDeserializer(indexID));
+        module.addDeserializer(Passage.class, new PassageDeserializer(indexID));
+        mapper.registerModule(module);
+        return mapper;
     }
 }

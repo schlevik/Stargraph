@@ -28,7 +28,7 @@ package net.stargraph.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.stargraph.StarGraphException;
-import net.stargraph.core.serializer.ObjectSerializer;
+import net.stargraph.core.serializer.StandardObjectSerializer;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
 import net.stargraph.model.IndexID;
@@ -59,7 +59,7 @@ public final class DocumentIterator implements Iterator<Indexable> {
     public DocumentIterator(Stargraph core, IndexID indexID) {
         this.core = Objects.requireNonNull(core);
         this.indexID = Objects.requireNonNull(indexID);
-        this.mapper = ObjectSerializer.createMapper(indexID);
+        this.mapper = core.getObjectSerializer(indexID).createMapper(indexID);
 
         Path filePath = getFilePath(indexID.getKnowledgeBase());
         File file = filePath.toFile();

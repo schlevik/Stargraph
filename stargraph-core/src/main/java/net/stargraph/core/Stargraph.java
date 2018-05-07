@@ -38,6 +38,8 @@ import net.stargraph.core.search.database.DatabaseFactory;
 import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.core.search.index.BaseIndexSearcher;
 import net.stargraph.core.search.index.IndexSearcher;
+import net.stargraph.core.serializer.ObjectSerializer;
+import net.stargraph.core.serializer.StandardObjectSerializer;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.DataProviderFactory;
 import net.stargraph.data.processor.Holder;
@@ -76,6 +78,7 @@ public final class Stargraph {
      * ignored for the sake of robustness.
      */
     private boolean robust = true;
+    private ObjectSerializer objectSerializer;
 
     /* Init and terminate. */
 
@@ -306,10 +309,16 @@ public final class Stargraph {
                 // It's our internal factory hence we inject the core dependency.
                 factory = (DataProviderFactory) constructors[0].newInstance(this);
             } else {
-                // This should be a user factory without constructor.
-                // API user should rely on configuration or other means to initialize.
-                // See TestDataProviderFactory as an example
-                factory = (DataProviderFactory) providerClazz.newInstance();
+                try {
+                    factory = (DataProviderFactory) constructors[0].newInstance(this);
+                } catch (Exception e) {
+
+
+                    // This should be a user factory without constructor.
+                    // API user should rely on configuration or other means to initialize.
+                    // See TestDataProviderFactory as an example
+                    factory = (DataProviderFactory) providerClazz.newInstance();
+                }
             }
             return factory;
         } catch (IllegalAccessException | InstantiationException | InvocationTargetException | ClassNotFoundException e) {
@@ -317,6 +326,17 @@ public final class Stargraph {
         }
     }
 
+    public void setDefaultObjectSerializer(ObjectSerializer serializer) {
+        this.objectSerializer = serializer;
+    }
+
+    public ObjectSerializer getObjectSerializer(IndexID indexID) {
+        //TODO: this could also be configurable per index
+        if (this.objectSerializer == null) {
+            this.objectSerializer = new StandardObjectSerializer();
+        }
+        return this.objectSerializer;
+    }
 
     IndexFactory createIndexFactoryForID(IndexID indexID) {
         if (indexID != null) {

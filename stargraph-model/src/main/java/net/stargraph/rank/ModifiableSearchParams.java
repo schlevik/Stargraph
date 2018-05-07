@@ -29,12 +29,15 @@ package net.stargraph.rank;
 import net.stargraph.model.BuiltInIndex;
 import net.stargraph.model.IndexID;
 
+import java.io.Serializable;
+
 public final class ModifiableSearchParams {
 
     private int limit;
     private String knowledgeBase;
     private String index;
     private String searchTerm;
+    private Class<? extends Serializable> modelClass;
 
     private ModifiableSearchParams(String kbId) {
         // defaults
@@ -91,5 +94,13 @@ public final class ModifiableSearchParams {
 
     public static ModifiableSearchParams create() {
         return new ModifiableSearchParams();
+    }
+
+    public Class<? extends Serializable> getModelClass() {
+        return this.modelClass;
+    }
+
+    public void model(Class<? extends Serializable> model) {
+        this.modelClass = model;
     }
 }

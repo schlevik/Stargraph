@@ -27,9 +27,10 @@ package net.stargraph.core.impl.elastic;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
-import net.stargraph.core.serializer.ObjectSerializer;
+import net.stargraph.core.serializer.StandardObjectSerializer;
 import net.stargraph.model.BuiltInIndex;
 import net.stargraph.model.IndexID;
 import net.stargraph.rank.ModifiableSearchParams;
@@ -53,7 +54,7 @@ public final class ElasticIndexSearchExecutor<R extends Serializable> extends Ba
 
     public ElasticIndexSearchExecutor(IndexID indexID, Stargraph core) {
         super(indexID, core);
-        this.mapper = ObjectSerializer.createMapper(indexID);
+        this.mapper = core.getObjectSerializer(indexID).createMapper(indexID);
     }
 
     @Override
@@ -158,7 +159,7 @@ public final class ElasticIndexSearchExecutor<R extends Serializable> extends Ba
 
         try {
             String indexName = params.getIndexID().getIndex();
-            Class<Serializable> modelClass = BuiltInIndex.getModelClass(indexName);
+            Class<? extends Serializable> modelClass = BuiltInIndex.hasModelClass(indexName) ? BuiltInIndex.getModelClass(indexName) : params.getModelClass();
 
             scroller = new ElasticScroller<R>(esClient, query, params) {
                 @Override

@@ -14,7 +14,7 @@ import java.io.Serializable;
 public abstract class ElasticBaseIndexSearcher<R extends Serializable>
         extends BaseIndexSearcher<ElasticIndexSearchExecutor<R>, R, QueryBuilder> {
 
-    ElasticBaseIndexSearcher(Index index) {
+    public ElasticBaseIndexSearcher(Index index) {
         super(index);
     }
 }
