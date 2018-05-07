@@ -53,7 +53,7 @@ public class NLIQueryResolver extends AbstractQueryResolver {
         try {
             analysis = analyzer.analyse(userQuery);
         } catch (AnalysisException e) {
-            logger.info("Couldn't analyze the input query '{}', skipping.", userQuery);
+            logger.info(marker, "Couldn't analyze the input query '{}', skipping.", userQuery);
         }
         if (analysis != null) {
             // if analysis actually worked...
