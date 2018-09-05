@@ -100,7 +100,8 @@ public final class ModifiableSearchParams {
         return this.modelClass;
     }
 
-    public void model(Class<? extends Serializable> model) {
+    public ModifiableSearchParams model(Class<? extends Serializable> model) {
         this.modelClass = model;
+        return this;
     }
 }

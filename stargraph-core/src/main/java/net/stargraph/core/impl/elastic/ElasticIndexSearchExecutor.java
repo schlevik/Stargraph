@@ -159,8 +159,9 @@ public final class ElasticIndexSearchExecutor<R extends Serializable> extends Ba
 
         try {
             String indexName = params.getIndexID().getIndex();
-            Class<? extends Serializable> modelClass = BuiltInIndex.hasModelClass(indexName) ? BuiltInIndex.getModelClass(indexName) : params.getModelClass();
-
+            //Class<? extends Serializable> modelClass = BuiltInIndex.hasModelClass(indexName) ? BuiltInIndex.getModelClass(indexName) : params.getModelClass();
+            Class<? extends Serializable> modelClass = params.getModelClass() != null ? params.getModelClass() : BuiltInIndex.getModelClass(indexName);
+            this.logger.debug("modelClass: {}", modelClass.getCanonicalName());
             scroller = new ElasticScroller<R>(esClient, query, params) {
                 @Override
                 protected Score build(SearchHit hit) {

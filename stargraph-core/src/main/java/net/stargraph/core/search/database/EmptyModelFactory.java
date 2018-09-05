@@ -26,19 +26,9 @@ package net.stargraph.core.search.database;
  * ==========================License-End===============================
  */
 
-import net.stargraph.StarGraphException;
 import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.search.database.Database;
-import net.stargraph.core.search.database.DatabaseFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public final class EmptyModelFactory implements DatabaseFactory {
 
