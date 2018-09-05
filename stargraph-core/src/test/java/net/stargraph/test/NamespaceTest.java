@@ -44,7 +44,7 @@ public final class NamespaceTest {
         stargraph.setDataRootDir(Files.createTempDir());
         stargraph.setKBInitSet("obama");
         stargraph.initialize();
-        this.ns = stargraph.getKBCore("obama").getNamespace();
+        this.ns = stargraph.getKnowledgeBase("obama").getNamespace();
     }
 
     @Test

@@ -33,7 +33,7 @@ import net.stargraph.core.processors.Processors;
 import net.stargraph.core.processors.RegExFilterProcessor;
 import net.stargraph.data.processor.Holder;
 import net.stargraph.data.processor.Processor;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -44,7 +44,7 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public final class RegExFilterProcessorTest {
 
-    KBId kbId = KBId.of("obama", "facts");
+    IndexID indexID = IndexID.of("obama", "facts");
 
     @Test
     public void defaultFilterTest() {
@@ -52,7 +52,7 @@ public final class RegExFilterProcessorTest {
         System.out.println(ModelUtils.toStr(defaultCfg));
         Processor processor = Processors.create(defaultCfg);
 
-        Holder fact1 = ModelUtils.createWrappedFact(kbId,
+        Holder fact1 = ModelUtils.createWrappedFact(indexID,
                 "dbr:President_of_the_United_States", "rdfs:seeAlso", "dbr:Barack_Obama");
 
         processor.run(fact1);
@@ -64,7 +64,7 @@ public final class RegExFilterProcessorTest {
         Config cfg = buildConfig(null, null, null);
         Processor processor = Processors.create(cfg);
 
-        Holder fact1 = ModelUtils.createWrappedFact(kbId,
+        Holder fact1 = ModelUtils.createWrappedFact(indexID,
                 "http://dbpedia.org/resource/President_of_the_United_States",
                 "http://dbpedia.org/property/incumbent",
                 "http://dbpedia.org/resource/Barack_Obama");
@@ -77,7 +77,7 @@ public final class RegExFilterProcessorTest {
 
     @Test
     public void filterAllTest() {
-        Holder fact1 = ModelUtils.createWrappedFact(kbId,
+        Holder fact1 = ModelUtils.createWrappedFact(indexID,
                 "http://dbpedia.org/resource/President_of_the_United_States",
                 "http://dbpedia.org/property/incumbent",
                 "http://dbpedia.org/resource/Barack_Obama");
@@ -106,7 +106,7 @@ public final class RegExFilterProcessorTest {
 
     @Test
     public void filterTest() {
-        Holder fact1 = ModelUtils.createWrappedFact(kbId,
+        Holder fact1 = ModelUtils.createWrappedFact(indexID,
                 "http://dbpedia.org/resource/President_of_the_United_States",
                 "http://dbpedia.org/property/incumbent",
                 "http://dbpedia.org/resource/Barack_Obama");

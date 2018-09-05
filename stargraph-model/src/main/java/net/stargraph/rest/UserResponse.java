@@ -2,7 +2,7 @@ package net.stargraph.rest;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -12,10 +12,10 @@ package net.stargraph.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,41 +26,29 @@ package net.stargraph.rest;
  * ==========================License-End===============================
  */
 
-import net.stargraph.query.InteractionMode;
-
 import java.io.Serializable;
-import java.util.Objects;
+import java.util.*;
 
-public abstract class UserResponse implements Serializable {
+public class UserResponse implements Serializable {
     private String query;
-    private InteractionMode interactionMode;
+    private Map<String, PartialResponse> responses;
 
-    public UserResponse(String query, InteractionMode interactionMode) {
+    public UserResponse(String query) {
         this.query = Objects.requireNonNull(query);
-        this.interactionMode = Objects.requireNonNull(interactionMode);
+        this.responses = new LinkedHashMap<>();
     }
 
-    public final String getQuery() {
+    public String getQuery() {
         return query;
     }
 
-    public final InteractionMode getInteractionMode() {
-        return interactionMode;
+    public void addResponse(PartialResponse response) {
+        responses.put(response.getSource(), response);
     }
 
-    public static class EntityEntry {
-        public String id;
-        public String value;
-        public double score;
-
-        public EntityEntry(String id, String value) {
-            this(id, value, 1);
-        }
-
-        public EntityEntry(String id, String value, double score) {
-            this.id = id;
-            this.value = value;
-            this.score = score;
-        }
+    public Map<String, PartialResponse> getResponses() {
+        return responses;
     }
+
+
 }

@@ -12,10 +12,10 @@ package net.stargraph.core;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,11 +29,8 @@ package net.stargraph.core;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
-import org.apache.jena.rdf.model.StmtIterator;
+import net.stargraph.model.IndexID;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -46,13 +43,18 @@ public final class FactProviderFactory extends BaseDataProviderFactory {
     }
 
     @Override
-    public DataProvider<Indexable> create(KBId kbId) {
-        return new DataProvider<>(new FactIterator(core, kbId));
+    public DataProvider<Indexable> create(IndexID indexID) {
+        return new DataProvider<>(new FactIterator(core, indexID));
     }
 
     @Override
-    public DataProvider<Indexable> create(KBId kbId, List data) {
-        return new DataProvider<>(new FactIterator(core, kbId, data));
+    public DataProvider<? extends Holder> create(IndexID indexID, List data) {
+        return null;
     }
+
+//    @Override
+//    public DataProvider<Indexable> create(IndexID indexID, List data) {
+//        return new DataProvider<>(new FactIterator(core, indexID, data));
+//    }
 
 }

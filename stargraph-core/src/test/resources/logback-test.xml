@@ -17,5 +17,6 @@
     <logger name="org.apache.jena" level="INFO" additivity="true"/>
     <logger name="io.netty" level="INFO" additivity="true"/>
     <logger name="Jena" level="INFO" additivity="true"/>
+    <logger name="org.reflections" level="INFO" additivity="true"/>
 
 </configuration>

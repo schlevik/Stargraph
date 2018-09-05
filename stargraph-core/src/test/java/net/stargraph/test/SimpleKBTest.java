@@ -30,10 +30,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.hdt.HDTModelFactory;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.index.NullIndicesFactory;
-import net.stargraph.model.KBId;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.index.NullIndexFactory;
+import net.stargraph.model.IndexID;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -51,8 +50,8 @@ import static net.stargraph.test.TestUtils.createPath;
 public final class SimpleKBTest {
     private String kbName = "simple";
     private Stargraph stargraph;
-    private KBId factsId = KBId.of(kbName, "facts");
-    private KBId entitiesId = KBId.of(kbName, "entities");
+    private IndexID factsId = IndexID.of(kbName, "facts");
+    private IndexID entitiesId = IndexID.of(kbName, "entities");
 
     @BeforeClass
     public void before() throws IOException {
@@ -63,22 +62,22 @@ public final class SimpleKBTest {
         Config config = ConfigFactory.load().getConfig("stargraph");
         stargraph = new Stargraph(config, false);
         stargraph.setKBInitSet(kbName);
-        stargraph.setDefaultIndicesFactory(new NullIndicesFactory());
-        stargraph.setDefaultGraphModelFactory(new NTriplesModelFactory(stargraph));
+        stargraph.setDefaultIndexFactory(new NullIndexFactory());
+        stargraph.setDefaultDatabaseFactory(new NTriplesModelFactory(stargraph));
         stargraph.setDataRootDir(root.toFile());
         stargraph.initialize();
     }
 
     @Test
     public void factLoadTest() throws Exception {
-        Indexer indexer = stargraph.getIndexer(factsId);
+        IndexPopulator indexer = stargraph.getIndexer(factsId);
         indexer.load(true, -1);
         indexer.awaitLoader();
     }
 
     @Test
     public void entitiesLoadTest() throws Exception {
-        Indexer indexer = stargraph.getIndexer(entitiesId);
+        IndexPopulator indexer = stargraph.getIndexer(entitiesId);
         indexer.load(true, -1);
         indexer.awaitLoader();
     }

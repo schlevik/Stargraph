@@ -12,10 +12,10 @@ package net.stargraph.core.impl.elastic;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,34 +26,47 @@ package net.stargraph.core.impl.elastic;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.IndicesFactory;
-import net.stargraph.core.KBCore;
+import net.stargraph.core.IndexFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.BaseIndexer;
-import net.stargraph.core.search.BaseSearcher;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
-import net.stargraph.model.KBId;
+import net.stargraph.core.index.BaseIndexPopulator;
+import net.stargraph.core.search.index.IndexSearcher;
+import net.stargraph.model.IndexID;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public final class ElasticFactory implements IndicesFactory {
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+public final class ElasticFactory implements IndexFactory {
+    //TODO: read from config
+    private Set<Class<? extends ElasticBaseIndexSearcher>> allSearcherClasses = new HashSet<>(Arrays.asList(
+            ElasticDocumentIndexSearcher.class,
+            ElasticEntityIndexSearcher.class,
+            ElasticFactIndexSearcher.class,
+            ElasticPropertyIndexSearcher.class
+    ));
 
     @Override
-    public BaseIndexer createIndexer(KBId kbId, Stargraph stargraph) {
-        return new ElasticIndexer(kbId, stargraph);
+    public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
+        return new ElasticIndexPopulator(indexID, stargraph);
+    }
+
+
+    @Override
+    public ElasticIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
+        return new ElasticIndexSearchExecutor(indexID, stargraph);
     }
 
     @Override
-    public BaseSearcher createSearcher(KBId kbId, Stargraph stargraph) {
-        return new ElasticSearcher(kbId, stargraph);
+    public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
+        for (Class<? extends ElasticBaseIndexSearcher> searcherClass : allSearcherClasses) {
+            if (iFace.isAssignableFrom(searcherClass)) {
+                return searcherClass;
+            }
+        }
+        throw new NotImplementedException();
     }
 
-    @Override
-    public EntitySearcher createEntitySearcher(KBCore core) {
-        return new ElasticEntitySearcher(core);
-    }
 
-    @Override
-    public DocumentSearcher createDocumentSearcher(KBCore core) {
-        return new ElasticDocumentSearcher(core);
-    }
 }

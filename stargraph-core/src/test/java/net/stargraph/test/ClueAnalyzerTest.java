@@ -27,7 +27,7 @@ package net.stargraph.test;
  */
 
 import net.stargraph.core.query.QueryEngine;
-import net.stargraph.core.query.nli.ClueAnalyzer;
+import net.stargraph.core.query.srl.ClueAnalyzer;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

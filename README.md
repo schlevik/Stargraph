@@ -160,12 +160,12 @@ And the output is a JSON response.
   "interactionMode": "NLI",
   "answers": [
     {
-      "id": "dbr:Michelle_Obama",
+      "knowledgeBase": "dbr:Michelle_Obama",
       "value": "Michelle Obama",
       "score": 1
     },
     {
-      "id": "\"1992-10-03\"^^<http://www.w3.org/2001/XMLSchema#date>",
+      "knowledgeBase": "\"1992-10-03\"^^<http://www.w3.org/2001/XMLSchema#date>",
       "value": "1992-10-03",
       "score": 1
     }
@@ -173,24 +173,24 @@ And the output is a JSON response.
   "mappings": {
     "Barack Obama": [
       {
-        "id": "http://dbpedia.org/resource/Barack_Obama",
+        "knowledgeBase": "http://dbpedia.org/resource/Barack_Obama",
         "value": "Barack Obama",
         "score": 1
       }
     ],
     "wife": [
       {
-        "id": "http://dbpedia.org/ontology/child",
+        "knowledgeBase": "http://dbpedia.org/ontology/child",
         "value": "child",
         "score": 0.560512271511479
       },
       {
-        "id": "http://dbpedia.org/property/spouse",
+        "knowledgeBase": "http://dbpedia.org/property/spouse",
         "value": "spouse",
         "score": 0.5078599088550189
       },
       {
-        "id": "http://dbpedia.org/property/children",
+        "knowledgeBase": "http://dbpedia.org/property/children",
         "value": "children",
         "score": 0.5803166605881719
       }

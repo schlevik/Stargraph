@@ -35,8 +35,8 @@ import java.io.IOException;
 
 class FactDeSerializer extends AbstractDeserializer<Fact> {
 
-    FactDeSerializer(KBId kbId) {
-        super(kbId, Fact.class);
+    FactDeSerializer(IndexID indexID) {
+        super(indexID, Fact.class);
     }
 
     @Override
@@ -64,7 +64,7 @@ class FactDeSerializer extends AbstractDeserializer<Fact> {
             object = new InstanceEntity(objId, objValue);
         }
 
-        return new Fact(getKbId(), subject, property, object);
+        return new Fact(getIndexID(), subject, property, object);
     }
 
 

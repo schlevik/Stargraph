@@ -30,10 +30,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticFactory;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.rank.*;
@@ -43,6 +42,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 /**
@@ -51,45 +51,69 @@ import java.util.ArrayList;
  */
 public final class DocumentIndexIT {
 
-    private KBId kbId = KBId.of("obama", "documents");
+    private IndexID documentsID = IndexID.of("obama", "documents");
+    private IndexID entitiesID = IndexID.of("obama", "entities");
     private Stargraph stargraph;
-    private Indexer indexer;
+    private IndexPopulator indexer;
+    private Path dataRootDir;
 
     @BeforeClass
-    public void before() throws InterruptedException {
+    public void before() throws Exception {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
 
+        dataRootDir = TestUtils.prepareObamaTestEnv("obama");
+
         // assure ElasticSearch is running
-        TestUtils.assertElasticRunning(stargraph.getModelConfig(kbId));
+        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(documentsID));
 
-        this.stargraph.setKBInitSet(kbId.getId());
-        this.stargraph.setDefaultIndicesFactory(new ElasticFactory());
+        // assure index exists
+
+        this.stargraph.setKBInitSet(documentsID.getKnowledgeBase());
+        this.stargraph.setDefaultIndexFactory(new ElasticFactory());
+        this.stargraph.setDataRootDir(dataRootDir.toFile());
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(kbId);
+
+        assureEntitiesIndexExists();
+        this.indexer = stargraph.getIndexer(documentsID);
 
 
-        Searcher searcher = stargraph.getSearcher(kbId);
-        if (searcher.countDocuments() != 1) {
-            indexer.deleteAll();
+        IndexSearchExecutor searcher = stargraph.getSearcher(documentsID);
 
-            String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
-                    "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread.";
+        indexer.deleteAll();
 
-            indexer.index(new Indexable(new Document("test.txt", "Test", text), kbId));
-            indexer.flush();
+        String text = "Barack Obama is a nice guy. Somebody was the president of the United States. " +
+                "Barack Obama likes to eat garlic bread. Michelle Obama also likes to eat garlic bread. Donald Trump is the wife of Barack Obama.";
+
+        indexer.index(new Indexable(new Document("test.txt", "Test", text), documentsID));
+        indexer.flush();
+
+    }
+
+    private void assureEntitiesIndexExists() throws Exception {
+        IndexSearchExecutor searcher = stargraph.getSearcher(entitiesID);
+        boolean exists = false;
+        try {
+            exists = searcher.countDocuments() != 0;
+        } catch (Exception e) {
+            exists = false;
+        }
+        if (!exists) {
+            IndexPopulator indexer = stargraph.getIndexer(entitiesID);
+            indexer.load(true, -1);
+            indexer.awaitLoader();
         }
     }
 
     @Test
     public void queryDocumentIndexTest() {
-        DocumentSearcher documentSearcher = this.stargraph.getKBCore("obama").createDocumentSearcher();
+        DocumentIndexSearcher documentSearcher = this.stargraph.getKnowledgeBase("obama").getSearcher(DocumentIndexSearcher.class);
         InstanceEntity obama = new InstanceEntity("dbr:Barack_Obama", "Barack Obama");
         ModifiableSearchParams searchParams = ModifiableSearchParams.create("obama");
         searchParams.term("like to eat");
         ModifiableRankParams rankParams = new ModifiableRankParams(Threshold.auto(), RankingModel.LEVENSHTEIN);
-        Scores scores = documentSearcher.pivotedFullTextPassageSearch(obama, searchParams, rankParams);
+        Scores<Passage> scores = documentSearcher.pivotedFullTextPassageSearch(obama, searchParams, rankParams);
         ArrayList<LabeledEntity> linkedEntities = new ArrayList<>();
         linkedEntities.add(obama);
         System.out.println(scores);
@@ -99,6 +123,6 @@ public final class DocumentIndexIT {
 
     @AfterClass
     public void afterClass() {
-        stargraph.terminate();
+        TestUtils.cleanUpTestEnv(dataRootDir);
     }
 }

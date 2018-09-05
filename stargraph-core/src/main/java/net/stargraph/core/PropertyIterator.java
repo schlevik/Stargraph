@@ -27,7 +27,7 @@ package net.stargraph.core;
  */
 
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.model.PropertyEntity;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Statement;
@@ -38,18 +38,18 @@ import static net.stargraph.ModelUtils.createProperty;
 
 final class PropertyIterator extends TripleIterator<Indexable> {
 
-    PropertyIterator(Stargraph core, KBId kbId) {
-        super(core, kbId);
+    PropertyIterator(Stargraph core, IndexID indexID) {
+        super(core, indexID);
     }
 
-    PropertyIterator(Stargraph core, KBId kbId, List data) {
-        super(core, kbId, ModelFactory.createDefaultModel().add(data));
-    }
+//    PropertyIterator(Stargraph core, IndexID indexID, List data) {
+//        super(core, indexID, ModelFactory.createDefaultModel().add(data));
+//    }
 
     @Override
 
     protected Indexable buildNext(Statement statement) {
         PropertyEntity propertyEntity = createProperty(applyNS(statement.getPredicate().getURI()));
-        return new Indexable(propertyEntity, kbId);
+        return new Indexable(propertyEntity, indexID);
     }
 }

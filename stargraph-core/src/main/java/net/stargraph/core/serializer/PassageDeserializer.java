@@ -37,8 +37,8 @@ import java.util.List;
 
 class PassageDeserializer extends AbstractDeserializer<Passage> {
 
-    PassageDeserializer(KBId kbId) {
-        super(kbId, PropertyEntity.class);
+    PassageDeserializer(IndexID indexID) {
+        super(indexID, PropertyEntity.class);
     }
 
     @Override

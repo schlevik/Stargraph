@@ -28,21 +28,19 @@ package net.stargraph.test.it;
 
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.elastic.ElasticIndexer;
-import net.stargraph.core.impl.elastic.ElasticSearcher;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.impl.elastic.ElasticIndexPopulator;
+import net.stargraph.core.impl.elastic.ElasticIndexSearchExecutor;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Fact;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Aims to test the incremental indexing features..
@@ -53,32 +51,32 @@ import java.util.concurrent.TimeoutException;
 public final class IndexUpdateIT {
 
     private Stargraph stargraph;
-    private Indexer indexer;
-    private ElasticSearcher searcher;
-    private KBId kbId = KBId.of("simple", "facts");
+    private IndexPopulator indexer;
+    private ElasticIndexSearchExecutor searcher;
+    private IndexID indexID = IndexID.of("simple", "facts");
 
     @BeforeClass
     public void before() {
         ConfigFactory.invalidateCaches();
         stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
+        stargraph.setDefaultDatabaseFactory(new NTriplesModelFactory(stargraph));
+        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(indexID));
 
-        TestUtils.assertElasticRunning(stargraph.getModelConfig(kbId));
-
-        stargraph.setKBInitSet(kbId.getId());
+        stargraph.setKBInitSet(indexID.getKnowledgeBase());
         stargraph.initialize();
 
 
-        searcher = new ElasticSearcher(kbId, stargraph);
+        searcher = new ElasticIndexSearchExecutor(indexID, stargraph);
         searcher.start();
-        indexer = new ElasticIndexer(kbId, stargraph);
+        indexer = new ElasticIndexPopulator(indexID, stargraph);
         indexer.start();
         indexer.deleteAll();
     }
 
     @Test
     public void updateTest() throws InterruptedException {
-        Fact oneFact = ModelUtils.createFact(kbId, "dbr:Barack_Obama", "dbp:spouse", "dbr:Michelle_Obama");
-        indexer.index(new Indexable(oneFact, kbId));
+        Fact oneFact = ModelUtils.createFact(indexID, "dbr:Barack_Obama", "dbp:spouse", "dbr:Michelle_Obama");
+        indexer.index(new Indexable(oneFact, indexID));
         indexer.flush();
         Assert.assertEquals(searcher.countDocuments(), 1);
     }

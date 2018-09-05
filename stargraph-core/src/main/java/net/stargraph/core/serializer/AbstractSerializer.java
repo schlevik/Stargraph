@@ -27,20 +27,20 @@ package net.stargraph.core.serializer;
  */
 
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.util.Objects;
 
 public abstract class AbstractSerializer<T> extends StdSerializer<T> {
 
-    private KBId kbId;
+    private IndexID indexID;
 
-    protected AbstractSerializer(KBId kbId, Class<T> t) {
+    protected AbstractSerializer(IndexID indexID, Class<T> t) {
         super(t);
-        this.kbId = Objects.requireNonNull(kbId);
+        this.indexID = Objects.requireNonNull(indexID);
     }
 
-    public KBId getKbId() {
-        return kbId;
+    public IndexID getIndexID() {
+        return indexID;
     }
 }

@@ -29,14 +29,16 @@ package net.stargraph.test.it;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.lucene.LuceneFactory;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.features.NERFeature;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.query.response.TextResponse;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.*;
 import net.stargraph.test.TestUtils;
@@ -64,8 +66,8 @@ import java.util.concurrent.TimeoutException;
 public final class LuceneCanonicalEntitiesIT {
 
     private String id = "canonical-obama";
-    private KBId canonicalEntitiesIndex = KBId.of(id, "entities");
-    private KBId documentsIndex = KBId.of(id, "documents");
+    private IndexID canonicalEntitiesIndex = IndexID.of(id, "entities");
+    private IndexID documentsIndex = IndexID.of(id, "documents");
     private Stargraph stargraph;
     private File dataRootDir;
     private NER ner;
@@ -88,21 +90,21 @@ public final class LuceneCanonicalEntitiesIT {
 
         queryEngine = new QueryEngine(id, stargraph);
 
-        Indexer indexer = stargraph.getIndexer(canonicalEntitiesIndex);
+        IndexPopulator indexer = stargraph.getIndexer(canonicalEntitiesIndex);
         indexer.load(true, -1);
         indexer.awaitLoader();
 
-        ner = stargraph.getKBCore(id).getNER();
+        ner = stargraph.getKnowledgeBase(id).getFeature(NERFeature.class);
         Assert.assertNotNull(ner);
     }
 
 
-    @Test
     /**
      * The actual loading was done in {@link #beforeClass()}.
      */
+    @Test
     public void bulkLoadTest() {
-        Searcher searcher = stargraph.getSearcher(canonicalEntitiesIndex);
+        IndexSearchExecutor searcher = stargraph.getSearcher(canonicalEntitiesIndex);
         Assert.assertEquals(searcher.countDocuments(), 887);
     }
 
@@ -110,37 +112,36 @@ public final class LuceneCanonicalEntitiesIT {
     @Test
     public void successfullyLinkAgainstCanonicalEntity() {
         List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Hussein Obama");
-        System.out.println(entities);
         Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 
-    @Test(enabled = false)
+    @Test
     public void successfullyLinkObamaWikipediaArticle() throws IOException, InterruptedException, URISyntaxException {
-        TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsIndex));
-        Searcher searcher = stargraph.getSearcher(documentsIndex);
-        if (searcher.countDocuments() != 1) {
-
-            String location = stargraph.getModelConfig(documentsIndex).getConfigList("processors")
-                    .stream()
-                    .map(proc -> proc.getConfig("coref-processor"))
-                    .findAny()
-                    .get()
-                    .getString("graphene.coreference.url");
-            TestUtils.assertCorefRunning(location);
+        TestUtils.assertElasticRunning(stargraph.getConfig().getIndexConfig(documentsIndex));
+        IndexSearchExecutor searcher = stargraph.getSearcher(documentsIndex);
 
 
-            Indexer indexer = stargraph.getIndexer(documentsIndex);
+        String location = stargraph.getConfig().getIndexConfig(documentsIndex).getConfigList("processors")
+                .stream()
+                .map(proc -> proc.getConfig("coref-processor"))
+                .findAny()
+                .get()
+                .getString("graphene.coreference.url");
+        TestUtils.assertCorefRunning(location);
 
-            indexer.deleteAll();
-            URI u = getClass().getClassLoader().getResource("obama.txt").toURI();
-            Assert.assertNotNull(u);
-            String text = new String(Files.readAllBytes(Paths.get(u)));
 
-            indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsIndex));
-            indexer.flush();
-        }
+        IndexPopulator indexer = stargraph.getIndexer(documentsIndex);
+
+        indexer.deleteAll();
+        URI u = getClass().getClassLoader().getResource("obama.txt").toURI();
+        Assert.assertNotNull(u);
+        String text = new String(Files.readAllBytes(Paths.get(u)));
+
+        indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsIndex));
+        indexer.flush();
+
         String passageQuery = "PASSAGE When did Barack Obama travel to India?";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);
+        TextResponse response = (TextResponse) queryEngine.query(passageQuery).getAny();
         String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
                 "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
                 "and visited the families of college friends in Pakistan and India for three weeks .";

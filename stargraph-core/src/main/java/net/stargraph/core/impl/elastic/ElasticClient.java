@@ -12,10 +12,10 @@ package net.stargraph.core.impl.elastic;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,7 +29,7 @@ package net.stargraph.core.impl.elastic;
 import com.typesafe.config.Config;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.Version;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequestBuilder;
@@ -60,15 +60,15 @@ import java.util.List;
 public final class ElasticClient {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("elastic");
-    private KBId kbId;
+    private IndexID indexID;
     private Client client;
     private Stargraph core;
     private String indexName;
 
-    public ElasticClient(Stargraph core, KBId kbId) {
-        logger.trace(marker, "Creating ES Client for {}", kbId);
+    public ElasticClient(Stargraph core, IndexID indexID) {
+        logger.trace(marker, "Creating ES Client for {}", indexID);
         this.core = core;
-        this.kbId = kbId;
+        this.indexID = indexID;
         this.client = createClient();
         this.indexName = createIndexName();
     }
@@ -108,7 +108,7 @@ public final class ElasticClient {
     }
 
     DeleteIndexRequestBuilder prepareDelete() {
-        logger.info(marker, "Deleting {}", kbId);
+        logger.info(marker, "Deleting {}", indexID);
         return client.admin().indices().prepareDelete(getIndexName());
     }
 
@@ -117,10 +117,10 @@ public final class ElasticClient {
     }
 
     CreateIndexRequestBuilder prepareCreate() {
-        logger.info(marker, "Creating {}", kbId);
+        logger.info(marker, "Creating {}", indexID);
         Config mappingCfg = getModelCfg().getConfig("elastic.mapping");
         // Search for matching mapping definition, fallback to the dynamic _default_.
-        String targetType = mappingCfg.hasPath(kbId.getModel()) ? kbId.getModel() : "_default_";
+        String targetType = mappingCfg.hasPath(indexID.getIndex()) ? indexID.getIndex() : "_default_";
         Config mapping = mappingCfg.withOnlyPath(targetType);
         CreateIndexRequestBuilder builder = client.admin().indices().prepareCreate(getIndexName());
         return builder.addMapping(targetType, mapping.root().unwrapped());
@@ -132,7 +132,7 @@ public final class ElasticClient {
 
     @Override
     public String toString() {
-        return "ElasticClient{'" + kbId + "'}";
+        return "ElasticClient{'" + indexID + "'}";
     }
 
     private String getIndexName() {
@@ -140,16 +140,19 @@ public final class ElasticClient {
     }
 
     private String getIndexType() {
-        return kbId.getModel();
+        return indexID.getIndex();
     }
 
     private Config getModelCfg() {
-        return core.getModelConfig(kbId);
+        return core.getConfig().getIndexConfig(indexID);
     }
 
     private TransportClient createClient() {
-        //TODO: default to main config
         Config cfg = getModelCfg();
+        if (!cfg.hasPath("elastic")) {
+            // default to main config where elastic IS defined
+            cfg = core.getConfig().getMainConfig();
+        }
         Settings settings = Settings.builder().put("cluster.name", cfg.getString("elastic.cluster-name")).build();
         TransportClient client = new PreBuiltTransportClient(settings);
 
@@ -172,7 +175,7 @@ public final class ElasticClient {
     private String createIndexName() {
         String cfgPath = "elastic.index.prefix-name";
         String codeName = Version.getCodeName().replace(" ", "-").toLowerCase();
-        String prefix = core.getMainConfig().getIsNull(cfgPath) ? codeName : core.getMainConfig().getString(cfgPath);
-        return String.format("%s.%s.%s", prefix, kbId.getId(), kbId.getModel());
+        String prefix = core.getConfig().getMainConfig().getIsNull(cfgPath) ? codeName : core.getConfig().getMainConfig().getString(cfgPath);
+        return String.format("%s.%s.%s", prefix, indexID.getKnowledgeBase(), indexID.getIndex());
     }
 }

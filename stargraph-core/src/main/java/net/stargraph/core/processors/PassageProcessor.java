@@ -28,6 +28,7 @@ package net.stargraph.core.processors;
 
 import com.typesafe.config.Config;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.features.NERFeature;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.data.processor.BaseProcessor;
@@ -75,7 +76,7 @@ public final class PassageProcessor extends BaseProcessor {
             List<Passage> passages = new ArrayList<>();
 
             if (doLinking) {
-                NER ner = stargraph.getKBCore(holder.getKBId().getId()).getNER();
+                NER ner = stargraph.getKnowledgeBase(holder.getKBId().getKnowledgeBase()).getFeature(NERFeature.class);
                 for (String sentence : SentencesUtils.splitIntoSentences(document.getText())) {
 
                     List<LinkedNamedEntity> linkedNamedEntities = ner.searchAndLink(sentence);

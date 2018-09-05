@@ -2,7 +2,7 @@ package net.stargraph.rank.impl;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -12,10 +12,10 @@ package net.stargraph.rank.impl;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,18 +34,20 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-abstract class BaseRanker implements Ranker {
+import java.io.Serializable;
+
+abstract class BaseRanker implements Ranker<Serializable> {
     protected Logger logger = LoggerFactory.getLogger(getClass());
     protected Marker marker = MarkerFactory.getMarker("rank");
 
 
     @Override
-    public final Scores score(Scores inputScores, Rankable target) {
+    public final Scores<Serializable> score(Scores<Serializable> inputScores, Rankable target) {
         logger.trace(marker, "Target: '{}', input: {}", target.getValue(), inputScores);
-        Scores rescore = doScore(inputScores, target);
+        Scores<Serializable> rescore = doScore(inputScores, target);
         logger.trace(marker, "Target: '{}', output: {}", target.getValue(), rescore);
         return rescore;
     }
 
-    abstract Scores doScore(Scores inputScores, Rankable target);
+    abstract Scores<Serializable> doScore(Scores<Serializable> inputScores, Rankable target);
 }

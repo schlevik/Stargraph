@@ -1,0 +1,130 @@
+query -> searchers -> index/db
+
+In Query:
+query(text, kB)
+ stuff = analyze(text)
+ 
+ EntitySearcher searcher1 = stargraph.getKbCore(kB).getSearcher(EntitySearcher.class) // EntitySearcher, Searcher2 are interfaces. actual implementation comes from config
+ // this could be ambiguous, what if 2 indices have the same searcher? should the query know which index to query?
+ // then it could look like this: stargraph.getKbCore(kB).getSearcher(EntitySearcher.class, indexName)
+ Searcher2 searcher2 = stargraph.createSearcher(Searcher2.class, kB)
+
+ other_stuff = searcher1.do_specific_searcher1_method(stuff)
+ result = searcher2.do_specific_searcher2_method(other_stuff)
+ return result
+
+in KbCore:
+<T extends Searcher> T getSearcher(Class<T> class, nameOfSearchable=null):
+ // searchable (i.e. Index or Database) 
+ Searchable searchable = getSearchable(nameOfSearchable)
+ return (T) searchable.createSearcher()
+
+getSearchable(name):
+for (index : indices):
+  if index.name == name:
+    return index
+  return database
+ 
+
+in SomeSearcherImpl implements Searcher<SomeActualSearcherImpl>:
+SomeActualSearcherImpl whatToSearch; //from constructor
+do_specific_searcher1_method(params):
+  T actualSearcher = whatToSearch.getActualSearcher();
+  // construct specific ActualSearcherQuery
+  Scores result = actualSearcher.search(query, params)
+  return rerank(result)
+  
+in SomeActualSearcherImpl:
+search(query, params):
+ // backend specific search based on query and params
+ return result
+
+-----------------------------------------------------------------
+dbpedia: {
+ db: {type: "graph", ...}
+ indices: {
+  entities: {...}
+  properties: {...}
+  facts: {...}
+ }
+ queries: {
+  nli: {
+   indices: ["entities", "properties", "facts"]
+   db: ["graph"]
+  }
+}
+
+dbpedia-presidents = {
+ extend = dbpedia
+ db = "document"
+ indices: {
+   entities: inherit,
+   passages: {...}
+ }
+ queries.passage: {
+  indices: ["entities", "passages"]
+   db: ["document"]
+  }
+ }
+}
+
+something-else = {
+ composedOf = dbpedia . other-graph-based-kb
+ queries: {
+  nli: {
+   indices: ["entities", "properties", "facts"]
+   db: ["graph"]
+  }
+}
+//for kb = dbpedia-presidents
+in QueryEngine:
+query(text, kb):
+ Query query = Query(text)
+ for (queryResolver : kb.queries):
+   queryResolver.query(query, kb)
+
+in QueryResolver:
+execute(query, kb):
+  SpecificIndexSearcher is = kb.getIndexSearcher(IndexID.of(kb, requiredIndexName))
+  Scores result = is.specificSearch(specific, params)
+  OtherSpecificIndexSearcher is2 = kb.getIndexSearcher(IndexID.of(kb, otherRequiredIndexName))
+  Scores newResult = is.otherSpecificSearch(other, params, from, result)
+  DatabaseQuery qry = new SPARQLQuery(some, params)
+  SparqlResult dbResult = kb.executeDatabaseQuery(qry).get(SparqlResult.class)
+  DatabaseQuery qry2 = new DocumentQuery(dbResult.something(), somethingElse)
+  query.append(qry2.getSomething(), qry.getSomethingElse())
+
+query(query, kb):
+  kb.executeQuery(this)
+
+in KnowledgeBase:
+executeQuery(QueryResolver qr, Query q):
+  if isList():
+    this.getKBs().forEach(kb -> executeQuery(qr, q))
+  else:
+    qr.execute(q, this)
+
+getIndexSearcher(indexID):
+  return this.getIndex(indexID).getSearcher()
+
+Map<indexID, Index> indices;
+Index getIndex(String name):
+  index = this.indices.get(indexID)
+  if index == null:
+    if isComposed():
+      composedOf().getIndex(name)
+    else:
+      // well fuck
+
+DatabaseResult executeDatabaseQuery(DatabaseQuery query):
+  return this.getDatabase(query.getType()).query(query)
+
+Database getDatabase(DBType type):
+  if this.database.getType() == type:
+    return this.database
+  else:
+    if isComposed():
+      composedOf().getDatabase()
+    else:
+      // well fuck
+

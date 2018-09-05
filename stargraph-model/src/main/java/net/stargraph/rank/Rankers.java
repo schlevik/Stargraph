@@ -2,7 +2,7 @@ package net.stargraph.rank;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -12,10 +12,10 @@ package net.stargraph.rank;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,21 +33,22 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 public final class Rankers {
     private static Logger logger = LoggerFactory.getLogger(Rankers.class);
     private static Marker marker = MarkerFactory.getMarker("rank");
 
-    public static Scores apply(Scores inputScores, ModifiableRankParams rankParams, String target) {
+    public static <T extends Serializable> Scores<T> apply(Scores<T> inputScores, ModifiableRankParams rankParams, String target) {
         return apply(inputScores, rankParams, asRankable(target));
     }
 
-    public static Scores apply(Scores inputScores, ModifiableRankParams rankParams, Rankable target) {
+    public static <T extends Serializable> Scores<T> apply(Scores<T> inputScores, ModifiableRankParams rankParams, Rankable target) {
         Objects.requireNonNull(inputScores);
         logger.debug(marker, "Applying {} on {} entries.", rankParams, inputScores.size());
         Ranker ranker = createRanker(rankParams);
-        Scores rescores = ranker.score(inputScores, target);
+        Scores<T> rescores = ranker.score(inputScores, target);
         return ThresholdFilter.filter(rescores, rankParams.getThreshold());
     }
 

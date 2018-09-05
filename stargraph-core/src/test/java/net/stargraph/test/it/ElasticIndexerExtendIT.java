@@ -30,10 +30,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.impl.elastic.ElasticFactory;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.index.NullIndicesFactory;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.data.DataProviderFactory;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.test.TestData;
 import net.stargraph.test.TestDataProviderFactory;
 import org.testng.annotations.BeforeClass;
@@ -44,15 +43,16 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-// disabled since it's basically the same as ElasticIndexerIT.
+
+// disabled since it's basically the same as ElasticIndexPopulatorIT.
 // to enable, consult pom.xml
 @Test(enabled = false)
 public final class ElasticIndexerExtendIT {
 
-    private KBId kbId = KBId.of("mytest", "mytype");
+    private IndexID indexID = IndexID.of("mytest", "mytype");
     private List<TestData> expected;
     private Stargraph stargraph;
-    private Indexer indexer;
+    private IndexPopulator indexer;
     private final DataProviderFactory dataProviderFactory = new TestDataProviderFactory();
 
     @BeforeClass
@@ -60,19 +60,19 @@ public final class ElasticIndexerExtendIT {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
         this.stargraph = new Stargraph(config, false);
-        this.stargraph.setKBInitSet(kbId.getId());
-        this.stargraph.setDefaultIndicesFactory(new ElasticFactory());
+        this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
+        this.stargraph.setDefaultIndexFactory(new ElasticFactory());
         this.stargraph.initialize();
-        this.indexer = stargraph.getIndexer(kbId);
+        this.indexer = stargraph.getIndexer(indexID);
         List<String> expected = Arrays.asList("Four", "Five", "Six", "Seven");
-        this.expected = expected.stream().map(s -> new TestData(s)).collect(Collectors.toList());
+        this.expected = expected.stream().map(TestData::new).collect(Collectors.toList());
         indexer.load(true, -1);
         indexer.awaitLoader();
     }
 
     @Test
     public void successWhenExtendIndexTest() {
-        this.indexer.extend(this.dataProviderFactory.create(this.kbId, this.expected));
+        this.indexer.extend(this.dataProviderFactory.create(this.indexID, this.expected));
     }
 
 

@@ -28,18 +28,16 @@ package net.stargraph.core;
 
 import com.google.common.collect.Iterators;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.impl.jena.JenaGraphDatabase;
+import net.stargraph.core.search.database.DBType;
 import net.stargraph.data.Indexable;
-import net.stargraph.model.KBId;
-import org.apache.jena.base.Sys;
+import net.stargraph.model.IndexID;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
-import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.util.NodeUtils;
 import org.apache.jena.util.iterator.ExtendedIterator;
-import org.semanticweb.yars.nx.namespace.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -53,17 +51,17 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
     private Model model;
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
-    private KBId kbId;
-    private KBCore core;
+    private IndexID indexID;
     private Namespace namespace;
     private Iterator<Tuple> iterator;
     private Tuple currentTuple;
 
-    public CanonicalEntityIterator(Stargraph stargraph, KBId kbId) {
-        this.kbId = Objects.requireNonNull(kbId);
-        this.core = stargraph.getKBCore(kbId.getId());
-        this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
-        this.model = core.getGraphModel();
+    public CanonicalEntityIterator(Stargraph stargraph, IndexID indexID) {
+        KnowledgeBase kb = stargraph.getKnowledgeBase(indexID.getKnowledgeBase());
+        JenaGraphDatabase database = (JenaGraphDatabase) kb.getDatabase(DBType.Graph);
+        this.indexID = Objects.requireNonNull(indexID);
+        this.namespace = database.getNamespace();
+        this.model = database.getModel();
         this.iterator = createIterator();
     }
 
@@ -99,7 +97,7 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
             return new Indexable(ModelUtils.createCanonicalEntity(
                     applyNS(currentTuple.resUri()),
                     applyNS(currentTuple.refUri())
-            ), kbId);
+            ), indexID);
 
         } finally {
             currentTuple = null;
@@ -113,27 +111,10 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
         return uri;
     }
 
-    private final static String ENTITY_QUERY_WITH_REDIRECTS =
-            "SELECT DISTINCT ?resource ?redir WHERE { {" +
-                    " ?resource ?p ?o. " +
-                    "OPTIONAL { ?resource <http://dbpedia.org/ontology/wikiPageRedirects> ?redir }" +
-                    "} UNION {" +
-                    " ?s ?p ?resource." +
-                    "OPTIONAL { ?resource <http://dbpedia.org/ontology/wikiPageRedirects> ?redir }" +
-                    "} }";
 
-    private final static String ENTITY_QUERY_SUBJ_ONLY =
-            "SELECT ?resource ?redir WHERE {" +
-                    " ?resource ?p ?o . " +
-                    "OPTIONAL { ?resource <http://dbpedia.org/ontology/wikiPageRedirects> ?redir . }" +
-                    "}";
-
-
-    public Iterator<Tuple> createIterator() {
+    private Iterator<Tuple> createIterator() {
         logger.debug(marker, "Model has {} entries.", model.size());
-        //Query query = QueryFactory.create(ENTITY_QUERY_WITH_REDIRECTS);
         Graph g = model.getGraph();
-//        Triple(null, model.createProperty("<http://dbpedia.org/ontology/wikiPageRedirects>").asNode(), null
         ExtendedIterator<Triple> exIt = g.find(Node.ANY, NodeUtils.asNode("http://dbpedia.org/ontology/wikiPageRedirects"), null);
 
 
@@ -143,10 +124,6 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
         exIt = g.find(null, null, Node.ANY);
         ExtendedIterator<Tuple> objIt = exIt.mapWith(triple -> new Tuple(triple.getObject(), null));
 
-//        logger.debug(marker, "Performing following query on the model:\n{}", query.toString());
-//        QueryExecution execution = QueryExecutionFactory.create(query, model);
-//        ResultSet resultSet = execution.execSelect();
-//        return redirIt;
         return Iterators.concat(redirIt, subjIt, objIt);
     }
 
@@ -167,18 +144,14 @@ public final class CanonicalEntityIterator implements Iterator<Indexable> {
 
         Tuple(Triple triple) {
             this(triple.getSubject(), triple.getObject());
-            //logger.debug(marker, "Creating new tuple from triple {}", triple);
         }
 
-//        Tuple(QuerySolution row) {
-//            this(row.get("resource"), row.get("redir"));
-//        }
 
-        public String resUri() {
+        String resUri() {
             return res.getURI();
         }
 
-        public String refUri() {
+        String refUri() {
             return hasRef ? ref.getURI() : null;
         }
     }

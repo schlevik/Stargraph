@@ -27,9 +27,9 @@ package net.stargraph.core;
  */
 
 import net.stargraph.StarGraphException;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.search.Searcher;
-import net.stargraph.model.KBId;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
+import net.stargraph.model.IndexID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -49,11 +49,11 @@ public final class KBLoader {
     private Logger logger = LoggerFactory.getLogger(getClass());
     private Marker marker = MarkerFactory.getMarker("core");
     private ExecutorService executor;
-    private KBCore core;
+    private KnowledgeBase core;
     private boolean loading;
     private String lastResetKey;
 
-    KBLoader(KBCore core) {
+    KBLoader(KnowledgeBase core) {
         this.core = Objects.requireNonNull(core);
         this.executor = Executors.newSingleThreadExecutor();
         this.lastResetKey = null;
@@ -64,7 +64,7 @@ public final class KBLoader {
             throw new StarGraphException("Loaders are in progress...");
         }
 
-        boolean hasSomeData = core.getKBIds().parallelStream().anyMatch(this::containsData);
+        boolean hasSomeData = core.getIndexIDs().parallelStream().anyMatch(this::containsData);
 
         if (hasSomeData) {
             if (lastResetKey == null) {
@@ -72,7 +72,7 @@ public final class KBLoader {
                 String msg = String.format("This KB (%s) is not empty. " +
                         "This operation WILL OVERWRITE EVERYTHING. " +
                         "Repeat this request to confirm your action adding the query param 'resetKey=%s' to the URL.",
-                        core.getKBName(), lastResetKey);
+                        core.getName(), lastResetKey);
                 throw new StarGraphException(msg);
             }
             else {
@@ -80,7 +80,7 @@ public final class KBLoader {
                     logger.warn(marker, "Wrong reset key='{}'", resetKey);
                     String msg = String.format("Wrong RESET KEY for KB (%s). " +
                             "Repeat this request to confirm your action adding the query param 'resetKey=%s' to the URL.",
-                            core.getKBName(), lastResetKey);
+                            core.getName(), lastResetKey);
                     throw new StarGraphException(msg);
                 }
 
@@ -91,7 +91,7 @@ public final class KBLoader {
         executor.submit(() -> {
             loading = true;
             try {
-                doLoadAll(core.getKBName());
+                doLoadAll(core.getName());
             } catch (InterruptedException e) {
                 logger.error(marker, "Interrupted.", e);
             }
@@ -103,13 +103,13 @@ public final class KBLoader {
 
     private void doLoadAll(String dbId) throws InterruptedException {
         logger.warn(marker, "Loading ALL DATA of '{}'. This can take some time ;) ..", dbId);
-        List<KBId> successful = new ArrayList<>();
-        List<KBId> failing = new ArrayList<>();
-        core.getKBIds().forEach(kbId -> { // why not parallel?
+        List<IndexID> successful = new ArrayList<>();
+        List<IndexID> failing = new ArrayList<>();
+        core.getIndexIDs().forEach(kbId -> { // why not parallel?
             try {
-                Indexer indexer = core.getIndexer(kbId.getModel());
-                indexer.load(true, -1);
-                indexer.awaitLoader();
+                IndexPopulator indexPopulator = core.getIndexPopulator(kbId.getIndex());
+                indexPopulator.load(true, -1);
+                indexPopulator.awaitLoader();
                 successful.add(kbId);
             } catch (Exception e) {
                 logger.error(marker, "Fail to load {}", kbId);
@@ -125,8 +125,8 @@ public final class KBLoader {
         }
     }
 
-    private boolean containsData(KBId kbId) {
-        Searcher searcher = core.getSearcher(kbId.getModel());
+    private boolean containsData(IndexID indexID) {
+        IndexSearchExecutor searcher = core.getSearchExecutor(indexID.getIndex());
         return searcher.countDocuments() > 0;
     }
 }

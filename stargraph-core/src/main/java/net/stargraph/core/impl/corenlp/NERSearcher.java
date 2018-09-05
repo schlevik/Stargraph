@@ -28,9 +28,11 @@ package net.stargraph.core.impl.corenlp;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import net.stargraph.StarGraphException;
+import net.stargraph.core.Index;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
-import net.stargraph.core.search.EntitySearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
 import net.stargraph.model.InstanceEntity;
 import net.stargraph.query.Language;
 import net.stargraph.rank.ModifiableSearchParams;
@@ -48,14 +50,17 @@ public final class NERSearcher implements NER {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Marker marker = MarkerFactory.getMarker("ner");
     private CoreNLPNERClassifier ner;
-    private EntitySearcher entitySearcher;
-    private String entitySearcherDbId;
+    private EntityIndexSearcher entityIndexSearcher;
     private boolean reverseNameOrder;
 
-    public NERSearcher(Language language, EntitySearcher entitySearcher, String entitySearcherDbId) {
-        this.ner = new CoreNLPNERClassifier(Objects.requireNonNull(language));
-        this.entitySearcher = Objects.requireNonNull(entitySearcher);
-        this.entitySearcherDbId = Objects.requireNonNull(entitySearcherDbId);
+    public NERSearcher(Index index) {
+        this.ner = new CoreNLPNERClassifier(Objects.requireNonNull(index.getKnowledgeBase().getLanguage()));
+        if (!EntityIndexSearcher.class.isAssignableFrom(index.getSearcher().getClass())) {
+            logger.debug(marker, "'{}' assinable from Entity index searcher?: {}", index.getSearcher().getClass(),
+                    index.getSearcher().getClass().isAssignableFrom(EntityIndexSearcher.class));
+            throw new StarGraphException("NERSearcher accepts only entity index!");
+        }
+        this.entityIndexSearcher = (EntityIndexSearcher) index.getSearcher();
         this.reverseNameOrder = false; //TODO: read from configuration, specific for each KB.
     }
 
@@ -69,8 +74,7 @@ public final class NERSearcher implements NER {
             logger.trace(marker, "NER output: {}", sentences);
             linked = postProcessFoundNamedEntities(sentences);
             return linked;
-        }
-        finally {
+        } finally {
             double elapsedInMillis = (System.nanoTime() - start) / 1000_000;
             logger.debug(marker, "Took {}ms, entities: {}, text: '{}'", elapsedInMillis, linked, text);
         }
@@ -80,9 +84,7 @@ public final class NERSearcher implements NER {
         final List<List<LinkedNamedEntity>> sentenceList = mergeConsecutiveNamedEntities(sentences);
 
         if (this.reverseNameOrder) {
-            sentenceList.forEach(sentence -> {
-                sentence.forEach(LinkedNamedEntity::reverseValue);
-            });
+            sentenceList.forEach(sentence -> sentence.forEach(LinkedNamedEntity::reverseValue));
         }
 
         if (sentenceList.isEmpty() || (sentenceList.size() == 1 && sentenceList.get(0).isEmpty())) {
@@ -96,7 +98,7 @@ public final class NERSearcher implements NER {
     /**
      * Receives a list of CoreLabel (from CoreNLP package) and merges two consecutive named entities with
      * the same label into a single one.
-     *
+     * <p>
      * Example: "Barack/PERSON Obama/PERSON" becomes "Barack Obama/PERSON"
      *
      * @param sentences List of lists of CoreLabels
@@ -113,8 +115,8 @@ public final class NERSearcher implements NER {
 
             /*
                 A named entity is composed of multiple words, most of the time.
-                Two consecutive words belong to entitiesone named entity if they have the same label.
-                This method does not differentiate two different named entities when they are not
+                Two consecutive words belong to the same named entity if they have the same label.
+                This method does not differentiate between two different named entities when they are not
                 divided by a different label.
                 CoreNLP labels words that are not a named entity with "O", so we remove these from the output.
              */
@@ -188,15 +190,15 @@ public final class NERSearcher implements NER {
         if (!namedEntity.getCat().equalsIgnoreCase("DATE")) {
             //TODO: Limit reduce network latency but can hurt precision in some cases
             ModifiableSearchParams searchParams =
-                    ModifiableSearchParams.create(this.entitySearcherDbId).term(namedEntity.getValue()).limit(50);
+                    ModifiableSearchParams.create().term(namedEntity.getValue()).limit(50);
 
             logger.trace(marker, "Trying to link {}", namedEntity);
 
-            final Scores scores = entitySearcher.instanceSearch(searchParams, ParamsBuilder.levenshtein());
+            final Scores<InstanceEntity> scores = entityIndexSearcher.instanceSearch(searchParams, ParamsBuilder.levenshtein());
 
             // Currently, we only care about the highest scored entity.
             if (scores.size() > 0) {
-                InstanceEntity instance = (InstanceEntity) scores.get(0).getEntry();
+                InstanceEntity instance = scores.get(0).getEntry();
                 double score = scores.get(0).getValue();
                 namedEntity.link(instance, score);
             }

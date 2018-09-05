@@ -27,14 +27,16 @@ package net.stargraph.core.impl.lucene;
  */
 
 import net.stargraph.StarGraphException;
-import net.stargraph.core.IndicesFactory;
-import net.stargraph.core.KBCore;
+import net.stargraph.core.Index;
+import net.stargraph.core.IndexFactory;
+import net.stargraph.core.KnowledgeBase;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.index.BaseIndexer;
-import net.stargraph.core.search.BaseSearcher;
-import net.stargraph.core.search.DocumentSearcher;
-import net.stargraph.core.search.EntitySearcher;
-import net.stargraph.model.KBId;
+import net.stargraph.core.index.BaseIndexPopulator;
+import net.stargraph.core.search.executor.BaseIndexSearchExecutor;
+import net.stargraph.core.search.index.DocumentIndexSearcher;
+import net.stargraph.core.search.index.EntityIndexSearcher;
+import net.stargraph.core.search.index.IndexSearcher;
+import net.stargraph.model.IndexID;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MMapDirectory;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -45,35 +47,35 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class LuceneFactory implements IndicesFactory {
-    private Map<KBId, Directory> luceneDirs = new ConcurrentHashMap<>();
+public final class LuceneFactory implements IndexFactory {
+    private Map<IndexID, Directory> luceneDirs = new ConcurrentHashMap<>();
 
     @Override
-    public BaseIndexer createIndexer(KBId kbId, Stargraph stargraph) {
-        return new LuceneIndexer(kbId, stargraph, getLuceneDir(stargraph, kbId));
+    public BaseIndexPopulator createIndexer(IndexID indexID, Stargraph stargraph) {
+        return new LuceneIndexPopulator(indexID, stargraph, getLuceneDir(stargraph, indexID));
     }
 
     @Override
-    public BaseSearcher createSearcher(KBId kbId, Stargraph stargraph) {
-        return new LuceneSearcher(kbId, stargraph, getLuceneDir(stargraph, kbId));
+    public BaseIndexSearchExecutor createSearchExecutor(IndexID indexID, Stargraph stargraph) {
+        return new LuceneIndexSearchExecutor(indexID, stargraph, getLuceneDir(stargraph, indexID));
     }
 
     @Override
-    public EntitySearcher createEntitySearcher(KBCore core) {
-        return new LuceneCanonicalEntitySearcher(core);
+    public Class getImplementationFor(Class<? extends IndexSearcher> iFace) {
+        if (iFace.equals(EntityIndexSearcher.class)) {
+            return LuceneCanonicalEntityIndexSearcher.class;
+        } else {
+            throw new NotImplementedException();
+        }
     }
 
-    @Override
-    public DocumentSearcher createDocumentSearcher(KBCore core) {
-        throw new NotImplementedException();
-    }
 
-    private Directory getLuceneDir(Stargraph stargraph, KBId kbId) {
-        return luceneDirs.computeIfAbsent(kbId,
+    private Directory getLuceneDir(Stargraph stargraph, IndexID indexID) {
+        return luceneDirs.computeIfAbsent(indexID,
                 (id) -> {
                     try {
                         String rootPath = stargraph.getDataRootDir();
-                        Path idxPath = Paths.get(rootPath, id.getId(), id.getModel(), "idx");
+                        Path idxPath = Paths.get(rootPath, id.getKnowledgeBase(), id.getIndex(), "idx");
                         return new MMapDirectory(idxPath);
                     } catch (IOException e) {
                         throw new StarGraphException(e);

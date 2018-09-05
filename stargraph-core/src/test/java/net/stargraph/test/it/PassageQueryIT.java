@@ -29,19 +29,18 @@ package net.stargraph.test.it;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.corenlp.NERSearcher;
-import net.stargraph.core.index.Indexer;
+import net.stargraph.core.features.NERFeature;
+import net.stargraph.core.index.IndexPopulator;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
 import net.stargraph.core.query.QueryEngine;
 import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.search.Searcher;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
 import net.stargraph.data.Indexable;
 import net.stargraph.model.Document;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -65,8 +64,8 @@ import java.util.List;
 public final class PassageQueryIT {
 
     private String id = "lucene-dbpedia";
-    KBId documentsKBId = KBId.of(id, "documents");
-    KBId entitiesKBId = KBId.of(id, "entities");
+    IndexID documentsIndexID = IndexID.of(id, "documents");
+    IndexID entitiesIndexID = IndexID.of(id, "entities");
     Stargraph stargraph;
     QueryEngine queryEngine;
 
@@ -76,26 +75,29 @@ public final class PassageQueryIT {
         stargraph = new Stargraph(ConfigFactory.load().getConfig("stargraph"), false);
 
 
-        TestUtils.assertElasticRunning(stargraph.getModelConfig(documentsKBId));
+        //TestUtils.assertElasticRunning(stargraph.getIndexConfig(documentsIndexID));
 
         stargraph.setKBInitSet(id);
         stargraph.initialize();
 
-        TestUtils.ensureLuceneIndexExists(stargraph, entitiesKBId);
-
+        TestUtils.ensureLuceneIndexExists(stargraph, entitiesIndexID);
+//        TestUtils.populateEntityIndex(stargraph.getPopulator(entitiesIndexID));
+//        System.out.println(stargraph.getSearchExecutor(entitiesIndexID).countDocuments());
+//        System.out.println("INDEX POPULATED!!!!");
+//        Assert.assertTrue(false);
 
         queryEngine = new QueryEngine(id, stargraph);
 
 
-        URI u = getClass().getClassLoader().getResource("apple.txt").toURI();
+        URI u = getClass().getClassLoader().getResource("obama.txt").toURI();
         Assert.assertNotNull(u);
         String text = new String(Files.readAllBytes(Paths.get(u)));
 
         // if index doesn't exist, create it
-        Searcher searcher = stargraph.getSearcher(documentsKBId);
-        if (searcher.countDocuments() != 2) {
+        IndexSearchExecutor searcher = stargraph.getSearcher(documentsIndexID);
+        if (searcher.countDocuments() != 1) {
 
-            String location = stargraph.getModelConfig(documentsKBId).getConfigList("processors")
+            String location = stargraph.getConfig().getIndexConfig(documentsIndexID).getConfigList("processors")
                     .stream()
                     .map(proc -> proc.getConfig("coref-processor"))
                     .findAny()
@@ -104,11 +106,11 @@ public final class PassageQueryIT {
             TestUtils.assertCorefRunning(location);
 
 
-            Indexer indexer = stargraph.getIndexer(documentsKBId);
+            IndexPopulator indexer = stargraph.getIndexer(documentsIndexID);
 
             indexer.deleteAll();
 
-            indexer.index(new Indexable(new Document("apple.txt", "Apple", text), documentsKBId));
+            indexer.index(new Indexable(new Document("obama.txt", "Obama", text), documentsIndexID));
             indexer.flush();
         }
     }
@@ -116,18 +118,20 @@ public final class PassageQueryIT {
 
     @Test
     public void nerLinkTest() {
-        NER ner = stargraph.getKBCore(id).getNER();
-        List<LinkedNamedEntity> entities = ner.searchAndLink("Apple Inc");
+        NER ner = stargraph.getKnowledgeBase(id).getFeature(NERFeature.class);
+        List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Hussein Obama");
         System.out.println(entities);
-        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Apple_Inc."));
+        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 
 
-    @Test
+    @Test(enabled = false)
     public void successfullyAnswerPassageQuery() {
-        String passageQuery = "PASSAGE What does Apple Inc.'s future performance depend on?";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);
-        String expected = "Apple Inc. 's future performance depends in part on support from third-party software developers .";
+        String passageQuery = "PASSAGE When did Barack Obama travel to India?";
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery).getAny();
+        String expected = "In mid-1981 , Barack Hussein Obama II traveled to Indonesia " +
+                "to visit Barack Hussein Obama II 's mother and half-sister Maya , " +
+                "and visited the families of college friends in Pakistan and India for three weeks .";
         Assert.assertEquals(response.getTextAnswer().get(0), expected);
 
 

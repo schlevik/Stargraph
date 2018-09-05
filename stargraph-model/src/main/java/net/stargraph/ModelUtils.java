@@ -2,7 +2,7 @@ package net.stargraph;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -145,18 +145,18 @@ public final class ModelUtils {
         return new PropertyEntity(uri, extractLabel(uri, true));
     }
 
-    public static Fact createFact(KBId kbId, String s, String p, String o) {
-        return new Fact(kbId, ModelUtils.createInstance(s), ModelUtils.createProperty(p), ModelUtils.createInstance(o));
+    public static Fact createFact(IndexID indexID, String s, String p, String o) {
+        return new Fact(indexID, ModelUtils.createInstance(s), ModelUtils.createProperty(p), ModelUtils.createInstance(o));
     }
 
-    public static Holder createWrappedFact(KBId kbId, String s, String p, String o) {
-        Fact fact = ModelUtils.createFact(kbId, s, p, o);
-        return new Indexable(fact, kbId);
+    public static Holder createWrappedFact(IndexID indexID, String s, String p, String o) {
+        Fact fact = ModelUtils.createFact(indexID, s, p, o);
+        return new Indexable(fact, indexID);
     }
 
-    public static Holder createWrappedProperty(KBId kbId, String p) {
+    public static Holder createWrappedProperty(IndexID indexID, String p) {
         PropertyEntity propertyEntity = ModelUtils.createProperty(p);
-        return new Indexable(propertyEntity, kbId);
+        return new Indexable(propertyEntity, indexID);
     }
 
     private static String getNamespace(String uriStr) {

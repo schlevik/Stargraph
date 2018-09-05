@@ -32,7 +32,7 @@ import net.stargraph.core.FactProviderFactory;
 import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
 import net.stargraph.data.DataProvider;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -55,24 +55,26 @@ public class FactProviderTest {
     @Test
     public void factIterateTest() {
         Stargraph core = new Stargraph(config, false);
+        core.setKBInitSet("obama");
         core.setDataRootDir(root.toFile());
         core.initialize();
-        KBId kbId = KBId.of("obama", "facts");
+        IndexID indexID = IndexID.of("obama", "facts");
         FactProviderFactory factory = new FactProviderFactory(core);
-        DataProvider<?> provider = factory.create(kbId);
+        DataProvider<?> provider = factory.create(indexID);
         Assert.assertEquals(provider.getStream().count(), 1877);
     }
 
     @Test
     public void factFromNTriplesTest() throws IOException {
         Stargraph core = new Stargraph(config, false);
+        core.setKBInitSet("obama");
         core.setDataRootDir(root.toFile());
-        core.setDefaultGraphModelFactory(new NTriplesModelFactory(core));
+        core.setDefaultDatabaseFactory(new NTriplesModelFactory(core));
         core.initialize();
 
-        KBId kbId = KBId.of("obama", "facts");
+        IndexID indexID = IndexID.of("obama", "facts");
         FactProviderFactory factory = new FactProviderFactory(core);
-        DataProvider<?> provider = factory.create(kbId);
+        DataProvider<?> provider = factory.create(indexID);
         Assert.assertEquals(provider.getStream().count(), 1877);
     }
 

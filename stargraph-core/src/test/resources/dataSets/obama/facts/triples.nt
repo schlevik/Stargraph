@@ -169,7 +169,7 @@
 <http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/guardian> "world/barack-obama"@en .
 <http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/worldcat> "lccn-n94-112934"@en .
 <http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/nndb> "208"^^<http://www.w3.org/2001/XMLSchema#integer> .
-<http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/id> "Obama,+Barack"@en .
+<http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/knowledgeBase> "Obama,+Barack"@en .
 <http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/title> "Offices and distinctions"@en .
 <http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/book> "Barack Obama"@en .
 <http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/property/portal> "Barack Obama"@en .

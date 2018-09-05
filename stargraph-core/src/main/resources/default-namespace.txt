@@ -53,7 +53,7 @@ dbpedia-he http://he.dbpedia.org/resource/
 dbpedia-hr http://hr.dbpedia.org/resource/
 dbpedia-hsb http://hsb.dbpedia.org/resource/
 dbpedia-hu http://hu.dbpedia.org/resource/
-dbpedia-id http://id.dbpedia.org/resource/
+dbpedia-knowledgeBase http://knowledgeBase.dbpedia.org/resource/
 dbpedia-ie http://ie.dbpedia.org/resource/
 dbpedia-io http://io.dbpedia.org/resource/
 dbpedia-is http://is.dbpedia.org/resource/

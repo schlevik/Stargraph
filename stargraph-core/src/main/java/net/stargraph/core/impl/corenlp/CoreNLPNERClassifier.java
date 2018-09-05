@@ -60,7 +60,7 @@ public class CoreNLPNERClassifier {
                 try {
                     classifier = CRFClassifier.getClassifier("edu/stanford/nlp/models/ner/english.muc.7class.distsim.crf.ser.gz");
                 } catch (IOException | ClassNotFoundException e) {
-                    LOGGER.error("Cannot initialize english CoreNLP model: {}", e.getMessage());
+                    LOGGER.error("Cannot initialize english CoreNLP index: {}", e.getMessage());
                     throw new StarGraphException("CoreNLP models not found; cannot continue");
                 }
                 break;
@@ -69,7 +69,7 @@ public class CoreNLPNERClassifier {
                     // classifier = CRFClassifier.getClassifier("edu/stanford/nlp/models/ner/german.hgc_175m_600.crf.ser.gz");
                     classifier = CRFClassifier.getClassifier("edu/stanford/nlp/models/ner/german.dewac_175m_600.crf.ser.gz");
                 } catch (IOException | ClassNotFoundException e) {
-                    LOGGER.error("Cannot initialize german CoreNLP model: {}", e.getMessage());
+                    LOGGER.error("Cannot initialize german CoreNLP index: {}", e.getMessage());
                     throw new StarGraphException("CoreNLP models not found; cannot continue");
                 }
                 break;

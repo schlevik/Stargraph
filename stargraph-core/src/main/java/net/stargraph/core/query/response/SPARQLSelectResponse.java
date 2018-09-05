@@ -12,10 +12,10 @@ package net.stargraph.core.query.response;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@ package net.stargraph.core.query.response;
  * ==========================License-End===============================
  */
 
-import net.stargraph.core.query.QueryResponse;
+import net.stargraph.core.query.AbstractQueryResolver;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.query.InteractionMode;
 
@@ -37,8 +37,8 @@ import java.util.Objects;
 public final class SPARQLSelectResponse extends QueryResponse {
     private Map<String, List<LabeledEntity>> bindings;
 
-    public SPARQLSelectResponse(InteractionMode interactionMode, String userQuery, Map<String, List<LabeledEntity>> bindings) {
-        super(interactionMode, userQuery);
+    public SPARQLSelectResponse(AbstractQueryResolver source, String userQuery, Map<String, List<LabeledEntity>> bindings) {
+        super(userQuery, source);
         this.bindings = Objects.requireNonNull(bindings);
     }
 

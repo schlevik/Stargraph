@@ -29,11 +29,13 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
+import net.stargraph.core.NTriplesModelFactory;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.lucene.LuceneEntitySearcher;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.core.search.Searcher;
-import net.stargraph.model.KBId;
+import net.stargraph.core.impl.lucene.LuceneEntityIndexSearcher;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.core.search.executor.IndexSearchExecutor;
+import net.stargraph.model.IndexID;
+import net.stargraph.model.InstanceEntity;
 import net.stargraph.rank.*;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -45,7 +47,7 @@ import java.io.File;
 public final class LuceneTest {
     // lucene-obama uses lucene. DUH
     private String id = "lucene-obama";
-    private KBId kbId = KBId.of(id, "entities");
+    private IndexID indexID = IndexID.of(id, "entities");
     private Stargraph stargraph;
     private File dataRootDir;
 
@@ -54,26 +56,27 @@ public final class LuceneTest {
     public void beforeClass() {
         ConfigFactory.invalidateCaches();
         Config config = ConfigFactory.load().getConfig("stargraph");
-        dataRootDir = TestUtils.prepareObamaTestEnv(kbId.getId()).toFile();
+        dataRootDir = TestUtils.prepareObamaTestEnv(indexID.getKnowledgeBase()).toFile();
         this.stargraph = new Stargraph(config, false);
-        this.stargraph.setKBInitSet(kbId.getId());
+        this.stargraph.setKBInitSet(indexID.getKnowledgeBase());
         this.stargraph.setDataRootDir(dataRootDir);
+        //this.stargraph.setDefaultDatabaseFactory(new NTriplesModelFactory(stargraph));
         this.stargraph.initialize();
     }
 
 
     @Test
     public void bulkLoadTest() throws Exception {
-        Indexer indexer = stargraph.getIndexer(kbId);
+        IndexPopulator indexer = stargraph.getIndexer(indexID);
         indexer.load(true, -1);
         indexer.awaitLoader();
-        Searcher searcher = stargraph.getSearcher(kbId);
+        IndexSearchExecutor searcher = stargraph.getSearcher(indexID);
         Assert.assertEquals(searcher.countDocuments(), 756);
     }
 
     @Test
     public void searchTest() {
-        LuceneEntitySearcher entitySearcher = new LuceneEntitySearcher(this.stargraph.getKBCore(id));
+        LuceneEntityIndexSearcher entitySearcher = new LuceneEntityIndexSearcher(stargraph.getIndex(indexID));
         ModifiableSearchParams searchParams = ModifiableSearchParams
                 .create(id)
                 .term("Barack Obama")
@@ -81,7 +84,7 @@ public final class LuceneTest {
         ModifiableRankParams rankParams = new ModifiableRankParams().
                 rankingModel(RankingModel.LEVENSHTEIN).
                 threshold(Threshold.auto());
-        Scores result = entitySearcher.instanceSearch(searchParams, rankParams);
+        Scores<InstanceEntity> result = entitySearcher.instanceSearch(searchParams, rankParams);
         Assert.assertEquals(result.get(0).getEntry(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 

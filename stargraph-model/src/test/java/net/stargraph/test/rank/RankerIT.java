@@ -2,7 +2,7 @@ package net.stargraph.test.rank;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -34,6 +34,7 @@ import net.stargraph.rank.impl.IndraRanker;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import static net.stargraph.test.rank.RankTestUtils.createRankable;
@@ -46,10 +47,10 @@ public final class RankerIT {
         ModifiableIndraParams params = ParamsBuilder.word2vec().corpus("wiki-2014").language("EN").url(getIndraURL());
         Ranker ranker = new IndraRanker(params);
 
-        Scores scores = new Scores(Arrays.asList(createScore("husband", 100), createScore("husband", 100),
+        Scores<Serializable> scores = new Scores<>(Arrays.asList(createScore("husband", 100), createScore("husband", 100),
                 createScore("children", 94), createScore("partner", 51), createScore("father", 1)));
 
-        Scores rescored = ranker.score(scores, createRankable("wife"));
+        Scores<Serializable> rescored = ranker.score(scores, createRankable("wife"));
         Assert.assertEquals(rescored.get(0).getRankableView().getValue(), "husband");
     }
 

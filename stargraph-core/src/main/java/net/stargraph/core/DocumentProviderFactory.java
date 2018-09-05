@@ -29,7 +29,7 @@ package net.stargraph.core;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.Indexable;
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.util.List;
 
@@ -43,12 +43,12 @@ public final class DocumentProviderFactory extends BaseDataProviderFactory {
     }
 
     @Override
-    public DataProvider<Indexable> create(KBId kbId) {
-        return new DataProvider<>(new DocumentIterator(core, kbId));
+    public DataProvider<Indexable> create(IndexID indexID) {
+        return new DataProvider<>(new DocumentIterator(core, indexID));
     }
 
     @Override
-    public DataProvider<? extends Holder> create(KBId kbId, List data) {
+    public DataProvider<? extends Holder> create(IndexID indexID, List data) {
         // TODO: 1/5/18 implement or refactor
         return null;
     }

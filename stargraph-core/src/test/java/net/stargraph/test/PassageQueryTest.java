@@ -28,10 +28,8 @@ package net.stargraph.test;
 
 import net.stargraph.core.Stargraph;
 import net.stargraph.core.query.QueryEngine;
-import net.stargraph.core.query.QueryResponse;
+import net.stargraph.core.query.passage.PassageQueryResolver;
 import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.query.response.NoResponse;
-import net.stargraph.model.InstanceEntity;
 import net.stargraph.query.InteractionMode;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -58,11 +56,11 @@ public class PassageQueryTest {
     public void successfullyDetectPassageQueryTest() {
 
         String passageQuery = "PASSAGE What does Barack Obama like to eat?";
-        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery);
+        AnswerSetResponse response = (AnswerSetResponse) queryEngine.query(passageQuery).getAny();
 
         List<String> expected = new ArrayList<>();
         expected.add("Barack Obama likes to eat garlic bread .");
-        Assert.assertEquals(response.getInteractionMode(), InteractionMode.PASSAGE);
+        Assert.assertEquals(response.getSource().getClass(), PassageQueryResolver.class);
 
         Assert.assertEquals(response.getTextAnswer(), expected);
 

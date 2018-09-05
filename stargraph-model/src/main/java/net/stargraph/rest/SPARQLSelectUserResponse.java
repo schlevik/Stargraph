@@ -2,7 +2,7 @@ package net.stargraph.rest;
 
 /*-
  * ==========================License-Start=============================
- * stargraph-model
+ * stargraph-index
  * --------------------------------------------------------------------
  * Copyright (C) 2017 Lambda^3
  * --------------------------------------------------------------------
@@ -32,11 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class SPARQLSelectUserResponse extends UserResponse {
+public final class SPARQLSelectUserResponse extends PartialResponse {
     private Map<String, List<String>> bindings;
 
-    public SPARQLSelectUserResponse(String query, InteractionMode interactionMode) {
-        super(query, interactionMode);
+    public SPARQLSelectUserResponse(String source) {
+        super(source);
     }
 
     public void setBindings(Map<String, List<String>> bindings) {

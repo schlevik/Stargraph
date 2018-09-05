@@ -29,17 +29,14 @@ package net.stargraph.test;
 import com.typesafe.config.Config;
 import net.stargraph.StarGraphException;
 import net.stargraph.core.Stargraph;
-import net.stargraph.core.impl.elastic.ElasticEntitySearcher;
-import net.stargraph.core.index.Indexer;
-import net.stargraph.model.KBId;
+import net.stargraph.core.index.IndexPopulator;
+import net.stargraph.model.IndexID;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.testng.Assert;
 
-import javax.management.RuntimeErrorException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,9 +50,9 @@ import java.util.concurrent.TimeoutException;
 
 public final class TestUtils {
 
-    public static Path createPath(Path root, KBId kbId) throws IOException {
+    public static Path createPath(Path root, IndexID indexID) throws IOException {
         Files.delete(root);
-        return Files.createDirectories(root.resolve(kbId.getId()).resolve(kbId.getModel()));
+        return Files.createDirectories(root.resolve(indexID.getKnowledgeBase()).resolve(indexID.getIndex()));
     }
 
     public static File copyResource(String resourceLocation, Path target) {
@@ -81,7 +78,7 @@ public final class TestUtils {
 //        Path root;
 //        try {
 //            root = Files.createTempFile("stargraph-", "-dataDir");
-//            Path factsPath = createPath(root, KBId.of(kbID, "facts"));
+//            Path factsPath = createPath(root, IndexID.of(kbID, "facts"));
 //            Path hdtPath = factsPath.resolve("triples.hdt");
 //            Path ntFilePath = factsPath.resolve("triples.nt");
 //            copyResource("dataSets/obama/facts/triples.hdt", hdtPath);
@@ -96,7 +93,7 @@ public final class TestUtils {
         Path root;
         try {
             root = Files.createTempFile("stargraph-", "-dataDir");
-            Path factsPath = createPath(root, KBId.of(kbID, "facts"));
+            Path factsPath = createPath(root, IndexID.of(kbID, "facts"));
             Path ntFilePath = factsPath.resolve("triples.nt");
             copyResource(Paths.get(ntResourceLocation).toString(), ntFilePath);
             if (hdtResourceLocation != null) {
@@ -159,7 +156,7 @@ public final class TestUtils {
 
     }
 
-    public static void ensureLuceneIndexExists(Stargraph stargraph, KBId entityIndex) {
+    public static void ensureLuceneIndexExists(Stargraph stargraph, IndexID entityIndex) {
         boolean indexExists = true;
         try {
             stargraph.getSearcher(entityIndex).countDocuments();
@@ -178,13 +175,13 @@ public final class TestUtils {
         }
     }
 
-    public static boolean doesLuceneIndexExist(Path path, KBId kbAndIndex) {
-        Path idxPath = path.resolve(kbAndIndex.getId()).resolve(kbAndIndex.getModel()).resolve("idx");
+    public static boolean doesLuceneIndexExist(Path path, IndexID kbAndIndex) {
+        Path idxPath = path.resolve(kbAndIndex.getKnowledgeBase()).resolve(kbAndIndex.getIndex()).resolve("idx");
         return Files.exists(idxPath);
 
     }
 
-    public static void populateEntityIndex(Indexer indexer) throws InterruptedException, TimeoutException, ExecutionException {
+    public static void populateEntityIndex(IndexPopulator indexer) throws InterruptedException, TimeoutException, ExecutionException {
         indexer.load(true, -1);
         indexer.awaitLoader();
 

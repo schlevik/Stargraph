@@ -27,11 +27,9 @@ package net.stargraph.server;
  */
 
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.query.Query;
 import net.stargraph.core.query.QueryEngine;
-import net.stargraph.core.query.QueryResponse;
-import net.stargraph.core.query.response.AnswerSetResponse;
-import net.stargraph.core.query.response.NoResponse;
-import net.stargraph.core.query.response.SPARQLSelectResponse;
+import net.stargraph.core.query.response.*;
 import net.stargraph.model.LabeledEntity;
 import net.stargraph.rest.*;
 import org.slf4j.Logger;
@@ -60,8 +58,8 @@ public final class QueryResourceImpl implements QueryResource {
         try {
             if (core.hasKB(id)) {
                 QueryEngine engine = engines.computeIfAbsent(id, (k) -> new QueryEngine(k, core));
-                QueryResponse queryResponse = engine.query(q);
-                return Response.status(Response.Status.OK).entity(buildUserResponse(queryResponse)).build();
+                Query result = engine.query(q);
+                return Response.status(Response.Status.OK).entity(buildUserResponse(result)).build();
             }
             return Response.status(Response.Status.NOT_FOUND).build();
         } catch (Exception e) {
@@ -70,49 +68,65 @@ public final class QueryResourceImpl implements QueryResource {
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    public UserResponse buildUserResponse(QueryResponse queryResponse) {
+    private UserResponse buildUserResponse(Query result) {
 
-        if (queryResponse instanceof NoResponse) {
-            return new NoUserResponse(queryResponse.getUserQuery(), queryResponse.getInteractionMode());
-        } else if (queryResponse instanceof AnswerSetResponse) {
-            AnswerSetResponse answerSet = (AnswerSetResponse) queryResponse;
-            if (answerSet.getSparqlQuery() == null) {
-                return new TextUserResponse(answerSet.getUserQuery(), answerSet.getInteractionMode(), String.join("\n", answerSet.getTextAnswer()));
-            }
-            SchemaAgnosticUserResponse response =
-                    new SchemaAgnosticUserResponse(answerSet.getUserQuery(), answerSet.getInteractionMode(), answerSet.getSparqlQuery());
-
-            List<UserResponse.EntityEntry> answers = answerSet.getEntityAnswer().stream()
-                    .map(a -> new UserResponse.EntityEntry(a.getId(), a.getValue())).collect(Collectors.toList());
-
-            response.setAnswers(answers);
-
-            final Map<String, List<UserResponse.EntityEntry>> mappings = new HashMap<>();
-            answerSet.getMappings().forEach((modelBinding, scoreList) -> {
-                List<UserResponse.EntityEntry> entries = scoreList.stream()
-                        .map(s -> new UserResponse.EntityEntry(s.getRankableView().getId(),
-                                s.getRankableView().getValue(), s.getValue()))
-                        .collect(Collectors.toList());
-                mappings.computeIfAbsent(modelBinding.getTerm(), (term) -> new ArrayList<>()).addAll(entries);
-            });
-
-            response.setMappings(mappings);
-            return response;
-        } else if (queryResponse instanceof SPARQLSelectResponse) {
-            SPARQLSelectResponse selectResponse = (SPARQLSelectResponse) queryResponse;
-            final Map<String, List<String>> bindings = new LinkedHashMap<>();
-            selectResponse.getBindings().entrySet().forEach(e -> {
-                List<String> entityEntryList = e.getValue().stream().map(LabeledEntity::getId).collect(Collectors.toList());
-                bindings.put(e.getKey(), entityEntryList);
-            });
-
-            SPARQLSelectUserResponse response =
-                    new SPARQLSelectUserResponse(selectResponse.getUserQuery(), selectResponse.getInteractionMode());
-
-            response.setBindings(bindings);
-            return response;
+        if (result.getResponses().isEmpty()) {
+            return new NoUserResponse(result.getInput());
         }
+        UserResponse userResponse = new UserResponse(result.getInput());
 
-        throw new UnsupportedOperationException("Can't create REST response");
+        for (QueryResponse responseEntry : result.getResponses()) {
+            String source = responseEntry.getSource().getName();
+
+            if (responseEntry instanceof AnswerSetResponse) {
+                AnswerSetResponse answerSet = (AnswerSetResponse) responseEntry;
+                SchemaAgnosticUserResponse response =
+                        new SchemaAgnosticUserResponse(source, answerSet.getSparqlQuery());
+
+                List<SchemaAgnosticUserResponse.EntityEntry> answers = answerSet.getEntityAnswer().stream()
+                        .map(a -> new SchemaAgnosticUserResponse.EntityEntry(a.getId(), a.getValue())).collect(Collectors.toList());
+
+                response.setAnswers(answers);
+
+                final Map<String, List<SchemaAgnosticUserResponse.EntityEntry>> mappings = new HashMap<>();
+                answerSet.getMappings().forEach((modelBinding, scoreList) -> {
+                    List<SchemaAgnosticUserResponse.EntityEntry> entries = scoreList.stream()
+                            .map(s -> new SchemaAgnosticUserResponse.EntityEntry(s.getRankableView().getId(),
+                                    s.getRankableView().getValue(), s.getValue()))
+                            .collect(Collectors.toList());
+                    mappings.computeIfAbsent(modelBinding.getTerm(), (term) -> new ArrayList<>()).addAll(entries);
+                });
+
+                response.setMappings(mappings);
+                userResponse.addResponse(response);
+            } else if (responseEntry instanceof SPARQLSelectResponse) {
+                SPARQLSelectResponse selectResponse = (SPARQLSelectResponse) responseEntry;
+                final Map<String, List<String>> bindings = new LinkedHashMap<>();
+                selectResponse.getBindings().forEach((key, value) -> {
+                    List<String> entityEntryList = value.stream()
+                            .map(LabeledEntity::getId)
+                            .collect(Collectors.toList());
+                    bindings.put(key, entityEntryList);
+                });
+
+                SPARQLSelectUserResponse response =
+                        new SPARQLSelectUserResponse(source);
+
+                response.setBindings(bindings);
+//                return response;
+                userResponse.addResponse(response);
+            } else if (responseEntry instanceof TextResponse) {
+                TextResponse textResponse = (TextResponse) responseEntry;
+                TextUserResponse response =
+                        new TextUserResponse(source);
+                response.setAnswers(textResponse.getTextAnswer());
+
+                userResponse.addResponse(response);
+
+            } else {
+                throw new UnsupportedOperationException("Can't create REST response");
+            }
+        }
+        return userResponse;
     }
 }

@@ -56,9 +56,9 @@ public final class ProcessorsTest {
 
     @Test
     public void simpleProcessorChainTest() {
-        final KBId kbId = KBId.of("obama", "facts");
+        final IndexID indexID = IndexID.of("obama", "facts");
 
-        Holder holder = ModelUtils.createWrappedFact(kbId,
+        Holder holder = ModelUtils.createWrappedFact(indexID,
                 "http://dbpedia.org/resource/FC_Oberlausitz_Neugersdorf",
                 "http://purl.org/dc/terms/subject",
                 "http://dbpedia.org/resource/Category:Football_clubs_in_Germany");
@@ -81,10 +81,10 @@ public final class ProcessorsTest {
 
     @Test
     public void duplicateProcessorTest() {
-        KBId kbId = KBId.of("obama", "facts");
+        IndexID indexID = IndexID.of("obama", "facts");
         PropertyEntity prop = ModelUtils.createProperty("http://dbpedia.org/property/president");
         Processor processor = Processors.create(config.withOnlyPath("sink-duplicate"));
-        Holder holder = new Indexable(prop, kbId);
+        Holder holder = new Indexable(prop, indexID);
         processor.run(holder);
         Assert.assertFalse(holder.isSinkable());
         processor.run(holder);
@@ -93,9 +93,9 @@ public final class ProcessorsTest {
 
     @Test(expectedExceptions = FatalProcessorException.class)
     public void unrecoverableErrorProcessorTest() {
-        KBId kbId = KBId.of("any", "type");
+        IndexID indexID = IndexID.of("any", "type");
         Processor processor = Processors.create(config.withOnlyPath(CoreferenceResolutionProcessor.name));
-        Holder holder = new Indexable(new Document("Some Id", " Some title", "A bunch of text .."), kbId);
+        Holder holder = new Indexable(new Document("Some Id", " Some title", "A bunch of text .."), indexID);
         processor.run(holder);
         Assert.assertFalse(holder.isSinkable());
     }

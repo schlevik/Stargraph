@@ -12,10 +12,10 @@ package net.stargraph.core;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,9 @@ package net.stargraph.core;
  * ==========================License-End===============================
  */
 
-import net.stargraph.model.KBId;
+import net.stargraph.core.impl.jena.JenaGraphDatabase;
+import net.stargraph.core.search.database.DBType;
+import net.stargraph.model.IndexID;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
@@ -36,30 +38,36 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 abstract class TripleIterator<T> implements Iterator<T> {
     protected Logger logger = LoggerFactory.getLogger(getClass());
     protected Marker marker = MarkerFactory.getMarker("core");
-    protected KBId kbId;
+    protected IndexID indexID;
     protected Model model;
 
     private StmtIterator innerIt;
     private Statement currentStmt;
     private Namespace namespace;
 
-    TripleIterator(Stargraph stargraph, KBId kbId) {
-        this(stargraph, kbId, stargraph.getKBCore(kbId.getId()).getGraphModel());
+    //    TripleIterator(Stargraph stargraph, IndexID indexID) {
+//        this(stargraph, indexID, ((JenaGraphDatabase) stargraph.getKnowledgeBase(indexID.getKnowledgeBase()).getDatabase(DBType.Graph)).getModel());
+//    }
+    TripleIterator(Stargraph stargraph, IndexID indexID) {
+        JenaGraphDatabase db = (JenaGraphDatabase) Objects.requireNonNull(stargraph).
+                getKnowledgeBase(indexID.getKnowledgeBase()).getDatabase(DBType.Graph);
+        this.model = db.getModel();
+        this.namespace = db.getNamespace();
+        this.indexID = Objects.requireNonNull(indexID);
+        this.innerIt = model.listStatements();
     }
-
-    TripleIterator(Stargraph stargraph, KBId kbId, Model model) {
-        this.model = model;
-        this.namespace = stargraph.getKBCore(kbId.getId()).getNamespace();
-        this.kbId = Objects.requireNonNull(kbId);
-        this.innerIt = Objects.requireNonNull(model).listStatements();
-    }
+//    TripleIterator(Stargraph stargraph, IndexID indexID, Model model) {
+//        this.model = model;
+//        this.namespace = stargraph.getKnowledgeBase(indexID.getKnowledgeBase()).getNamespace();
+//        this.indexID = Objects.requireNonNull(indexID);
+//        this.innerIt = Objects.requireNonNull(model).listStatements();
+//    }
 
 
     @Override

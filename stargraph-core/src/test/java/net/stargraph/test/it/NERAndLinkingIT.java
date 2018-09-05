@@ -29,10 +29,11 @@ package net.stargraph.test.it;
 import com.typesafe.config.ConfigFactory;
 import net.stargraph.ModelUtils;
 import net.stargraph.core.Stargraph;
+import net.stargraph.core.features.NERFeature;
 import net.stargraph.core.ner.LinkedNamedEntity;
 import net.stargraph.core.ner.NER;
+import net.stargraph.model.IndexID;
 import net.stargraph.model.InstanceEntity;
-import net.stargraph.model.KBId;
 import net.stargraph.test.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -50,10 +51,10 @@ import java.util.List;
  * this might take some time and kill your ram though.
  */
 public final class NERAndLinkingIT {
-    NER ner;
-    String kbName = "lucene-dbpedia";
-    Stargraph stargraph;
-    KBId entityIndex = KBId.of(kbName, "entities");
+    private NER ner;
+    private String kbName = "lucene-dbpedia";
+    private Stargraph stargraph;
+    private IndexID entityIndex = IndexID.of(kbName, "entities");
 
     @BeforeClass
     public void beforeClass() {
@@ -66,7 +67,7 @@ public final class NERAndLinkingIT {
         TestUtils.ensureLuceneIndexExists(stargraph, entityIndex);
 
 
-        ner = stargraph.getKBCore(kbName).getNER();
+        ner = stargraph.getKnowledgeBase(kbName).getFeature(NERFeature.class);
         Assert.assertNotNull(ner);
     }
 
@@ -74,7 +75,7 @@ public final class NERAndLinkingIT {
     @Test
     public void linkObamaTest() {
         List<LinkedNamedEntity> entities = ner.searchAndLink("Barack Obama");
-        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:BarackObama"));
+        Assert.assertEquals(entities.get(0).getEntity(), ModelUtils.createInstance("dbr:Barack_Obama"));
     }
 
     @Test

@@ -31,7 +31,7 @@ import com.typesafe.config.ConfigFactory;
 import net.stargraph.data.DataProvider;
 import net.stargraph.data.DataProviderFactory;
 import net.stargraph.data.processor.Holder;
-import net.stargraph.model.KBId;
+import net.stargraph.model.IndexID;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,18 +41,18 @@ public final class TestDataProviderFactory implements DataProviderFactory {
     private Config config = ConfigFactory.load().getConfig("stargraph");
 
     @Override
-    public DataProvider<? extends Holder> create(KBId kbId) {
-        String cfgPath = String.format("%s.provider.args.data", kbId.getModelPath());
+    public DataProvider<? extends Holder> create(IndexID indexID) {
+        String cfgPath = String.format("%s.provider.args.data", indexID.getIndexPath());
         List<? extends Config> configList = config.getConfigList(cfgPath);
         List<TestData> testData = configList.stream()
                 .map(cfg -> new TestData(cfg.getBoolean("failOnIndexer"), cfg.getBoolean("failOnProvider"), cfg.getString("text")))
                 .collect(Collectors.toList());
 
-        return new DataProvider<>(new TestDataIterator(kbId, testData));
+        return new DataProvider<>(new TestDataIterator(indexID, testData));
     }
 
     @Override
-    public DataProvider<? extends Holder> create(KBId kbId, List data) {
-        return new DataProvider<>(new TestDataIterator(kbId, data));
+    public DataProvider<? extends Holder> create(IndexID indexID, List data) {
+        return new DataProvider<>(new TestDataIterator(indexID, data));
     }
 }

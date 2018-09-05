@@ -37,8 +37,8 @@ import java.util.List;
 
 class DocumentDeserializer extends AbstractDeserializer<Document> {
 
-    DocumentDeserializer(KBId kbId) {
-        super(kbId, PropertyEntity.class);
+    DocumentDeserializer(IndexID indexID) {
+        super(indexID, PropertyEntity.class);
     }
 
     @Override
